@@ -1,0 +1,23 @@
+# Set default behavior to automatically normalize line endings to LF
+* text=auto eol=lf
+
+# Explicit binary files (do not convert line endings)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.svg text
+*.pdf binary
+
+# Network simulation and packet capture binaries
+*.pkt binary
+*.pcap binary
+*.pcapng binary
+*.cap binary
+
+# Saved ML Models
+*.pkl binary
+*.joblib binary
+*.onnx binary

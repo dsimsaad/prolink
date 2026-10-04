@@ -1,0 +1,1 @@
+# Planned dependencies: fastapi, uvicorn, pandas, numpy, scikit-learn, faker, matplotlib, jupyter, pytest, psycopg

@@ -1,0 +1,6 @@
+{
+  "name": "ProLink — Hire Trusted Professionals, Fast",
+  "description": "Pakistan's premier service marketplace. Post jobs, get verified local offers, compare transparent quotes, and hire top-rated professionals for plumbing, electrical, AC repair, cleaning, and more.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

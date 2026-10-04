@@ -1,0 +1,61 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+*.DS_Store
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# .NET / C#
+bin/
+obj/
+.vs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+appsettings.Development.json
+appsettings.Production.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.ipynb_checkpoints/
+*.pkl
+insight/models/*.pkl
+!insight/models/.gitkeep
+
+# Large Dataset Files (preserve .gitkeep)
+insight/data/raw/*
+!insight/data/raw/.gitkeep
+insight/data/synthetic/*
+!insight/data/synthetic/.gitkeep
+insight/data/processed/*
+!insight/data/processed/.gitkeep
+
+# IDE & Editors
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/extensions.json

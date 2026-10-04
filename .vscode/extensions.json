@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "ms-dotnettools.csdevkit",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "eamodio.gitlens",
+    "EditorConfig.EditorConfig",
+    "ms-azuretools.vscode-docker",
+    "hediet.vscode-drawio",
+    "bierner.markdown-mermaid",
+    "rangav.vscode-thunder-client"
+  ]
+}
