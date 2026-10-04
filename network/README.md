@@ -6,7 +6,7 @@ This directory contains standalone networking modules, packet captures, and netw
 > **Hosting Constraint**: Raw TCP/UDP sockets cannot run on Vercel's serverless environment. These modules are run locally or on a standalone VM / container host. The implementation language (e.g., Python, C#, or Go) will be finalized during Phase 3.
 
 ## Planned Owner
-- **Lead**: P1 (Product / Data / SRS Lead)
+- **Lead**: P1 (Product / Data Lead)
 - **Reviewer**: P3 (C# Engine Lead)
 
 ## Planned Structure & Files

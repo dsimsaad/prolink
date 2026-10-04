@@ -113,11 +113,10 @@ prolink/
 ├── db/                            # Database migrations, RLS policies, and seed data
 │   ├── migrations/                # Sequentially numbered SQL migrations (001_schema.sql, etc.)
 │   └── seed/                      # Demo users, service categories, and sample jobs
-└── docs/                          # Specifications, decisions, SRS, and course deliverables
+└── docs/                          # Specifications, decisions, and course deliverables
     ├── architecture.md            # System architecture details and service contracts
     ├── decisions/                 # Architectural Decision Records (ADRs) and instructor notes
     ├── api/                       # Cross-service JSON request/response contracts
-    ├── srs/                       # SRS documents and diagram sources (draw.io / Mermaid)
     └── reports/                   # Reports for DSA, IDS, and CN course deliverables
 ```
 
@@ -127,7 +126,7 @@ prolink/
 
 | Role | Team Member | Primary Ownership | Secondary / Review Ownership |
 | :--- | :--- | :--- | :--- |
-| **P1** | Product / Data / SRS Lead | `db/`, `docs/`, `network/` (Lead) | General Architecture Review |
+| **P1** | Product / Data Lead | `db/`, `docs/`, `network/` (Lead) | General Architecture Review |
 | **P2** | Frontend Lead | `web/` | `docs/api/` (Client Contracts) |
 | **P3** | C# Engine Lead | `api/` | `network/` (Reviewer), `docs/reports/dsa/` |
 | **P4** | Data Science Lead | `insight/` | `docs/reports/ids/` |

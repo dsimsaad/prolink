@@ -4,7 +4,7 @@
 Database management, schema definitions, migration scripts, Row Level Security (RLS) policies, and seed data for the Supabase-hosted PostgreSQL instance. The version-controlled SQL files in this directory are the single source of truth for the database schema.
 
 ## Planned Owner
-- **Lead**: P1 (Product / Data / SRS Lead)
+- **Lead**: P1 (Product / Data Lead)
 
 ## Planned Structure & Files
 ```text
