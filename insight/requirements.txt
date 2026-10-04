@@ -1,1 +1,27 @@
-# Planned dependencies: fastapi, uvicorn, pandas, numpy, scikit-learn, faker, matplotlib, jupyter, pytest, psycopg
+# ProLink Insight Service (Python 3.12) Dependencies
+
+# Web & API Framework
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.6.0
+python-dotenv>=1.0.1
+
+# Data Science & Machine Learning
+pandas>=2.2.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+matplotlib>=3.8.0
+
+# Synthetic Data Generation
+faker>=24.0.0
+
+# Database Access (PostgreSQL / Supabase)
+psycopg[binary]>=3.1.18
+
+# Notebooks & Exploratory Data Analysis
+jupyter>=1.0.0
+ipykernel>=6.29.0
+
+# Testing & Quality
+pytest>=8.0.0
+httpx>=0.27.0
