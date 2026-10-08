@@ -4,6 +4,81 @@
 
 ---
 
+## 🚀 Quick Start: Running the Website
+
+Ensure you have **Node.js (LTS >= 20.x)** and **npm** installed.
+
+### 🍎 On macOS / Linux
+
+1. **Navigate to the `web/` directory**:
+   ```bash
+   cd web
+   ```
+
+2. **Create the local environment file (`.env.local`)**:
+   ```bash
+   cp ../.env.example .env.local
+   ```
+   > Make sure your `web/.env.local` includes the Supabase credentials:
+   > ```env
+   > NEXT_PUBLIC_SUPABASE_URL=https://yevrgmanogofvuxlpasd.supabase.co
+   > NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_8Xcq4WGAN06UQomk90vCrA_yiSak3fX
+   > NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_8Xcq4WGAN06UQomk90vCrA_yiSak3fX
+   > NEXT_PUBLIC_API_URL=http://localhost:5000
+   > NEXT_PUBLIC_INSIGHT_URL=http://localhost:8000
+   > ```
+
+3. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+4. **Start the local development server**:
+   ```bash
+   npm run dev
+   ```
+
+5. Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+
+---
+
+### 🪟 On Windows
+
+#### Option A: PowerShell
+1. **Navigate to the `web/` directory**:
+   ```powershell
+   cd web
+   ```
+
+2. **Create the local environment file (`.env.local`)**:
+   ```powershell
+   Copy-Item ..\.env.example .env.local
+   ```
+   *(Ensure Supabase keys are configured in `web\.env.local`)*
+
+3. **Install dependencies**:
+   ```powershell
+   npm install
+   ```
+
+4. **Start the development server**:
+   ```powershell
+   npm run dev
+   ```
+
+5. Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+
+#### Option B: Command Prompt (CMD)
+```cmd
+cd web
+copy ..\.env.example .env.local
+npm install
+npm run dev
+```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+
+---
+
 ## 1. System Architecture
 
 ```mermaid
