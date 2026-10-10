@@ -2,6 +2,8 @@
 .DS_Store
 Thumbs.db
 *.DS_Store
+.local/
+Library/
 
 # Environment Variables & Secrets
 .env
