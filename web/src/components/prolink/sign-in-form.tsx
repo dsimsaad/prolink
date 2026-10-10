@@ -2,19 +2,77 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Brand, Icon } from "./brand";
+import { createClient } from "@/utils/supabase/client";
 
-/** Replace these UI-only actions with your authentication adapter when integrating. */
 export function SignInForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryError = searchParams.get("error") || "";
+
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage(
-      "Sign-in is not connected yet. Connect your authentication provider to enable account access.",
-    );
+  const [loading, setLoading] = useState(false);
+
+  const displayMessage = message || queryError;
+
+  async function handleGoogleSignIn() {
+    try {
+      setMessage("");
+      setLoading(true);
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) {
+        setMessage(error.message);
+      }
+    } catch (err) {
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred during Google sign-in.",
+      );
+    } finally {
+      setLoading(false);
+    }
   }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      setMessage("");
+      setLoading(true);
+      const formData = new FormData(event.currentTarget);
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setMessage(error.message);
+      } else {
+        router.push("/");
+        router.refresh();
+      }
+    } catch (err) {
+      setMessage(
+        err instanceof Error ? err.message : "Failed to sign in. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="sign-in-page">
       <main className="auth-column">
@@ -31,7 +89,19 @@ export function SignInForm() {
             business.
           </p>
           <div className="social-buttons">
-            {["Google", "Apple", "Facebook"].map((provider) => (
+            <button
+              type="button"
+              className="social-button"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              aria-label="Continue with Google"
+            >
+              <span aria-hidden="true" className="social-symbol google">
+                G
+              </span>
+              {loading ? "Connecting..." : "Google"}
+            </button>
+            {["Apple", "Facebook"].map((provider) => (
               <button
                 key={provider}
                 type="button"
@@ -46,9 +116,7 @@ export function SignInForm() {
                   aria-hidden="true"
                   className={`social-symbol ${provider.toLowerCase()}`}
                 >
-                  {provider === "Google" ? (
-                    "G"
-                  ) : provider === "Apple" ? (
+                  {provider === "Apple" ? (
                     <svg viewBox="0 0 24 24">
                       <path
                         fill="currentColor"
@@ -116,7 +184,7 @@ export function SignInForm() {
                 Forgot password?
               </a>
             </div>
-            <button className="button submit-button" type="submit">
+            <button className="button submit-button" type="submit" disabled={loading}>
               Sign In <Icon name="arrow" />
             </button>
           </form>
@@ -124,9 +192,9 @@ export function SignInForm() {
             id="auth-status"
             role="status"
             aria-live="polite"
-            className={message ? "auth-message" : ""}
+            className={displayMessage ? "auth-message" : ""}
           >
-            {message}
+            {displayMessage}
           </div>
         </div>
         <footer className="auth-footer">
