@@ -14,8 +14,9 @@ All SQL scripts must be executed in the **Supabase Dashboard $\rightarrow$ SQL E
 | **1** | [`db/migrations/001_core_schema.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/001_core_schema.sql) | DDL Migration | Creates 15 core tables, check constraints, foreign keys, and indexes. |
 | **2** | [`db/migrations/002_functions_triggers.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/002_functions_triggers.sql) | Logic Migration | Auth signup triggers, column security guards, review validator, and Bayesian rating updates. |
 | **3** | [`db/migrations/003_rls.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/003_rls.sql) | Security Migration | Enables RLS on all 15 tables, defines client/admin policies, and configures Realtime. |
-| **4** | [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) | Seed Data | Seeds 8 standard trade categories, 12 placeholder areas, and graph travel edges. |
-| **5** | [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) | Verification | Transactional test script verifying RLS policies, trigger guards, and constraints. |
+| **4** | [`db/migrations/004_google_onboarding.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/004_google_onboarding.sql) | Logic & Security Migration | Adds `onboarding_completed` flag, updates `handle_new_user()` for Google OAuth, updates column protection, and creates `complete_onboarding()` RPC. |
+| **5** | [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) | Seed Data | Seeds 8 standard trade categories, 12 placeholder areas, and graph travel edges. |
+| **6** | [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) | Verification | Transactional test script verifying RLS policies, trigger guards, and constraints. |
 
 ---
 
@@ -209,3 +210,7 @@ Every `SECURITY DEFINER` function explicitly defines `SET search_path = ''` and 
    - `db/seed/001_categories_areas.sql` includes 12 synthetic placeholder areas (`Area 01` to `Area 12`) and graph edges for travel-time routing. These must be replaced with actual municipal sectors and travel duration matrices for the deployment city.
 3. **Directed Graph Edges**:
    - `area_edges` are directed to support one-way streets and asymmetric traffic congestion. The seed script inserts pairs in both directions.
+4. **Google OAuth & Role Onboarding**:
+   - When a user signs in via Google OAuth, Supabase Auth generates a user without role metadata. `handle_new_user()` provisions a default profile with `role = 'customer'` and `onboarding_completed = false`.
+   - The user is redirected to `/onboarding` where they select either `customer` or `professional`. The `complete_onboarding()` RPC updates their role and sets `onboarding_completed = true` exactly once.
+   - Any attempt by direct client updates to bypass onboarding or escalate roles is blocked at the database trigger layer (`protect_sensitive_columns`).

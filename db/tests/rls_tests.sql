@@ -31,6 +31,10 @@ DECLARE
     v_count int;
     v_phone_visible text;
     v_error_caught boolean;
+    v_oauth_user_id uuid := '66666666-6666-6666-6666-666666666666';
+    v_admin_attempt_id uuid := '77777777-7777-7777-7777-777777777777';
+    v_user_role text;
+    v_user_onboarded boolean;
 
 BEGIN
     RAISE NOTICE '================================================================';
@@ -300,6 +304,133 @@ BEGIN
         RAISE NOTICE 'TEST 9 [Unique constraint blocks duplicate offer by same pro]: PASS';
     ELSE
         RAISE WARNING 'TEST 9 [Unique constraint blocks duplicate offer by same pro]: FAIL';
+    END IF;
+
+    -- --------------------------------------------------------------------------
+    -- TEST 10: Direct client cannot update onboarding_completed (Blocked by trigger)
+    -- --------------------------------------------------------------------------
+    PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_c1_id), true);
+    BEGIN
+        SET LOCAL ROLE authenticated;
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- In test environments where the role authenticated does not exist, continue
+            NULL;
+    END;
+    v_error_caught := false;
+
+    BEGIN
+        UPDATE public.profiles
+        SET onboarding_completed = false
+        WHERE id = v_c1_id;
+    EXCEPTION
+        WHEN SQLSTATE '42501' THEN
+            v_error_caught := true;
+    END;
+
+    BEGIN
+        RESET ROLE;
+    EXCEPTION
+        WHEN OTHERS THEN
+            NULL;
+    END;
+
+    IF v_error_caught THEN
+        RAISE NOTICE 'TEST 10 [Direct client update to onboarding_completed blocked]: PASS';
+    ELSE
+        RAISE WARNING 'TEST 10 [Direct client update to onboarding_completed blocked]: FAIL';
+    END IF;
+
+    -- --------------------------------------------------------------------------
+    -- TEST 11: complete_onboarding works once and sets the role (e.g., professional)
+    -- --------------------------------------------------------------------------
+    -- Setup OAuth test user with onboarding_completed = false
+    INSERT INTO auth.users (id, email, raw_user_meta_data)
+    VALUES (v_oauth_user_id, 'oauth@example.com', '{}'::jsonb)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO public.profiles (id, role, full_name, onboarding_completed)
+    VALUES (v_oauth_user_id, 'customer', 'OAuth User', false)
+    ON CONFLICT (id) DO UPDATE SET onboarding_completed = false, role = 'customer';
+
+    PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_oauth_user_id), true);
+    
+    PERFORM public.complete_onboarding('professional');
+
+    SELECT role, onboarding_completed INTO v_user_role, v_user_onboarded
+    FROM public.profiles
+    WHERE id = v_oauth_user_id;
+
+    SELECT count(*) INTO v_count
+    FROM public.professional_profiles
+    WHERE profile_id = v_oauth_user_id;
+
+    IF v_user_role = 'professional' AND v_user_onboarded = true AND v_count = 1 THEN
+        RAISE NOTICE 'TEST 11 [complete_onboarding sets role & creates pro profile]: PASS';
+    ELSE
+        RAISE WARNING 'TEST 11 [complete_onboarding sets role & creates pro profile]: FAIL (Role: %, Onboarded: %, ProProfileCount: %)', v_user_role, v_user_onboarded, v_count;
+    END IF;
+
+    -- --------------------------------------------------------------------------
+    -- TEST 12: Second call to complete_onboarding fails
+    -- --------------------------------------------------------------------------
+    v_error_caught := false;
+    BEGIN
+        PERFORM public.complete_onboarding('customer');
+    EXCEPTION
+        WHEN SQLSTATE '22023' THEN
+            v_error_caught := true;
+    END;
+
+    IF v_error_caught THEN
+        RAISE NOTICE 'TEST 12 [Second call to complete_onboarding rejected]: PASS';
+    ELSE
+        RAISE WARNING 'TEST 12 [Second call to complete_onboarding rejected]: FAIL';
+    END IF;
+
+    -- --------------------------------------------------------------------------
+    -- TEST 13: Passing admin role to complete_onboarding is rejected
+    -- --------------------------------------------------------------------------
+    INSERT INTO auth.users (id, email, raw_user_meta_data)
+    VALUES (v_admin_attempt_id, 'hacker@example.com', '{}'::jsonb)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO public.profiles (id, role, full_name, onboarding_completed)
+    VALUES (v_admin_attempt_id, 'customer', 'Attempt Admin', false)
+    ON CONFLICT (id) DO UPDATE SET onboarding_completed = false, role = 'customer';
+
+    PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_admin_attempt_id), true);
+    
+    v_error_caught := false;
+    BEGIN
+        PERFORM public.complete_onboarding('admin');
+    EXCEPTION
+        WHEN SQLSTATE '22023' THEN
+            v_error_caught := true;
+    END;
+
+    IF v_error_caught THEN
+        RAISE NOTICE 'TEST 13 [complete_onboarding rejects admin role]: PASS';
+    ELSE
+        RAISE WARNING 'TEST 13 [complete_onboarding rejects admin role]: FAIL';
+    END IF;
+
+    -- --------------------------------------------------------------------------
+    -- TEST 14: Unauthenticated call to complete_onboarding is rejected
+    -- --------------------------------------------------------------------------
+    PERFORM set_config('request.jwt.claims', '', true);
+    v_error_caught := false;
+    BEGIN
+        PERFORM public.complete_onboarding('customer');
+    EXCEPTION
+        WHEN SQLSTATE '42501' THEN
+            v_error_caught := true;
+    END;
+
+    IF v_error_caught THEN
+        RAISE NOTICE 'TEST 14 [Unauthenticated call to complete_onboarding rejected]: PASS';
+    ELSE
+        RAISE WARNING 'TEST 14 [Unauthenticated call to complete_onboarding rejected]: FAIL';
     END IF;
 
     RAISE NOTICE '================================================================';
