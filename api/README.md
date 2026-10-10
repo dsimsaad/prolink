@@ -10,7 +10,7 @@ The Core Engine is a high-performance C# ASP.NET Core Web API containing a custo
 ```text
 api/
 ├── Dockerfile                   Docker container configuration for Render deployment
-├── ProLink.sln                  Visual Studio / .NET Solution file
+├── ProLink.slnx                 Visual Studio / .NET Solution file
 ├── ProLink.Engine/              DSA library (zero database or web dependencies)
 │   ├── Structures/              Trie.cs, MinHeap.cs, PriorityQueue.cs, LruCache.cs, Queue.cs
 │   ├── Algorithms/              MergeSort.cs, Dijkstra.cs
@@ -40,34 +40,19 @@ api/
 - **`ProLink.Bench`**: BenchmarkDotNet benchmarks to measure latency, throughput, and memory allocations.
 - **`ProLink.Api`**: ASP.NET Core controllers exposing REST APIs, validating Supabase JWT tokens on every request, and interfacing with Postgres.
 
-## How to Run: TODO
-Run these commands when ready to initialize the .NET solution and projects:
+## How to Run
+The solution is configured with `api/ProLink.slnx` containing all projects:
 
 ```bash
-# 1. Create solution
-dotnet new sln -n ProLink -o api
+# 1. Build the solution
+dotnet build api/ProLink.slnx
 
-# 2. Create projects
-dotnet new classlib -n ProLink.Engine -o api/ProLink.Engine
-dotnet new xunit -n ProLink.Engine.Tests -o api/ProLink.Engine.Tests
-dotnet new console -n ProLink.Bench -o api/ProLink.Bench
-dotnet new webapi -n ProLink.Api -o api/ProLink.Api
+# 2. Run test suite
+dotnet test api/ProLink.slnx
 
-# 3. Add projects to solution
-dotnet sln api/ProLink.sln add api/ProLink.Engine/ProLink.Engine.csproj
-dotnet sln api/ProLink.sln add api/ProLink.Engine.Tests/ProLink.Engine.Tests.csproj
-dotnet sln api/ProLink.sln add api/ProLink.Bench/ProLink.Bench.csproj
-dotnet sln api/ProLink.sln add api/ProLink.Api/ProLink.Api.csproj
-
-# 4. Add project references
-dotnet add api/ProLink.Engine.Tests reference api/ProLink.Engine
-dotnet add api/ProLink.Bench reference api/ProLink.Engine
-dotnet add api/ProLink.Api reference api/ProLink.Engine
-
-# 5. Run tests
-dotnet test api/ProLink.sln
-
-# 6. Run API locally
-dotnet run --project api/ProLink.Api
+# 3. Run API locally (specify PORT=5090 on macOS if 5080 is occupied)
+PORT=5080 dotnet run --project api/ProLink.Api --no-launch-profile
 ```
-The API will run locally at [http://localhost:5000](http://localhost:5000) (or specified port).
+The API will run locally at [http://localhost:5080](http://localhost:5080) (or whichever `PORT` is passed).
+Health check: `GET http://localhost:5080/health`.
+Identity check: `GET http://localhost:5080/me` with `Authorization: Bearer <supabase-jwt>`.
