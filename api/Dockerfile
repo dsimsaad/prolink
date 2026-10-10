@@ -1,4 +1,3 @@
-```dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
 WORKDIR /src
@@ -18,4 +17,3 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
 ENTRYPOINT ["dotnet", "ProLink.Api.dll"]
-```
