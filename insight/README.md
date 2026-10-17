@@ -1,69 +1,153 @@
-# ProLink Insight Service (`insight/`)
+# ProLink Insight Service
 
-## Purpose
-Python service for Introduction to Data Science (IDS), providing job category classification (NLP/ML), professional ranking score models, platform analytics, synthetic dataset generation, and exploratory data analysis (EDA) Jupyter notebooks. Deployed as a FastAPI serverless API on Vercel.
+Python 3.12 / FastAPI microservice for job category classification. Existing
+`GET /health` and `POST /match` endpoints remain available.
 
-## Planned Owner
-- **Lead**: P4 (Data Science Lead)
+## Structure
 
-## Planned Structure & Files
 ```text
 insight/
-├── main.py                      FastAPI application entry point
-├── requirements.txt             Python package dependencies
-├── app/                         FastAPI API routes and business logic
-│   ├── classifier/              Category text classification models & inference
-│   ├── ranking/                 ML/statistical ranking scores for professionals
-│   └── analytics/               Platform metrics, aggregations, and reporting
-├── generator/                   Synthetic data generation scripts using Faker
-│   └── generate_dataset.py
-├── notebooks/                   Jupyter notebooks for EDA, modeling, and evaluation
-│   ├── 01_exploratory_data_analysis.ipynb
-│   └── 02_category_classifier_training.ipynb
-├── data/                        Data directories (.gitignore ignores raw/synthetic content)
-│   ├── raw/                     Raw survey responses and external datasets
-│   ├── processed/               Cleaned and transformed datasets
-│   └── synthetic/               Generated test datasets for training and benchmarking
-├── models/                      Serialized machine learning models (.pkl, .joblib)
-└── tests/                       pytest automated test suites
+  main.py                    FastAPI, CORS, model startup, /classify, /match, /health
+  requirements.txt           Runtime, test, and existing notebook dependencies
+  app/
+    db.py                    Root environment loader and read-only Supabase queries
+    schemas.py               Validated request, response, and training models
+    classifier.py            TF-IDF + logistic regression, persistence, abstention
+  generator/
+    synthetic_data.py        Seeded Faker dataset and optional CSV export
+  models/classifier.pkl      Generated on first startup; ignored by Git
+  tests/                     Offline database, classifier, and API tests
 ```
 
-## What Will Go Inside
-- **`app/`**: FastAPI endpoints serving category suggestions (`/api/classify`), ML ranking enhancements (`/api/rank`), and analytics dashboards (`/api/analytics`).
-- **`generator/`**: Synthetic dataset generation tools using Faker to produce realistic Pakistani/local home service profiles, reviews, and job postings.
-- **`notebooks/`**: Documented Jupyter notebooks conducting EDA, hypothesis testing, data cleaning, and model evaluation.
-- **`data/` & `models/`**: Datasets and saved trained models.
+## Configuration
 
-## How to Run: TODO
-Run these commands when ready to initialize the Python environment:
+Set these variables in the **repository root** `.env` or `.env.local`, not inside
+`insight/`. `.env.local` overrides `.env`; existing process variables override both.
+Paths are resolved from the source file, independently of the shell's directory.
 
-### macOS / Linux
-```bash
-# 1. Create virtual environment
-python3.12 -m venv .venv
-
-# 2. Activate virtual environment
-source .venv/bin/activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Run FastAPI local development server
-uvicorn main:app --reload --port 8000
+```dotenv
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-server-only-service-role-key
+ALLOWED_ORIGINS=http://localhost:3000
 ```
 
-### Windows (PowerShell / Command Prompt)
-```cmd
-# 1. Create virtual environment
+`ALLOWED_ORIGINS` accepts comma-separated Next.js origins (no paths or trailing
+slash). An unset or empty value defaults to `http://localhost:3000`.
+The service-role key stays on this server and is never returned in API responses.
+
+## Windows PowerShell
+
+Starting at the monorepo root:
+
+```powershell
+cd insight
 py -3.12 -m venv .venv
-
-# 2. Activate virtual environment
-.venv\Scripts\activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Run FastAPI local development server
-uvicorn main:app --reload --port 8000
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
-API docs will be available at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+If PowerShell does not allow activation, use the environment's interpreter directly
+instead; no execution-policy change is needed:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+## macOS / Linux
+
+Starting at the monorepo root:
+
+```bash
+cd insight
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Interactive API documentation: <http://localhost:8000/docs>.
+For deployment, omit `--reload`; configure allowed origins for the deployed frontend.
+Each worker initializes its own in-memory model. Writes use a temporary file and
+atomic replacement, so workers cannot read partially written artifacts.
+
+## Classification
+
+`POST /classify` accepts a nonblank title (up to 200 characters) and description
+(up to 10,000 characters). Invalid input returns HTTP 422.
+
+```json
+{
+  "title": "Leaking bathroom pipe",
+  "description": "Need a plumber to replace a broken water pipe and fix the tap."
+}
+```
+
+Response shape (confidence is illustrative and varies by trained model):
+
+```json
+{
+  "suggested_category": "Plumbing",
+  "confidence": 0.87,
+  "is_fallback": false
+}
+```
+
+Try it from PowerShell:
+
+```powershell
+$body = @{
+    title = "Leaking bathroom pipe"
+    description = "Need a plumber to replace a broken water pipe and fix the tap."
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri http://localhost:8000/classify -ContentType application/json -Body $body
+```
+
+## Training and model lifecycle
+
+1. Startup loads a trusted local `models/classifier.pkl` if compatible with the
+   installed scikit-learn version. Incompatible/corrupt artifacts trigger retraining.
+2. Without an artifact, `fetch_training_jobs()` reads `jobs.title`,
+   `jobs.description`, and the referenced `categories.name`. It orders by job ID,
+   paginates, skips invalid rows, and caps the fetch at 10,000 rows. This matches
+   `db/migrations/001_core_schema.sql`; no database migrations or writes are needed.
+3. Missing credentials, empty data, or a database failure use 640 deterministic
+   Faker examples across the eight categories in `db/seed/001_categories_areas.sql`.
+   A single-class real dataset is supplemented with synthetic examples because
+   logistic regression requires at least two classes. Logs identify the source.
+4. TF-IDF word unigrams/bigrams feed class-balanced logistic regression. The fitted
+   pipeline and provenance are saved atomically. If the filesystem is read-only,
+   inference remains available in memory and startup logs a warning.
+5. Predictions below **0.35** return `"General / Uncategorized"` with
+   `is_fallback=true`; confidence remains the model's top probability. Text with
+   no known vocabulary returns the same category with confidence **0.0**.
+
+`is_fallback` describes prediction abstention, not whether synthetic training data
+was used. Synthetic training is a bootstrap baseline, not evidence of real-world
+accuracy. Evaluate on independent, labeled real jobs before relying on confidence
+scores in production. Scores are uncalibrated logistic-regression probabilities.
+
+The saved model is reused across restarts; new database jobs do **not** retrain it
+automatically. To retrain, stop the service, remove only
+`insight/models/classifier.pkl`, and restart. Only load model files created by a
+trusted process: joblib/pickle deserialization can execute code.
+
+## Tests and dataset export
+
+From `insight/`, with the virtual environment active:
+
+```bash
+python -m pytest -q
+python -m generator.synthetic_data --samples-per-category 80 --seed 42 --output data/synthetic/jobs.csv
+```
+
+Tests use temporary model files and mocked Supabase access; no live records or
+credentials are required. CSV export is optional; startup uses generated records
+in memory and never inserts them into Supabase.
+
+Implementation references: [FastAPI lifespan](https://fastapi.tiangolo.com/advanced/events/),
+[Supabase Python queries](https://supabase.com/docs/reference/python/select), and
+[scikit-learn model persistence](https://scikit-learn.org/stable/model_persistence.html).

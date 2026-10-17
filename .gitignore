@@ -36,6 +36,7 @@ appsettings.Production.json
 
 # Python
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *$py.class
 .venv/
@@ -48,6 +49,7 @@ insight/models/*.pkl
 !insight/models/.gitkeep
 
 # Large Dataset Files (preserve .gitkeep)
+*.csv
 insight/data/raw/*
 !insight/data/raw/.gitkeep
 insight/data/synthetic/*
