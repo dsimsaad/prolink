@@ -74,6 +74,22 @@ For deployment, omit `--reload`; configure allowed origins for the deployed fron
 Each worker initializes its own in-memory model. Writes use a temporary file and
 atomic replacement, so workers cannot read partially written artifacts.
 
+## Deployment (Render)
+
+The Insight Service is deployed as a Python Web Service on **Render**.
+
+- **Environment**: Python 3
+- **Root Directory**: `insight`
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- **Environment Variables**:
+  - `SUPABASE_URL`: Supabase project URL (`https://<project-ref>.supabase.co`)
+  - `SUPABASE_SERVICE_ROLE_KEY`: Supabase server-only service role key
+  - `ALLOWED_ORIGINS`: Comma-separated frontend origins (e.g. `https://prolink.vercel.app,http://localhost:3000`)
+- **Health Check Path**: `/health`
+
+> **Render Free Tier Notice**: Instances spin down after ~15 minutes of inactivity. Initial requests after idle may encounter 30–50 seconds cold-start latency while the service wakes up.
+
 ## Classification
 
 `POST /classify` accepts a nonblank title (up to 200 characters) and description
