@@ -140,7 +140,6 @@ export function LandingPage({
             <a href="#trust">Trust & Safety</a>
           </nav>
           <div className="nav-actions">
-            <BecomeProfessionalCta variant="navbar" state={proState} />
             {isLoggedIn ? (
               <div className="user-menu-container" ref={userMenuRef}>
                 <button
@@ -271,21 +270,14 @@ export function LandingPage({
                 </button>
               </>
             ) : (
-              <>
-                <Link
-                  href="/sign-in"
-                  className="text-link"
-                  style={{ padding: "8px 0" }}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <BecomeProfessionalCta
-                  variant="mobile"
-                  state={proState}
-                  onClick={() => setMenuOpen(false)}
-                />
-              </>
+              <Link
+                href="/sign-in"
+                className="text-link"
+                style={{ padding: "8px 0" }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Sign In
+              </Link>
             )}
           </nav>
         )}

@@ -39,13 +39,13 @@ export function Brand({
       style={{ textDecoration: "none" }}
     >
       <Image
-        src="/images/Prolink Logo.png"
+        src="/images/logo.png"
         alt="ProLink"
-        width={108}
-        height={42}
+        width={158}
+        height={44}
         priority={priority}
-        className="h-8 md:h-10 w-auto object-contain"
-        style={{ height: "auto", width: "auto", maxHeight: "42px" }}
+        className="h-9 md:h-11 w-auto object-contain"
+        style={{ height: "auto", width: "auto", maxHeight: "46px" }}
       />
     </Link>
   );
