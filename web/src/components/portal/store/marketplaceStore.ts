@@ -72,7 +72,7 @@ export const marketplaceStore = {
     const { error } = await createClient().auth.signOut();
     if (error) { marketplaceStore.addToast('Sign out failed', error.message, 'error'); return; }
     state = { ...state, currentUser: null, currentRole: 'guest' };
-    routePush('/sign-in');
+    window.location.replace('/');
     notify();
   },
 

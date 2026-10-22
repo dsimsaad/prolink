@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
+import { getSignInDestination } from "@/utils/auth-destination";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const rawNext = searchParams.get("next");
 
-  // Allow only known internal destinations.
-  let next = "/";
-  if (rawNext === "/" || rawNext === "/become-professional" || rawNext === "/user" || rawNext === "/admin") {
-    next = rawNext;
-  }
+  const next = getSignInDestination(rawNext, searchParams.get("role"));
 
   if (code) {
     const cookieStore = await cookies();

@@ -2,34 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Icon } from "./brand";
 import { createClient } from "@/utils/supabase/client";
-
-function getSafeNextPath(searchParams: URLSearchParams): string {
-  const rawNext = searchParams.get("next");
-  const role = searchParams.get("role");
-
-  // Backwards compatibility: ?role=professional treats destination as /become-professional
-  if (role === "professional") {
-    return "/become-professional";
-  }
-
-  // Allow only known internal destinations.
-  if (rawNext === "/" || rawNext === "/become-professional" || rawNext === "/user" || rawNext === "/admin") {
-    return rawNext;
-  }
-
-  return "/";
-}
+import { getSignInDestination } from "@/utils/auth-destination";
 
 export function SignInForm({
   defaultMode,
 }: {
   defaultMode?: "signin" | "signup";
 } = {}) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const queryMode = searchParams.get("mode");
@@ -47,7 +30,7 @@ export function SignInForm({
   const [loading, setLoading] = useState(false);
 
   const displayMessage = message || queryError;
-  const safeNext = getSafeNextPath(searchParams);
+  const safeNext = getSignInDestination(searchParams.get("next"), searchParams.get("role"));
 
   async function handleGoogleSignIn() {
     try {
@@ -55,9 +38,7 @@ export function SignInForm({
       setLoading(true);
       const supabase = createClient();
       const redirectUrl = new URL(`${window.location.origin}/auth/callback`);
-      if (safeNext !== "/") {
-        redirectUrl.searchParams.set("next", safeNext);
-      }
+      redirectUrl.searchParams.set("next", safeNext);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -98,8 +79,7 @@ export function SignInForm({
         if (error) {
           setMessage(error.message);
         } else {
-          router.push(safeNext);
-          router.refresh();
+          window.location.replace(safeNext);
         }
       } else {
         // Sign up flow sends full_name only; no role is sent
@@ -118,8 +98,7 @@ export function SignInForm({
           setMessage(error.message);
         } else if (data.session) {
           // Immediately authenticated
-          router.push(safeNext);
-          router.refresh();
+          window.location.replace(safeNext);
         } else if (data.user) {
           // Email confirmation is required by Supabase configuration
           setMessage(

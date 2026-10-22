@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import type { ProfessionalState } from '@/utils/professional';
 
@@ -17,7 +16,6 @@ const AccountContext = createContext<(Account & { handleSignOut: () => Promise<v
 
 export function NavigationAccountProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<Account>(signedOut);
-  const router = useRouter();
   const [refreshVersion, setRefreshVersion] = useState(0);
 
   useEffect(() => {
@@ -68,7 +66,7 @@ export function NavigationAccountProvider({ children }: { children: ReactNode })
     const { error } = await createClient().auth.signOut();
     if (error) return;
     setAccount(signedOut);
-    router.refresh();
+    window.location.replace('/');
   };
 
   return createElement(AccountContext.Provider, { value: { ...account, handleSignOut, refreshAccount: () => setRefreshVersion(version => version + 1) } }, children);
