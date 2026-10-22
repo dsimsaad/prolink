@@ -19,12 +19,17 @@ export function Brand({
         style={{ textDecoration: "none" }}
       >
         <Image
-          src="/images/logo-light.png"
+          src="/images/logo-white.png"
           alt="ProLink"
           width={150}
           height={42}
           className="h-8 md:h-9 w-auto object-contain"
-          style={{ height: "auto", width: "auto", maxHeight: "40px" }}
+          style={{
+            height: "auto",
+            width: "auto",
+            maxHeight: "40px",
+            filter: "brightness(0) invert(1)",
+          }}
         />
       </Link>
     );

@@ -1,3 +1,4 @@
+import "./faqs.css";
 import { SiteHeader } from "@/components/prolink/site-header";
 import { SiteFooter } from "@/components/prolink/site-footer";
 import { FaqsClient } from "@/components/prolink/faqs-client";
@@ -10,7 +11,7 @@ export const metadata = {
 
 export default function FaqsPage() {
   return (
-    <div className="subpage-wrapper">
+    <div className="faqs-page">
       <SiteHeader currentPage="faqs" />
       <main id="main">
         <FaqsClient />

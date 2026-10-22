@@ -1,3 +1,4 @@
+import "./contact.css";
 import { SiteHeader } from "@/components/prolink/site-header";
 import { SiteFooter } from "@/components/prolink/site-footer";
 import { ContactForm } from "@/components/prolink/contact-form";
@@ -11,12 +12,12 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="subpage-wrapper">
+    <div className="contact-page">
       <SiteHeader currentPage="contact" />
       <main id="main">
-        <section className="subpage-hero">
+        <section className="contact-hero">
           <div className="container">
-            <span className="badge">
+            <span className="contact-hero-badge">
               <Icon name="mail" />
               We&apos;re here to help
             </span>
@@ -28,48 +29,45 @@ export default function ContactPage() {
           </div>
         </section>
 
-        <section className="subpage-body container">
-          <div className="contact-grid-container">
-            {/* Contact Details Stack */}
-            <div className="contact-cards-stack">
-              <div className="contact-detail-card">
-                <span className="contact-icon-box">
+        <section className="contact-main-container">
+          <div className="contact-layout-grid">
+            {/* Left Column: Contact Details Stack */}
+            <div className="contact-info-stack">
+              <div className="contact-card">
+                <span className="contact-card-icon">
                   <Icon name="phone" />
                 </span>
-                <div>
+                <div className="contact-card-content">
                   <h3>Direct Phone Helpline</h3>
                   <p>Speak directly with our customer support center in Pakistan.</p>
-                  <strong>+92 (51) 111-776-546</strong>
-                  <div style={{ marginTop: "4px", fontSize: "12px", color: "var(--muted)" }}>
-                    WhatsApp: +92 (300) 123-4567
-                  </div>
+                  <span className="contact-highlight-text">+92 (51) 111-776-546</span>
+                  <div className="contact-sub-text">WhatsApp: +92 (300) 123-4567</div>
                 </div>
               </div>
 
-              <div className="contact-detail-card">
-                <span className="contact-icon-box">
+              <div className="contact-card">
+                <span className="contact-card-icon">
                   <Icon name="mail" />
                 </span>
-                <div>
+                <div className="contact-card-content">
                   <h3>Email Inquiries</h3>
-                  <p>Send detailed documentation, job references, or partnership inquiries.</p>
+                  <p>Send job details, document verification, or partnership inquiries.</p>
                   <a
                     href="mailto:support@prolink.pk"
-                    style={{ fontWeight: 700, color: "var(--forest)", fontSize: "14px" }}
+                    className="contact-highlight-text"
+                    style={{ textDecoration: "none" }}
                   >
                     support@prolink.pk
                   </a>
-                  <div style={{ marginTop: "4px", fontSize: "12px", color: "var(--muted)" }}>
-                    Escrow Disputes: disputes@prolink.pk
-                  </div>
+                  <div className="contact-sub-text">Escrow Disputes: disputes@prolink.pk</div>
                 </div>
               </div>
 
-              <div className="contact-detail-card">
-                <span className="contact-icon-box">
+              <div className="contact-card">
+                <span className="contact-card-icon">
                   <Icon name="pin" />
                 </span>
-                <div>
+                <div className="contact-card-content">
                   <h3>Head Office</h3>
                   <p>
                     ProLink Technologies Pakistan (Pvt) Ltd.
@@ -81,21 +79,21 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="contact-detail-card">
-                <span className="contact-icon-box">
+              <div className="contact-card">
+                <span className="contact-card-icon">
                   <Icon name="clock" />
                 </span>
-                <div>
+                <div className="contact-card-content">
                   <h3>Operating Hours</h3>
                   <p>Monday through Saturday: 9:00 AM – 8:00 PM PKT</p>
-                  <span style={{ fontSize: "12px", color: "var(--forest)", fontWeight: 600 }}>
+                  <div style={{ fontSize: "12px", color: "#0f6b3e", fontWeight: 700 }}>
                     Emergency escalation available 24/7 for active escrow jobs
-                  </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Direct Email / Contact Form */}
+            {/* Right Column: Direct Email / Message Form */}
             <ContactForm />
           </div>
         </section>

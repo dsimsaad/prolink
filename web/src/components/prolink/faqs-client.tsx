@@ -109,11 +109,11 @@ export function FaqsClient() {
 
   return (
     <>
-      <section className="subpage-hero">
+      <section className="faqs-hero">
         <div className="container">
-          <span className="badge">
+          <span className="faqs-hero-badge">
             <Icon name="shield" />
-            Help & Knowledge Base
+            Help &amp; Knowledge Base
           </span>
           <h1>Frequently Asked Questions</h1>
           <p>
@@ -123,16 +123,16 @@ export function FaqsClient() {
         </div>
       </section>
 
-      <section className="subpage-body container">
+      <section className="faqs-main-container">
         {/* Category Pill Filters */}
-        <div className="faq-category-nav" role="tablist">
+        <div className="faqs-category-filter" role="tablist">
           {categories.map((cat) => (
             <button
               key={cat.id}
               type="button"
               role="tab"
               aria-selected={activeCategory === cat.id}
-              className={`faq-category-pill ${activeCategory === cat.id ? "active" : ""}`}
+              className={`faqs-tab-btn ${activeCategory === cat.id ? "active" : ""}`}
               onClick={() => setActiveCategory(cat.id)}
             >
               {cat.label}
@@ -141,23 +141,26 @@ export function FaqsClient() {
         </div>
 
         {/* Dropdown Accordion List */}
-        <div className="faq-list">
+        <div className="faqs-accordion-group">
           {filteredFaqs.map((faq) => {
             const isOpen = openIds.includes(faq.id);
             return (
-              <div key={faq.id} className={`faq-item ${isOpen ? "open" : ""}`}>
+              <div
+                key={faq.id}
+                className={`faqs-accordion-card ${isOpen ? "open" : ""}`}
+              >
                 <button
                   type="button"
-                  className="faq-question-btn"
+                  className="faqs-question-trigger"
                   onClick={() => toggleItem(faq.id)}
                   aria-expanded={isOpen}
                   aria-controls={`faq-answer-${faq.id}`}
                 >
                   <span>{faq.question}</span>
-                  <Icon name="chevron-down" className="faq-chevron" />
+                  <Icon name="chevron-down" className="faqs-chevron-icon" />
                 </button>
                 {isOpen && (
-                  <div id={`faq-answer-${faq.id}`} className="faq-answer">
+                  <div id={`faq-answer-${faq.id}`} className="faqs-answer-content">
                     {faq.answer}
                   </div>
                 )}
@@ -167,14 +170,13 @@ export function FaqsClient() {
         </div>
 
         {/* Support Help Box */}
-        <div className="faq-help-box">
-          <h2 style={{ fontSize: "20px", fontWeight: 700, color: "var(--ink)", marginBottom: "8px" }}>
-            Still have questions?
-          </h2>
-          <p style={{ fontSize: "14px", color: "var(--body)", marginBottom: "20px" }}>
-            Our team is available 6 days a week to help with your account, jobs, or verification.
+        <div className="faqs-support-cta-box">
+          <h2>Still have questions?</h2>
+          <p>
+            Our support team in Islamabad is available 6 days a week to help with your
+            account, jobs, or professional verification.
           </p>
-          <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+          <div className="faqs-cta-actions">
             <Link href="/contact" className="button">
               Contact Support <Icon name="arrow" />
             </Link>
