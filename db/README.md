@@ -11,12 +11,13 @@ All SQL scripts must be executed in the **Supabase Dashboard $\rightarrow$ SQL E
 
 | Order | File Path | Type | Purpose |
 | :---: | :--- | :--- | :--- |
-| **1** | [`db/migrations/001_core_schema.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/001_core_schema.sql) | DDL Migration | Creates 15 core tables, check constraints, foreign keys, and indexes. |
+| **1** | [`db/migrations/001_core_schema.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/001_core_schema.sql) | DDL Migration | Creates 15 core tables, check constraints, foreign keys, and performance indexes. |
 | **2** | [`db/migrations/002_functions_triggers.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/002_functions_triggers.sql) | Logic Migration | Auth signup triggers, column security guards, review validator, and Bayesian rating updates. |
-| **3** | [`db/migrations/003_rls.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/003_rls.sql) | Security Migration | Enables RLS on all 15 tables, defines client/admin policies, and configures Realtime. |
-| **4** | [`db/migrations/004_google_onboarding.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/004_google_onboarding.sql) | Logic & Security Migration | Adds `onboarding_completed` flag, updates `handle_new_user()` for Google OAuth, updates column protection, and creates `complete_onboarding()` RPC. |
-| **5** | [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) | Seed Data | Seeds 8 standard trade categories, 12 placeholder areas, and graph travel edges. |
-| **6** | [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) | Verification | Transactional test script verifying RLS policies, trigger guards, and constraints. |
+| **3** | [`db/migrations/003_rls.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/003_rls.sql) | Security Migration | Enables RLS on all tables, defines client/admin policies, and configures Realtime. |
+| **4** | [`db/migrations/004_google_onboarding.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/004_google_onboarding.sql) | Legacy Migration | *(Superseded by 005)* Added onboarding flag and RPC for Google OAuth. Safe to run before 005. |
+| **5** | [`db/migrations/005_dual_role_professional_applications.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/005_dual_role_professional_applications.sql) | Dual-Role Migration | Migrates account roles to unified `user` / `admin`, adds application review lifecycle, drops legacy 004 onboarding objects, adds application RPCs, safety triggers, and RLS updates. |
+| **6** | [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) | Seed Data | Seeds 8 standard trade categories, 12 placeholder areas, and graph travel edges. |
+| **7** | [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) | Verification | Transactional test suite verifying RLS policies, trigger guards, dual-role workflows, and constraints. |
 
 ---
 
@@ -26,7 +27,7 @@ All SQL scripts must be executed in the **Supabase Dashboard $\rightarrow$ SQL E
 erDiagram
     AUTH_USERS ||--|| PROFILES : "1-to-1 (auth.users)"
     PROFILES ||--o| CONTACT_DETAILS : "1-to-1 private phone"
-    PROFILES ||--o| PROFESSIONAL_PROFILES : "1-to-1 pro extension"
+    PROFILES ||--o| PROFESSIONAL_PROFILES : "1-to-1 pro application/extension"
     AREAS ||--o{ PROFILES : "home area"
     
     CATEGORIES ||--o{ CATEGORIES : "parent_id"
@@ -58,7 +59,7 @@ erDiagram
 
     PROFILES {
         uuid id PK
-        text role "customer | professional | admin"
+        text role "user | admin"
         text full_name
         bigint area_id FK
         timestamptz created_at
@@ -74,8 +75,13 @@ erDiagram
         uuid profile_id PK, FK
         text bio
         int years_experience
+        text status "pending | approved | rejected | suspended"
+        boolean verified "follows status"
         text availability "available | busy | offline"
-        boolean verified
+        timestamptz applied_at
+        timestamptz reviewed_at
+        uuid reviewed_by FK
+        text review_note
         numeric response_rate
         int rating_count
         int rating_sum
@@ -128,7 +134,7 @@ erDiagram
         numeric inspection_fee
         int eta_minutes
         text message
-        text status "pending | accepted | rejected | with drawn"
+        text status "pending | accepted | rejected | withdrawn"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -180,37 +186,151 @@ erDiagram
 
 ---
 
-## 3. Design Decisions & Architectural Principles
+## 3. The Dual-Role Model
 
-### A. Phone Number Isolation (`contact_details`)
-Customer and professional phone numbers are intentionally isolated from the `profiles` table into `contact_details`. While profile names and avatars must be queryable on public offer cards, direct phone numbers are protected by the `can_see_contact()` function:
-- Phone numbers remain hidden during browsing and offer comparison.
-- Phone numbers are unveiled only after an offer is accepted and the job enters `Assigned`, `In progress`, `Completed`, or `Disputed` status.
-- Administrators retain visibility for user support.
+Under the unified dual-role architecture:
+1. **Unified User Accounts**: Every registered user has `profiles.role = 'user'`. There is no role selection during signup. All users can immediately post jobs, compare quotes, and hire professionals.
+2. **Applying as a Professional**: Any user account can apply to offer professional services. Applying creates a `professional_profiles` record with `status = 'pending'`, along with their selected trade skills, service coverage areas, and verified phone number.
+3. **Application Review & Approval**: Only an administrator (`profiles.role = 'admin'`) can approve, reject, or suspend an application.
+4. **Visibility & Capabilities**: Only professionals with `status = 'approved'` can view Open jobs in the marketplace, submit offers, appear in customer matching, and have their profile publicly visible.
 
-### B. Text with CHECK Constraints vs. PostgreSQL ENUMs
-All state and category flags use native `text` columns with explicit `CHECK` constraints (e.g. `role IN ('customer', 'professional', 'admin')`). This avoids database migration locks when adding states to enums in production and keeps the schema portable.
+### Application Status Flow
 
-### C. Client vs. Backend Service-Role Division
-- **Next.js Frontend (Direct Supabase Access)**: Executes authenticated `SELECT` queries for browsing and lightweight `INSERT`/`UPDATE` operations (e.g. updating profile details, managing service skills/areas, sending chat messages, marking notifications read).
-- **C# / Python Backend Engine (Service Role Access)**: Executes state transitions (e.g. accepting offers, assigning jobs, canceling jobs, creating audit events, creating reviews). The backend bypasses RLS while relying on core database triggers and constraints to enforce invariants.
+```mermaid
+stateDiagram-v2
+    [*] --> None : User Registers (role = 'user')
+    None --> Pending : apply_as_professional()
+    
+    Pending --> Approved : review(approved) [Admin]
+    Pending --> Rejected : review(rejected, with note) [Admin]
+    
+    Rejected --> Pending : apply_as_professional() [Reapply]
+    
+    Approved --> Suspended : review(suspended, with note) [Admin]
+    Suspended --> Approved : review(approved) [Admin Reinstatement]
+    
+    state Approved {
+        [*] --> MarketActive
+        MarketActive: Visible to all authenticated users
+        MarketActive: Can view Open & Offers received jobs
+        MarketActive: Can submit job offers
+    }
 
-### D. Security Definer Search Path Governance
-Every `SECURITY DEFINER` function explicitly defines `SET search_path = ''` and references schema objects using explicit namespaces (`public.profiles`, `auth.users`) to prevent search path injection attacks.
+    state Pending {
+        [*] --> InReview
+        InReview: Profile hidden from public
+        InReview: Cannot view Open jobs
+        InReview: Cannot submit offers
+        InReview: Modifiable skills and areas
+    }
+```
 
 ---
 
-## 4. Key Assumptions
+## 4. Database Functions & RPC Signatures
 
-1. **Bayesian Rating Model Assumptions**:
-   - The rating update trigger (`update_professional_rating`) uses a prior weight $m = 5.0$ and prior mean rating $C = 3.5$:
-     $$\text{avg\_rating\_bayes} = \left(\frac{v}{v + m}\right) \times R + \left(\frac{m}{v + m}\right) \times C$$
-   - *Note*: $m = 5.0$ and $C = 3.5$ are baseline heuristics to prevent new professionals with a single 5-star review from outranking seasoned professionals. These constants should be calibrated as real platform review volume grows.
-2. **City Area Topology**:
-   - `db/seed/001_categories_areas.sql` includes 12 synthetic placeholder areas (`Area 01` to `Area 12`) and graph edges for travel-time routing. These must be replaced with actual municipal sectors and travel duration matrices for the deployment city.
-3. **Directed Graph Edges**:
-   - `area_edges` are directed to support one-way streets and asymmetric traffic congestion. The seed script inserts pairs in both directions.
-4. **Google OAuth & Role Onboarding**:
-   - When a user signs in via Google OAuth, Supabase Auth generates a user without role metadata. `handle_new_user()` provisions a default profile with `role = 'customer'` and `onboarding_completed = false`.
-   - The user is redirected to `/onboarding` where they select either `customer` or `professional`. The `complete_onboarding()` RPC updates their role and sets `onboarding_completed = true` exactly once.
-   - Any attempt by direct client updates to bypass onboarding or escalate roles is blocked at the database trigger layer (`protect_sensitive_columns`).
+The web frontend and administrative interfaces interact with the following database functions:
+
+### 1. `public.apply_as_professional`
+* **Signature**:
+  ```sql
+  apply_as_professional(
+      p_bio text,
+      p_years int,
+      p_category_ids bigint[],
+      p_area_ids bigint[],
+      p_phone text
+  ) RETURNS void
+  ```
+* **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated`.
+* **Behavior**:
+  - Validates bio length (30 to 1,000 characters).
+  - Validates years of experience (0 to 60).
+  - Validates trade categories (1 to 5 active categories).
+  - Validates coverage areas (1 to 12 existing areas).
+  - Validates phone format (plausible international/local 10 to 15 digits).
+  - If no professional profile exists, inserts a new row with `status = 'pending'` and `verified = false`.
+  - If the existing status is `'rejected'`, updates the row back to `'pending'`, resetting `reviewed_at`, `reviewed_by`, and `review_note`.
+  - If status is `'pending'`, `'approved'`, or `'suspended'`, raises exception `22023`.
+  - Atomically replaces `professional_skills` and `professional_areas`, and upserts `contact_details(phone)`.
+
+### 2. `public.review_professional_application`
+* **Signature**:
+  ```sql
+  review_professional_application(
+      p_professional_id uuid,
+      p_decision text,
+      p_note text
+  ) RETURNS void
+  ```
+* **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated` (function enforces admin check internally).
+* **Behavior**:
+  - Requires caller to be an administrator (`public.is_admin() = true`).
+  - Restricts `p_decision` to `'approved'`, `'rejected'`, or `'suspended'`.
+  - Requires a non-empty `p_note` when rejecting or suspending.
+  - Forbids administrators from reviewing their own application.
+  - Updates `status`, sets `verified = (p_decision = 'approved')`, records `reviewed_by = auth.uid()`, `reviewed_at = now()`, and `review_note`.
+  - Generates an in-app notification (`type = 'professional_application_reviewed'`) for the applicant.
+
+### 3. `public.is_approved_professional`
+* **Signature**:
+  ```sql
+  is_approved_professional(uid uuid) RETURNS boolean
+  ```
+* **Security**: `STABLE`, `SECURITY DEFINER`, `SET search_path = ''`.
+* **Behavior**: Returns `true` if and only if the specified user has a `professional_profiles` record with `status = 'approved'`.
+
+### 4. `public.is_admin`
+* **Signature**:
+  ```sql
+  is_admin() RETURNS boolean
+  ```
+* **Security**: `STABLE`, `SECURITY DEFINER`, `SET search_path = ''`.
+* **Behavior**: Returns `true` if the currently authenticated user (`auth.uid()`) has `role = 'admin'` in `public.profiles`.
+
+### 5. `public.protect_sensitive_columns`
+* **Trigger Target**: `BEFORE UPDATE ON public.profiles` and `BEFORE UPDATE ON public.professional_profiles`.
+* **Behavior**: Blocks direct client-initiated updates (`CURRENT_USER IN ('authenticated', 'anon')`) to:
+  - `profiles.role`
+  - `professional_profiles.status`
+  - `professional_profiles.verified`
+  - `professional_profiles.applied_at`, `reviewed_at`, `reviewed_by`, `review_note`
+  - `professional_profiles.response_rate`, `rating_count`, `rating_sum`, `avg_rating_bayes`
+
+### 6. Safety Triggers
+* `trg_validate_offer` on `public.offers`: Requires offering professional to satisfy `is_approved_professional()`, and forbids self-offers (`professional_id <> job.customer_id`).
+* `trg_validate_review` on `public.reviews`: Requires job to be `Completed`, reviewer to match customer, professional to match assigned professional, and forbids self-reviews (`reviewer_id <> professional_id`).
+* `trg_validate_conversation` on `public.conversations`: Forbids self-conversations (`customer_id <> professional_id`).
+
+---
+
+## 5. Row Level Security (RLS) Policy Adjustments
+
+| Table | Policy Name | Command | Access Criteria |
+| :--- | :--- | :---: | :--- |
+| `jobs` | `jobs_select_authorized` | `SELECT` | Job customer, assigned professional, admin, OR approved professional (`is_approved_professional(auth.uid())`) when status is `Open` or `Offers received`. |
+| `professional_profiles` | `professional_profiles_read_authenticated` | `SELECT` | Visible if `status = 'approved'`, owned by caller (`profile_id = auth.uid()`), or caller is an admin. |
+| `professional_profiles` | `professional_profiles_update_owner` | `UPDATE` | Owner can update non-protected fields (protected fields blocked by trigger). |
+| `professional_profiles` | `professional_profiles_admin_update` | `UPDATE` | Admins can update any professional profile. |
+| `professional_skills` | `professional_skills_read` | `SELECT` | Visible if parent profile is `approved`, owned by caller, or caller is admin. |
+| `professional_skills` | `professional_skills_insert_owner` / `update` / `delete` | Write | Modifiable by owner only while application status is `pending` or `approved`. |
+| `professional_areas` | `professional_areas_read` | `SELECT` | Visible if parent profile is `approved`, owned by caller, or caller is admin. |
+| `professional_areas` | `professional_areas_insert_owner` / `update` / `delete` | Write | Modifiable by owner only while application status is `pending` or `approved`. |
+
+---
+
+## 6. Key Assumptions & Follow-Up Directives
+
+1. **Seed Data Sets**:
+   All seed and test professionals must be inserted with `status = 'approved'` and `verified = true`.
+2. **Backend Matching Engine & Data Generator**:
+   - The Python synthetic data generator and C# Core API matching engine must query for:
+     `status = 'approved' AND availability = 'available'`
+   - Matching queries must explicitly exclude professionals where `professional_id = job.customer_id` to prevent self-matching.
+3. **Admin Promotion**:
+   Administrators cannot be created through signup or public RPCs. Administrators must be promoted manually by executing an SQL statement in the Supabase SQL editor:
+   ```sql
+   UPDATE public.profiles SET role = 'admin' WHERE id = '<target-user-uuid>';
+   ```
+4. **Superseded 004 Onboarding Artifacts**:
+   The `onboarding_completed` column and `complete_onboarding()` function from migration 004 are superseded by the dual-role model. Migration 005 safely drops them with `IF EXISTS`. Google OAuth signups do not require a role selection step; all signups default directly to role `user`.
