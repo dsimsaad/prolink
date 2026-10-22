@@ -1,18 +1,52 @@
 import Link from "next/link";
+import Image from "next/image";
 
-export function Brand() {
+export function Brand({
+  className = "",
+  variant = "default",
+  priority = true,
+}: {
+  className?: string;
+  variant?: "default" | "footer";
+  priority?: boolean;
+}) {
+  if (variant === "footer") {
+    return (
+      <Link
+        href="/"
+        className={`brand ${className}`.trim()}
+        aria-label="ProLink home"
+      >
+        <span className="brand-mark">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path
+              d="M10 8h7a5 5 0 0 1 5 5c0 2.76-2.24 5-5 5h-4v6h-3V8zm3 3v4h4a2 2 0 0 0 0-4h-4z"
+              fill="currentColor"
+            />
+            <circle cx="20" cy="19" r="3.5" fill="#2FAE60" />
+          </svg>
+        </span>
+        <span>ProLink</span>
+      </Link>
+    );
+  }
+
   return (
-    <Link href="/" className="brand" aria-label="ProLink home">
-      <span className="brand-mark">
-        <svg viewBox="0 0 32 32" aria-hidden="true">
-          <path
-            d="M10 8h7a5 5 0 0 1 5 5c0 2.76-2.24 5-5 5h-4v6h-3V8zm3 3v4h4a2 2 0 0 0 0-4h-4z"
-            fill="currentColor"
-          />
-          <circle cx="20" cy="19" r="3.5" fill="#2FAE60" />
-        </svg>
-      </span>
-      <span>ProLink</span>
+    <Link
+      href="/"
+      className={`brand ${className}`.trim()}
+      aria-label="ProLink home"
+      style={{ textDecoration: "none" }}
+    >
+      <Image
+        src="/images/Prolink Logo.png"
+        alt="ProLink"
+        width={108}
+        height={42}
+        priority={priority}
+        className="h-8 md:h-10 w-auto object-contain"
+        style={{ height: "auto", width: "auto", maxHeight: "42px" }}
+      />
     </Link>
   );
 }

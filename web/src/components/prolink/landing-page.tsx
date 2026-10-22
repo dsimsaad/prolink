@@ -278,7 +278,7 @@ export function LandingPage() {
         <div className="container">
           <div className="footer-grid">
             <div>
-              <Brand />
+              <Brand variant="footer" />
               <p>
                 Pakistan&apos;s verified skilled artisans network.
                 <br />
