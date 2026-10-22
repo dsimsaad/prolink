@@ -15,20 +15,21 @@
 -- 1. Profiles: Migrate Existing Roles & Update Role Constraint
 -- ------------------------------------------------------------------------------
 
--- Update all existing 'customer' and 'professional' role entries to unified 'user'
-UPDATE public.profiles
-SET role = 'user'
-WHERE role IN ('customer', 'professional');
-
--- Update the check constraint on profiles.role to restrict values to ('user', 'admin')
+-- 1a. Drop existing check constraints first so 'user' value is permitted during update
 ALTER TABLE public.profiles
     DROP CONSTRAINT IF EXISTS profiles_role_check,
     DROP CONSTRAINT IF EXISTS chk_profiles_role;
 
+-- 1b. Update all existing 'customer' and 'professional' role entries to unified 'user'
+UPDATE public.profiles
+SET role = 'user'
+WHERE role IN ('customer', 'professional');
+
+-- 1c. Add the updated check constraint restricting values to ('user', 'admin')
 ALTER TABLE public.profiles
     ADD CONSTRAINT chk_profiles_role CHECK (role IN ('user', 'admin'));
 
--- Set default role for all new profiles to 'user'
+-- 1d. Set default role for all new profiles to 'user'
 ALTER TABLE public.profiles
     ALTER COLUMN role SET DEFAULT 'user';
 
@@ -489,7 +490,8 @@ BEGIN
     WHERE id = NEW.job_id;
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Invalid job: The target job % does not exist.' USING ERRCODE = '23503';
+        RAISE EXCEPTION 'Invalid job: The target job % does not exist.', NEW.job_id
+            USING ERRCODE = '23503';
     END IF;
 
     -- Disallow self-bidding
