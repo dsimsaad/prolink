@@ -3,7 +3,11 @@ import { createClient } from "@/utils/supabase/middleware";
 
 export async function proxy(request: NextRequest) {
   // These public UI pages can be previewed before authentication is configured.
-  if (request.nextUrl.pathname === "/" || request.nextUrl.pathname === "/sign-in") {
+  if (
+    request.nextUrl.pathname === "/" ||
+    request.nextUrl.pathname === "/sign-in" ||
+    request.nextUrl.pathname === "/sign-up"
+  ) {
     return NextResponse.next();
   }
   return createClient(request);

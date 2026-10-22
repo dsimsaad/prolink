@@ -523,7 +523,7 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 72px;
+  margin-bottom: 32px;
 }
 .closing-cta h2 {
   color: white;
@@ -540,6 +540,40 @@ h3 {
 }
 .closing-cta .button:hover {
   background: #a9d3b5;
+}
+.pro-cta {
+  width: calc(100% - 64px);
+  background: var(--tint);
+  border: 1px solid var(--border);
+  padding: 36px 40px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 72px;
+}
+.pro-cta h2 {
+  color: var(--ink);
+  margin: 6px 0 0;
+  font-size: 26px;
+}
+.pro-cta p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+.pro-cta .button.outline {
+  background: white;
+  color: var(--forest);
+  border-color: var(--forest);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pro-cta .button.outline:hover {
+  background: var(--forest);
+  color: white;
 }
 .site-footer {
   background: var(--ink);
@@ -1005,6 +1039,14 @@ h3 {
     gap: 16px;
   }
   .closing-cta {
+    width: calc(100% - 40px);
+    margin-inline: 20px;
+    margin-bottom: 24px;
+    padding: 28px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pro-cta {
     width: calc(100% - 40px);
     margin-inline: 20px;
     margin-bottom: 48px;

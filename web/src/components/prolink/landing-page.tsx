@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Brand, Icon } from "./brand";
+import { createClient } from "@/utils/supabase/client";
 
 const services = [
   "Plumbing",
@@ -33,9 +34,24 @@ const steps = [
   ],
 ];
 
-export function LandingPage() {
+export function LandingPage({
+  initialIsLoggedIn = false,
+}: {
+  initialIsLoggedIn?: boolean;
+}) {
+  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
   const [menuOpen, setMenuOpen] = useState(false);
   const [announcement, setAnnouncement] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session?.user);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
   return (
     <>
       <a className="skip-link" href="#main">
@@ -64,6 +80,11 @@ export function LandingPage() {
             <a href="#trust">Trust & Safety</a>
           </nav>
           <div className="nav-actions">
+            {!isLoggedIn && (
+              <Link href="/sign-up?role=professional" className="button outline small">
+                Become a professional
+              </Link>
+            )}
             <Link href="/sign-in" className="text-link">
               Sign In
             </Link>
@@ -96,6 +117,16 @@ export function LandingPage() {
                 {text}
               </a>
             ))}
+            {!isLoggedIn && (
+              <Link
+                href="/sign-up?role=professional"
+                className="button outline small"
+                style={{ alignSelf: "flex-start", marginTop: "4px" }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Become a professional
+              </Link>
+            )}
           </nav>
         )}
         <nav className="category-nav" aria-label="Service categories">
@@ -273,6 +304,21 @@ export function LandingPage() {
             Post a Job <Icon name="arrow" />
           </Link>
         </section>
+        {!isLoggedIn && (
+          <section className="container pro-cta">
+            <div>
+              <span className="eyebrow">For Skilled Professionals</span>
+              <h2>Grow your work with ProLink</h2>
+              <p>
+                Create a professional profile and get matched with local
+                customers who need your skills.
+              </p>
+            </div>
+            <Link href="/sign-up?role=professional" className="button outline">
+              Become a professional <Icon name="arrow" />
+            </Link>
+          </section>
+        )}
       </main>
       <footer className="site-footer">
         <div className="container">
