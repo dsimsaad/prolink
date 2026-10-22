@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { getProfessionalState } from "@/utils/professional";
 import { Brand } from "@/components/prolink/brand";
+import { SiteFooter } from "@/components/prolink/site-footer";
 import {
   BecomeProfessionalForm,
   type ApplicationInitialData,
@@ -166,14 +167,7 @@ export default async function BecomeProfessionalPage() {
         />
       </main>
 
-      <footer className="site-footer" style={{ marginTop: "auto" }}>
-        <div className="container">
-          <div className="footer-bottom">
-            <span>© 2026 ProLink Technologies Pakistan (Pvt) Ltd.</span>
-            <span>English (Pakistan) · PKR (Rs)</span>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

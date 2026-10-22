@@ -6,7 +6,11 @@ export async function proxy(request: NextRequest) {
   if (
     request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname === "/sign-in" ||
-    request.nextUrl.pathname === "/sign-up"
+    request.nextUrl.pathname === "/sign-up" ||
+    request.nextUrl.pathname === "/contact" ||
+    request.nextUrl.pathname === "/contact-us" ||
+    request.nextUrl.pathname === "/faqs" ||
+    request.nextUrl.pathname === "/faq"
   ) {
     return NextResponse.next();
   }

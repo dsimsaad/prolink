@@ -485,6 +485,8 @@ export function LandingPage({
               <h3>Discover ProLink</h3>
               <a href="#how-it-works">How It Works</a>
               <a href="#trust">Trust & Safety</a>
+              <Link href="/faqs">FAQs</Link>
+              <Link href="/contact">Contact Us</Link>
               <Link href="/sign-in">Sign In</Link>
             </div>
             <div>

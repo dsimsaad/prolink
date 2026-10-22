@@ -1,0 +1,106 @@
+import { SiteHeader } from "@/components/prolink/site-header";
+import { SiteFooter } from "@/components/prolink/site-footer";
+import { ContactForm } from "@/components/prolink/contact-form";
+import { Icon } from "@/components/prolink/brand";
+
+export const metadata = {
+  title: "Contact Us | ProLink",
+  description:
+    "Get in touch with the ProLink support team in Islamabad. Reach us by email, phone, or send us a direct message.",
+};
+
+export default function ContactPage() {
+  return (
+    <div className="subpage-wrapper">
+      <SiteHeader currentPage="contact" />
+      <main id="main">
+        <section className="subpage-hero">
+          <div className="container">
+            <span className="badge">
+              <Icon name="mail" />
+              We&apos;re here to help
+            </span>
+            <h1>Contact ProLink Support</h1>
+            <p>
+              Have a question about a job, your professional application, or need
+              assistance? Our dedicated team in Islamabad is ready to assist.
+            </p>
+          </div>
+        </section>
+
+        <section className="subpage-body container">
+          <div className="contact-grid-container">
+            {/* Contact Details Stack */}
+            <div className="contact-cards-stack">
+              <div className="contact-detail-card">
+                <span className="contact-icon-box">
+                  <Icon name="phone" />
+                </span>
+                <div>
+                  <h3>Direct Phone Helpline</h3>
+                  <p>Speak directly with our customer support center in Pakistan.</p>
+                  <strong>+92 (51) 111-776-546</strong>
+                  <div style={{ marginTop: "4px", fontSize: "12px", color: "var(--muted)" }}>
+                    WhatsApp: +92 (300) 123-4567
+                  </div>
+                </div>
+              </div>
+
+              <div className="contact-detail-card">
+                <span className="contact-icon-box">
+                  <Icon name="mail" />
+                </span>
+                <div>
+                  <h3>Email Inquiries</h3>
+                  <p>Send detailed documentation, job references, or partnership inquiries.</p>
+                  <a
+                    href="mailto:support@prolink.pk"
+                    style={{ fontWeight: 700, color: "var(--forest)", fontSize: "14px" }}
+                  >
+                    support@prolink.pk
+                  </a>
+                  <div style={{ marginTop: "4px", fontSize: "12px", color: "var(--muted)" }}>
+                    Escrow Disputes: disputes@prolink.pk
+                  </div>
+                </div>
+              </div>
+
+              <div className="contact-detail-card">
+                <span className="contact-icon-box">
+                  <Icon name="pin" />
+                </span>
+                <div>
+                  <h3>Head Office</h3>
+                  <p>
+                    ProLink Technologies Pakistan (Pvt) Ltd.
+                    <br />
+                    4th Floor, Evacuee Trust Complex, F-5/1,
+                    <br />
+                    Islamabad, 44000, Pakistan
+                  </p>
+                </div>
+              </div>
+
+              <div className="contact-detail-card">
+                <span className="contact-icon-box">
+                  <Icon name="clock" />
+                </span>
+                <div>
+                  <h3>Operating Hours</h3>
+                  <p>Monday through Saturday: 9:00 AM – 8:00 PM PKT</p>
+                  <span style={{ fontSize: "12px", color: "var(--forest)", fontWeight: 600 }}>
+                    Emergency escalation available 24/7 for active escrow jobs
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Direct Email / Contact Form */}
+            <ContactForm />
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
