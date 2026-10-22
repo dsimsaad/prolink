@@ -62,29 +62,29 @@ button {
   background: var(--mint);
   color: var(--ink);
 }
-h1,
-h2,
-h3,
+h1:where(:not(.portal-root *)),
+h2:where(:not(.portal-root *)),
+h3:where(:not(.portal-root *)),
 p {
   margin: 0;
 }
-h1,
-h2,
-h3 {
+h1:where(:not(.portal-root *)),
+h2:where(:not(.portal-root *)),
+h3:where(:not(.portal-root *)) {
   color: var(--ink);
 }
-h1 {
+h1:where(:not(.portal-root *)) {
   font-weight: 800;
   letter-spacing: -0.035em;
 }
-h2 {
+h2:where(:not(.portal-root *)) {
   font-size: 30px;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.025em;
   margin-top: 8px;
 }
-h3 {
+h3:where(:not(.portal-root *)) {
   font-size: 16px;
   font-weight: 700;
 }
@@ -219,6 +219,11 @@ h3 {
   gap: 28px;
   font-size: 13px;
   font-weight: 500;
+}
+.desktop-nav a[aria-current="page"],
+.mobile-nav a[aria-current="page"] {
+  color: var(--forest);
+  font-weight: 700;
 }
 .desktop-nav a:hover,
 .category-nav a:hover {

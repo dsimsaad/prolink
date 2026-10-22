@@ -7,9 +7,9 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const rawNext = searchParams.get("next");
 
-  // Validate "next" parameter to strictly allow "/" and "/become-professional"
+  // Allow only known internal destinations.
   let next = "/";
-  if (rawNext === "/" || rawNext === "/become-professional") {
+  if (rawNext === "/" || rawNext === "/become-professional" || rawNext === "/user" || rawNext === "/admin") {
     next = rawNext;
   }
 

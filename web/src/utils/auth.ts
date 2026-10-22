@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/server";
  * Server-side guard for protected pages and layouts.
  * Ensures the user is logged in.
  */
-export async function requireUser() {
+export async function requireUser(next = "/user") {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
@@ -16,7 +16,7 @@ export async function requireUser() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    redirect("/sign-in");
+    redirect(`/sign-in?next=${encodeURIComponent(next)}`);
   }
 
   const { data: profile } = await supabase

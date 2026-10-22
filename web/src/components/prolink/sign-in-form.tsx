@@ -16,8 +16,8 @@ function getSafeNextPath(searchParams: URLSearchParams): string {
     return "/become-professional";
   }
 
-  // Strict allow-list: only "/" and "/become-professional"
-  if (rawNext === "/" || rawNext === "/become-professional") {
+  // Allow only known internal destinations.
+  if (rawNext === "/" || rawNext === "/become-professional" || rawNext === "/user" || rawNext === "/admin") {
     return rawNext;
   }
 

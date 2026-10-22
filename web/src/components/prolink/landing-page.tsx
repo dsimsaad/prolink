@@ -2,22 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Brand, Icon } from "./brand";
-import { createClient } from "@/utils/supabase/client";
 import { BecomeProfessionalCta } from "./become-professional-cta";
-import type { ProfessionalState } from "@/utils/professional";
+import { HomeNavbar, services } from "./home-navbar";
+import { useNavigationAccount, type NavigationAccountProps } from "./use-navigation-account";
 
-const services = [
-  "Plumbing",
-  "Electrical",
-  "AC Repair & HVAC",
-  "Carpentry",
-  "Appliance Repair",
-  "Deep Cleaning",
-  "Home Tutoring",
-];
 const steps = [
   [
     "Post your job request",
@@ -37,80 +27,9 @@ const steps = [
   ],
 ];
 
-interface LandingPageProps {
-  initialIsLoggedIn?: boolean;
-  initialProState?: ProfessionalState;
-  initialUserName?: string;
-  initialReviewNote?: string | null;
-}
-
-export function LandingPage({
-  initialIsLoggedIn = false,
-  initialProState = "logged_out",
-  initialUserName = "User",
-  initialReviewNote = null,
-}: LandingPageProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
-  const [proState, setProState] = useState<ProfessionalState>(initialProState);
-  const [userName, setUserName] = useState(initialUserName);
-  const [reviewNote, setReviewNote] = useState(initialReviewNote);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+export function LandingPage(props: NavigationAccountProps) {
+  const { proState, reviewNote } = useNavigationAccount(props);
   const [announcement, setAnnouncement] = useState(true);
-  const userMenuRef = useRef<HTMLDivElement>(null);
-
-  const router = useRouter();
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(event.target as Node)
-      ) {
-        setUserMenuOpen(false);
-      }
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setUserMenuOpen(false);
-      }
-    }
-    if (userMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleKeyDown);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [userMenuOpen]);
-
-  useEffect(() => {
-    const supabase = createClient();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const loggedIn = !!session?.user;
-      setIsLoggedIn(loggedIn);
-      if (!loggedIn) {
-        setProState("logged_out");
-        setUserName("User");
-        setReviewNote(null);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setIsLoggedIn(false);
-    setProState("logged_out");
-    setUserName("User");
-    setReviewNote(null);
-    setUserMenuOpen(false);
-    router.refresh();
-  };
 
   return (
     <>
@@ -131,170 +50,7 @@ export function LandingPage({
           </button>
         </div>
       )}
-      <header className="site-header">
-        <div className="container nav-row">
-          <Brand />
-          <nav className="desktop-nav" aria-label="Main navigation">
-            <a href="#services">Find Professionals</a>
-            <a href="#how-it-works">How It Works</a>
-            <a href="#trust">Trust & Safety</a>
-            <Link href="/faqs">FAQs</Link>
-            <Link href="/contact">Contact</Link>
-          </nav>
-          <div className="nav-actions">
-            {isLoggedIn ? (
-              <div className="user-menu-container" ref={userMenuRef}>
-                <button
-                  type="button"
-                  className="user-menu-button"
-                  aria-expanded={userMenuOpen}
-                  aria-haspopup="true"
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                >
-                  <span className="user-avatar-pill">
-                    {userName ? userName.charAt(0).toUpperCase() : "U"}
-                  </span>
-                  <span className="user-name-text">{userName}</span>
-                  <span style={{ fontSize: "9px", opacity: 0.7, marginLeft: "2px" }}>
-                    ▼
-                  </span>
-                </button>
-                {userMenuOpen && (
-                  <div className="user-dropdown-panel" role="menu">
-                    <div className="user-dropdown-header">
-                      <strong>{userName}</strong>
-                      <small>
-                        {proState === "approved"
-                          ? "Verified Professional"
-                          : proState === "pending"
-                            ? "Application Under Review"
-                            : proState === "rejected"
-                              ? "Application Needs Update"
-                              : proState === "suspended"
-                                ? "Account On Hold"
-                                : "Customer Account"}
-                      </small>
-                    </div>
-                    <BecomeProfessionalCta
-                      variant="menu-item"
-                      state={proState}
-                      onClick={() => setUserMenuOpen(false)}
-                    />
-                    <button
-                      type="button"
-                      className="sign-out-btn"
-                      role="menuitem"
-                      onClick={handleSignOut}
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link href="/sign-in" className="text-link">
-                Sign In
-              </Link>
-            )}
-            <Link href="/sign-in" className="button small">
-              Post a Job
-            </Link>
-            <button
-              className="menu-toggle"
-              aria-label="Toggle navigation"
-              aria-expanded={menuOpen}
-              aria-controls="mobile-nav"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? "×" : "☰"}
-            </button>
-          </div>
-        </div>
-        {menuOpen && (
-          <nav
-            id="mobile-nav"
-            className="mobile-nav"
-            aria-label="Mobile navigation"
-          >
-            {isLoggedIn && (
-              <div className="mobile-user-banner">
-                <div>
-                  Signed in as <strong>{userName}</strong>
-                </div>
-                {proState === "approved" && (
-                  <span
-                    style={{
-                      display: "block",
-                      color: "var(--forest)",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    ✓ Verified Professional
-                  </span>
-                )}
-                {proState === "pending" && (
-                  <span
-                    style={{
-                      display: "block",
-                      color: "#1d4ed8",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    ⏳ Application Under Review
-                  </span>
-                )}
-              </div>
-            )}
-            {[
-              ["Find Professionals", "#services"],
-              ["How It Works", "#how-it-works"],
-              ["Trust & Safety", "#trust"],
-              ["FAQs", "/faqs"],
-              ["Contact", "/contact"],
-            ].map(([text, href]) => (
-              <Link key={href} href={href} onClick={() => setMenuOpen(false)}>
-                {text}
-              </Link>
-            ))}
-            {isLoggedIn ? (
-              <>
-                <BecomeProfessionalCta
-                  variant="mobile"
-                  state={proState}
-                  onClick={() => setMenuOpen(false)}
-                />
-                <button
-                  type="button"
-                  className="mobile-sign-out-btn"
-                  onClick={handleSignOut}
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <Link
-                href="/sign-in"
-                className="text-link"
-                style={{ padding: "8px 0" }}
-                onClick={() => setMenuOpen(false)}
-              >
-                Sign In
-              </Link>
-            )}
-          </nav>
-        )}
-        <nav className="category-nav" aria-label="Service categories">
-          <div className="container">
-            {services.map((service) => (
-              <a key={service} href="#services">
-                {service}
-              </a>
-            ))}
-          </div>
-        </nav>
-      </header>
+      <HomeNavbar {...props} />
       <main id="main">
         <section className="hero">
           <div className="container hero-grid">

@@ -1,0 +1,31 @@
+"use client";
+import { BecomeProfessionalCta } from '@/components/prolink/become-professional-cta';
+import Link from 'next/link';
+import { usePathname,useRouter } from 'next/navigation';
+import { useEffect,useState } from 'react';
+import { AdminShell } from './components/layout/AdminShell';
+import { CompareDrawer } from './components/layout/CompareDrawer';
+import { CustomerShell } from './components/layout/CustomerShell';
+import { ToastContainer } from './components/ui/ToastContainer';
+import { AdminJobsOffersPage } from './pages/admin/AdminJobsOffersPage';
+import { AdminMatchingAIPage } from './pages/admin/AdminMatchingAIPage';
+import { AdminOverview } from './pages/admin/AdminOverview';
+import { AdminUsersPage } from './pages/admin/AdminUsersPage';
+import { AdminVerificationQueue } from './pages/admin/AdminVerificationQueue';
+import { CustomerJobDetails } from './pages/customer/CustomerJobDetails';
+import { CustomerOverview } from './pages/customer/CustomerOverview';
+import { MyJobsPage } from './pages/customer/MyJobsPage';
+import { PostJobPage } from './pages/customer/PostJobPage';
+import type { PortalProps } from './portal-loader';
+import { initializePortal,syncPortalPath } from './store/marketplaceStore';
+export default function PortalApp({ role, user, professionalState }: PortalProps) {
+ const router = useRouter(); const path = usePathname();
+ useState(() => { initializePortal({ ...user, role, phone: '', avatar: '', city: '', area: '', status: 'active', joinedDate: '' }, router.push, path); return true; });
+ useEffect(() => { syncPortalPath(path); }, [path]);
+ const section = path.split('/')[2] || 'overview';
+ const adminPages: Record<string, React.ReactNode> = { overview: <AdminOverview />, users: <AdminUsersPage />, verification: <AdminVerificationQueue />, jobs: <AdminJobsOffersPage />, matching: <AdminMatchingAIPage /> };
+ const userPages: Record<string, React.ReactNode> = { overview: <CustomerOverview />, jobs: path.split('/')[3] ? <CustomerJobDetails jobId={path.split('/')[3]} /> : <MyJobsPage />, 'post-job': <PostJobPage /> };
+ const content = (role === 'admin' ? adminPages : userPages)[section] || <section className="p-8"><h1>{section.replaceAll('-', ' ')}</h1><p>This section is not available yet.</p><Link href={role === 'admin' ? '/admin' : '/user'}>Back to dashboard</Link></section>;
+ const Shell = role === 'admin' ? AdminShell : CustomerShell;
+ return <div className="portal-root"><Shell><div className="px-6 py-3 bg-amber-50 text-sm flex flex-wrap items-center justify-between gap-3"><p>Design preview: marketplace figures and actions use sample data.</p>{role === 'customer' && <BecomeProfessionalCta state={professionalState} variant="mobile" />}{role === 'admin' && <Link href="/user">My user dashboard</Link>}</div><div key={path}>{content}</div><CompareDrawer /><ToastContainer /></Shell></div>;
+}
