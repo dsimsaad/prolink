@@ -7,6 +7,7 @@ import { useState, type FormEvent } from "react";
 import { Icon } from "./brand";
 import { createClient } from "@/utils/supabase/client";
 import { getSignInDestination } from "@/utils/auth-destination";
+import { clearOAuthDestination, rememberOAuthDestination } from "@/utils/oauth-navigation";
 
 export function SignInForm({
   defaultMode,
@@ -38,7 +39,9 @@ export function SignInForm({
       setLoading(true);
       const supabase = createClient();
       const redirectUrl = new URL(`${window.location.origin}/auth/callback`);
-      redirectUrl.searchParams.set("next", safeNext);
+      // Use the exact callback URL for normal Google sign-in.
+      if (safeNext !== "/user") redirectUrl.searchParams.set("next", safeNext);
+      rememberOAuthDestination(safeNext);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -46,9 +49,11 @@ export function SignInForm({
         },
       });
       if (error) {
+        clearOAuthDestination();
         setMessage(error.message);
       }
     } catch (err) {
+      clearOAuthDestination();
       setMessage(
         err instanceof Error
           ? err.message

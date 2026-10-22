@@ -3,6 +3,7 @@
 import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import type { ProfessionalState } from '@/utils/professional';
+import { clearOAuthDestination, finishOAuthNavigation, recoverOAuthCallback } from '@/utils/oauth-navigation';
 
 interface Account {
   isLoggedIn: boolean;
@@ -19,6 +20,7 @@ export function NavigationAccountProvider({ children }: { children: ReactNode })
   const [refreshVersion, setRefreshVersion] = useState(0);
 
   useEffect(() => {
+    if (recoverOAuthCallback()) return;
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) return;
 
     const supabase = createClient();
@@ -32,6 +34,7 @@ export function NavigationAccountProvider({ children }: { children: ReactNode })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       const user = session?.user;
+      if (user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && finishOAuthNavigation()) return;
       if (user && user.id === currentUserId && event !== 'USER_UPDATED') return;
       currentUserId = user?.id || null;
       const requestRevision = ++revision;
@@ -63,6 +66,7 @@ export function NavigationAccountProvider({ children }: { children: ReactNode })
   }, [refreshVersion]);
 
   const handleSignOut = async () => {
+    clearOAuthDestination();
     const { error } = await createClient().auth.signOut();
     if (error) return;
     setAccount(signedOut);
