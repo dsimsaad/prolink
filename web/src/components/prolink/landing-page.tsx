@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Brand, Icon } from "./brand";
 import { createClient } from "@/utils/supabase/client";
+import { BecomeProfessionalCta } from "./become-professional-cta";
+import type { ProfessionalState } from "@/utils/professional";
 
 const services = [
   "Plumbing",
@@ -34,24 +37,83 @@ const steps = [
   ],
 ];
 
+interface LandingPageProps {
+  initialIsLoggedIn?: boolean;
+  initialProState?: ProfessionalState;
+  initialUserName?: string;
+  initialReviewNote?: string | null;
+}
+
 export function LandingPage({
   initialIsLoggedIn = false,
-}: {
-  initialIsLoggedIn?: boolean;
-}) {
+  initialProState = "logged_out",
+  initialUserName = "User",
+  initialReviewNote = null,
+}: LandingPageProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
+  const [proState, setProState] = useState<ProfessionalState>(initialProState);
+  const [userName, setUserName] = useState(initialUserName);
+  const [reviewNote, setReviewNote] = useState(initialReviewNote);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [announcement, setAnnouncement] = useState(true);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setUserMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [userMenuOpen]);
+
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session?.user);
+      const loggedIn = !!session?.user;
+      setIsLoggedIn(loggedIn);
+      if (!loggedIn) {
+        setProState("logged_out");
+        setUserName("User");
+        setReviewNote(null);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setIsLoggedIn(false);
+    setProState("logged_out");
+    setUserName("User");
+    setReviewNote(null);
+    setUserMenuOpen(false);
+    router.refresh();
+  };
+
   return (
     <>
       <a className="skip-link" href="#main">
@@ -80,14 +142,61 @@ export function LandingPage({
             <a href="#trust">Trust & Safety</a>
           </nav>
           <div className="nav-actions">
-            {!isLoggedIn && (
-              <Link href="/sign-up?role=professional" className="button outline small">
-                Become a professional
+            <BecomeProfessionalCta variant="navbar" state={proState} />
+            {isLoggedIn ? (
+              <div className="user-menu-container" ref={userMenuRef}>
+                <button
+                  type="button"
+                  className="user-menu-button"
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="true"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                >
+                  <span className="user-avatar-pill">
+                    {userName ? userName.charAt(0).toUpperCase() : "U"}
+                  </span>
+                  <span className="user-name-text">{userName}</span>
+                  <span style={{ fontSize: "9px", opacity: 0.7, marginLeft: "2px" }}>
+                    ▼
+                  </span>
+                </button>
+                {userMenuOpen && (
+                  <div className="user-dropdown-panel" role="menu">
+                    <div className="user-dropdown-header">
+                      <strong>{userName}</strong>
+                      <small>
+                        {proState === "approved"
+                          ? "Verified Professional"
+                          : proState === "pending"
+                            ? "Application Under Review"
+                            : proState === "rejected"
+                              ? "Application Needs Update"
+                              : proState === "suspended"
+                                ? "Account On Hold"
+                                : "Customer Account"}
+                      </small>
+                    </div>
+                    <BecomeProfessionalCta
+                      variant="menu-item"
+                      state={proState}
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <button
+                      type="button"
+                      className="sign-out-btn"
+                      role="menuitem"
+                      onClick={handleSignOut}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href="/sign-in" className="text-link">
+                Sign In
               </Link>
             )}
-            <Link href="/sign-in" className="text-link">
-              Sign In
-            </Link>
             <Link href="/sign-in" className="button small">
               Post a Job
             </Link>
@@ -108,6 +217,37 @@ export function LandingPage({
             className="mobile-nav"
             aria-label="Mobile navigation"
           >
+            {isLoggedIn && (
+              <div className="mobile-user-banner">
+                <div>
+                  Signed in as <strong>{userName}</strong>
+                </div>
+                {proState === "approved" && (
+                  <span
+                    style={{
+                      display: "block",
+                      color: "var(--forest)",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    ✓ Verified Professional
+                  </span>
+                )}
+                {proState === "pending" && (
+                  <span
+                    style={{
+                      display: "block",
+                      color: "#1d4ed8",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    ⏳ Application Under Review
+                  </span>
+                )}
+              </div>
+            )}
             {[
               ["Find Professionals", "#services"],
               ["How It Works", "#how-it-works"],
@@ -117,15 +257,37 @@ export function LandingPage({
                 {text}
               </a>
             ))}
-            {!isLoggedIn && (
-              <Link
-                href="/sign-up?role=professional"
-                className="button outline small"
-                style={{ alignSelf: "flex-start", marginTop: "4px" }}
-                onClick={() => setMenuOpen(false)}
-              >
-                Become a professional
-              </Link>
+            {isLoggedIn ? (
+              <>
+                <BecomeProfessionalCta
+                  variant="mobile"
+                  state={proState}
+                  onClick={() => setMenuOpen(false)}
+                />
+                <button
+                  type="button"
+                  className="mobile-sign-out-btn"
+                  onClick={handleSignOut}
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="text-link"
+                  style={{ padding: "8px 0" }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+                <BecomeProfessionalCta
+                  variant="mobile"
+                  state={proState}
+                  onClick={() => setMenuOpen(false)}
+                />
+              </>
             )}
           </nav>
         )}
@@ -304,21 +466,11 @@ export function LandingPage({
             Post a Job <Icon name="arrow" />
           </Link>
         </section>
-        {!isLoggedIn && (
-          <section className="container pro-cta">
-            <div>
-              <span className="eyebrow">For Skilled Professionals</span>
-              <h2>Grow your work with ProLink</h2>
-              <p>
-                Create a professional profile and get matched with local
-                customers who need your skills.
-              </p>
-            </div>
-            <Link href="/sign-up?role=professional" className="button outline">
-              Become a professional <Icon name="arrow" />
-            </Link>
-          </section>
-        )}
+        <BecomeProfessionalCta
+          variant="landing-section"
+          state={proState}
+          reviewNote={reviewNote}
+        />
       </main>
       <footer className="site-footer">
         <div className="container">

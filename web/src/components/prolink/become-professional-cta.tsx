@@ -10,7 +10,10 @@ interface BecomeProfessionalCtaProps {
   onClick?: () => void;
 }
 
-export function getCtaConfig(state: ProfessionalState): {
+export function getCtaConfig(
+  state: ProfessionalState,
+  variant?: "navbar" | "landing-section" | "menu-item" | "mobile"
+): {
   href: string;
   label: string;
 } {
@@ -28,17 +31,28 @@ export function getCtaConfig(state: ProfessionalState): {
     case "pending":
       return {
         href: "/become-professional",
-        label: "Application under review",
+        label:
+          variant === "menu-item" || variant === "mobile"
+            ? "Application pending"
+            : "Application under review",
       };
     case "approved":
       return {
         href: "/become-professional",
-        label: "Verified professional",
+        label:
+          variant === "menu-item" || variant === "mobile"
+            ? "Professional active"
+            : "Verified professional",
       };
     case "rejected":
       return {
         href: "/become-professional",
-        label: "Update and reapply",
+        label:
+          variant === "navbar"
+            ? "Reapply as professional"
+            : variant === "menu-item"
+              ? "View application"
+              : "Update and reapply",
       };
     case "suspended":
       return {
@@ -55,29 +69,24 @@ export function BecomeProfessionalCta({
   className = "",
   onClick,
 }: BecomeProfessionalCtaProps) {
-  const { href, label } = getCtaConfig(state);
+  const { href, label } = getCtaConfig(state, variant);
 
   if (variant === "navbar") {
-    // Style adjustments depending on status for visual feedback
-    const isApproved = state === "approved";
-    const isPending = state === "pending";
-    const isAlert = state === "rejected" || state === "suspended";
+    // For pending, approved, or suspended: DO NOT show a prominent primary CTA button in the navbar.
+    if (state === "pending" || state === "approved" || state === "suspended") {
+      return null;
+    }
+
+    const isRejected = state === "rejected";
 
     return (
       <Link
         href={href}
         className={`button outline small ${
-          isApproved
-            ? "border-emerald-600 text-emerald-800 hover:bg-emerald-50"
-            : isAlert
-              ? "border-amber-500 text-amber-800 hover:bg-amber-50"
-              : isPending
-                ? "border-blue-400 text-blue-800 hover:bg-blue-50"
-                : ""
+          isRejected ? "border-amber-500 text-amber-800 hover:bg-amber-50" : ""
         } ${className}`.trim()}
         onClick={onClick}
       >
-        {isApproved && <Icon name="check" className="w-3.5 h-3.5 inline mr-1 text-emerald-600" />}
         {label}
       </Link>
     );
@@ -100,7 +109,7 @@ export function BecomeProfessionalCta({
     return (
       <Link
         href={href}
-        className={`dropdown-item block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 ${className}`.trim()}
+        className={className.trim()}
         role="menuitem"
         onClick={onClick}
       >

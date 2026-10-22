@@ -575,6 +575,140 @@ h3 {
   background: var(--forest);
   color: white;
 }
+
+/* User Menu Dropdown */
+.user-menu-container {
+  position: relative;
+  display: inline-block;
+}
+.user-menu-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.user-menu-button:hover,
+.user-menu-button:focus-visible {
+  border-color: var(--forest);
+  background: var(--tint);
+  outline: none;
+}
+.user-avatar-pill {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--mint);
+  color: var(--forest);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+.user-name-text {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .user-name-text {
+    display: none;
+  }
+}
+.user-dropdown-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 230px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.user-dropdown-header {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.user-dropdown-header strong {
+  display: block;
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-dropdown-header small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+.user-dropdown-panel a,
+.user-dropdown-panel button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--body);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+.user-dropdown-panel a:hover,
+.user-dropdown-panel button:hover {
+  background: var(--tint);
+  color: var(--forest);
+}
+.user-dropdown-panel .sign-out-btn {
+  color: #b91c1c;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 8px;
+}
+.user-dropdown-panel .sign-out-btn:hover {
+  background: #fef2f2;
+  color: #991b1b;
+}
+.mobile-user-banner {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.mobile-user-banner strong {
+  color: var(--ink);
+}
+.mobile-sign-out-btn {
+  text-align: left;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  color: #b91c1c;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+}
 .site-footer {
   background: var(--ink);
   color: #a3b1a8;
