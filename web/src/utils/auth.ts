@@ -4,8 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 
 /**
  * Server-side guard for protected pages and layouts.
- * Ensures the user is logged in, and redirects to /onboarding if
- * onboarding_completed is false.
+ * Ensures the user is logged in.
  */
 export async function requireUser() {
   const cookieStore = await cookies();
@@ -22,14 +21,9 @@ export async function requireUser() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, role, full_name, onboarding_completed")
+    .select("id, role, full_name")
     .eq("id", user.id)
     .single();
-
-  // If user has not completed role onboarding, redirect to /onboarding
-  if (profile && profile.onboarding_completed === false) {
-    redirect("/onboarding");
-  }
 
   return { user, profile, supabase };
 }

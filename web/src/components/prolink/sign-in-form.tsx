@@ -7,7 +7,22 @@ import { useState, type FormEvent } from "react";
 import { Brand, Icon } from "./brand";
 import { createClient } from "@/utils/supabase/client";
 
-type AllowedRole = "customer" | "professional";
+function getSafeNextPath(searchParams: URLSearchParams): string {
+  const rawNext = searchParams.get("next");
+  const role = searchParams.get("role");
+
+  // Backwards compatibility: ?role=professional treats destination as /become-professional
+  if (role === "professional") {
+    return "/become-professional";
+  }
+
+  // Strict allow-list: only "/" and "/become-professional"
+  if (rawNext === "/" || rawNext === "/become-professional") {
+    return rawNext;
+  }
+
+  return "/";
+}
 
 export function SignInForm({
   defaultMode,
@@ -18,7 +33,7 @@ export function SignInForm({
   const searchParams = useSearchParams();
 
   const queryMode = searchParams.get("mode");
-  const hasRoleParam = searchParams.has("role");
+  const hasRoleParam = searchParams.get("role") === "professional";
   const initialMode =
     defaultMode === "signup" || queryMode === "signup" || hasRoleParam
       ? "signup"
@@ -26,29 +41,27 @@ export function SignInForm({
 
   const queryError = searchParams.get("error") || "";
 
-  // Strict role sanitization: accept ONLY exact values 'customer' and 'professional'.
-  // Anything else (e.g. 'admin', undefined, unexpected values) resolves strictly to 'customer'.
-  const rawRole = searchParams.get("role")?.toLowerCase();
-  const initialRole: AllowedRole =
-    rawRole === "professional" ? "professional" : "customer";
-
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
-  const [role, setRole] = useState<AllowedRole>(initialRole);
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const displayMessage = message || queryError;
+  const safeNext = getSafeNextPath(searchParams);
 
   async function handleGoogleSignIn() {
     try {
       setMessage("");
       setLoading(true);
       const supabase = createClient();
+      const redirectUrl = new URL(`${window.location.origin}/auth/callback`);
+      if (safeNext !== "/") {
+        redirectUrl.searchParams.set("next", safeNext);
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl.toString(),
         },
       });
       if (error) {
@@ -85,15 +98,11 @@ export function SignInForm({
         if (error) {
           setMessage(error.message);
         } else {
-          router.push("/");
+          router.push(safeNext);
           router.refresh();
         }
       } else {
-        // Sign up flow
-        // Double-check role sanitization: only 'customer' or 'professional' (never 'admin')
-        const safeRole: AllowedRole =
-          role === "professional" ? "professional" : "customer";
-
+        // Sign up flow sends full_name only; no role is sent
         const fullName = (formData.get("fullName") as string)?.trim() || "";
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -101,7 +110,6 @@ export function SignInForm({
           options: {
             data: {
               full_name: fullName,
-              role: safeRole,
             },
           },
         });
@@ -109,8 +117,8 @@ export function SignInForm({
         if (error) {
           setMessage(error.message);
         } else if (data.session) {
-          // Immediately authenticated (email confirmation disabled in Supabase)
-          router.push("/onboarding");
+          // Immediately authenticated
+          router.push(safeNext);
           router.refresh();
         } else if (data.user) {
           // Email confirmation is required by Supabase configuration
@@ -143,16 +151,12 @@ export function SignInForm({
           <h1>
             {mode === "signin"
               ? "Sign in to your account"
-              : role === "professional"
-                ? "Create your professional account"
-                : "Create your account"}
+              : "Create your account"}
           </h1>
           <p className="auth-intro">
             {mode === "signin"
               ? "Access your jobs, verify real-time offers, or manage your service business."
-              : role === "professional"
-                ? "Join ProLink to offer your trade skills, connect with local customers, and grow your clientele."
-                : "Join ProLink to connect with verified service professionals or offer your trade skills."}
+              : "Join ProLink to connect with verified service professionals or offer your trade skills."}
           </p>
 
           <div className="social-buttons" style={{ gridTemplateColumns: "1fr" }}>
@@ -265,9 +269,7 @@ export function SignInForm({
                 ? "Processing..."
                 : mode === "signin"
                   ? "Sign In"
-                  : role === "professional"
-                    ? "Create your professional account"
-                    : "Create Account"}{" "}
+                  : "Create Account"}{" "}
               <Icon name="arrow" />
             </button>
           </form>
@@ -303,54 +305,27 @@ export function SignInForm({
                 </button>
               </>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                <div>
-                  <button
-                    type="button"
-                    className="text-link"
-                    onClick={() => {
-                      setRole((prev) =>
-                        prev === "professional" ? "customer" : "professional",
-                      );
-                      setMessage("");
-                    }}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      padding: 0,
-                      cursor: "pointer",
-                      fontSize: "inherit",
-                      fontWeight: 600,
-                      color: "var(--forest)",
-                    }}
-                  >
-                    {role === "professional"
-                      ? "Looking to hire? Sign up as a customer"
-                      : "Want to offer your services? Become a professional"}
-                  </button>
-                </div>
-                <div>
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    className="text-link"
-                    onClick={() => {
-                      setMode("signin");
-                      setMessage("");
-                    }}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      padding: 0,
-                      cursor: "pointer",
-                      fontSize: "inherit",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Sign in
-                  </button>
-                </div>
-              </div>
+              <>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className="text-link"
+                  onClick={() => {
+                    setMode("signin");
+                    setMessage("");
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    fontSize: "inherit",
+                    fontWeight: 600,
+                  }}
+                >
+                  Sign in
+                </button>
+              </>
             )}
           </div>
 

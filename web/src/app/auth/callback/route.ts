@@ -7,14 +7,9 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const rawNext = searchParams.get("next");
 
-  // Validate "next" parameter to prevent open redirect vulnerabilities
+  // Validate "next" parameter to strictly allow "/" and "/become-professional"
   let next = "/";
-  if (
-    rawNext &&
-    rawNext.startsWith("/") &&
-    !rawNext.startsWith("//") &&
-    !rawNext.startsWith("/\\")
-  ) {
+  if (rawNext === "/" || rawNext === "/become-professional") {
     next = rawNext;
   }
 
@@ -31,25 +26,15 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (!userError && user) {
-        // Look up the profile to inspect onboarding status
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("onboarding_completed")
-          .eq("id", user.id)
-          .single();
-
-        const targetPath =
-          profile?.onboarding_completed === false ? "/onboarding" : next;
-
         const forwardedHost = request.headers.get("x-forwarded-host");
         const isLocalEnv = process.env.NODE_ENV === "development";
 
         if (isLocalEnv) {
-          return NextResponse.redirect(`${origin}${targetPath}`);
+          return NextResponse.redirect(`${origin}${next}`);
         } else if (forwardedHost) {
-          return NextResponse.redirect(`https://${forwardedHost}${targetPath}`);
+          return NextResponse.redirect(`https://${forwardedHost}${next}`);
         } else {
-          return NextResponse.redirect(`${origin}${targetPath}`);
+          return NextResponse.redirect(`${origin}${next}`);
         }
       }
     }
