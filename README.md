@@ -87,7 +87,7 @@ flowchart TD
         Browser["User Browser (Desktop / Mobile)"]
     end
 
-    subgraph VercelWeb["Vercel Project 1 (Frontend)"]
+    subgraph VercelWeb["Vercel (Frontend)"]
         NextJS["Next.js Web App\n(React 19 / App Router)"]
     end
 
@@ -98,11 +98,11 @@ flowchart TD
         SupaStorage["Supabase Storage\n(Job & Profile Images)"]
     end
 
-    subgraph RenderAPI["Render Web Service (Free Docker Tier)"]
+    subgraph RenderAPI["Render Web Service 1 (Core Engine)"]
         CSharpAPI["C# Core Engine\n(ASP.NET Core Web API & Custom DSA)"]
     end
 
-    subgraph VercelInsight["Vercel Project 2 (Data Science)"]
+    subgraph RenderInsight["Render Web Service 2 (Insight Data Science)"]
         PythonAPI["Python Insight Service\n(FastAPI / Scikit-Learn)"]
     end
 
@@ -140,9 +140,9 @@ flowchart TD
 
 | Layer / Component | Technology | Hosting / Infrastructure |
 | :--- | :--- | :--- |
-| **Frontend** | Next.js (React, TypeScript, Tailwind CSS) | Vercel (Free tier, Project 1) |
+| **Frontend** | Next.js (React, TypeScript, Tailwind CSS) | Vercel (Free tier) |
 | **Core Engine API** | C# ASP.NET Core Web API (.NET 8/9, Custom DSA Library) | Render (Free Web Service Docker container) |
-| **Insight Service** | Python 3.12, FastAPI, Scikit-Learn, Pandas, NumPy | Vercel (Free tier, Project 2) |
+| **Insight Service** | Python 3.12, FastAPI, Scikit-Learn, Pandas, NumPy | Render (Free Web Service) |
 | **Database & Auth** | PostgreSQL (RLS), Supabase Auth (JWT), Supabase Storage | Supabase Hosted Cloud (Free tier) |
 | **Realtime Messaging** | Supabase Realtime (WebSockets) | Supabase Hosted Cloud |
 | **Computer Networks** | Custom Sockets (TCP SMTP, UDP Health Monitor, TCP Relay) | Localhost / Standalone VM |
@@ -301,12 +301,13 @@ uvicorn insight.main:app --reload --port 8000
 ## 7. Deployment Overview
 
 - **Frontend (`web/`)**: Deployed on **Vercel** (Root Directory configured to `web`).
-- **Insight Service (`insight/`)**: Deployed on **Vercel** as a second standalone project (Root Directory configured to `insight`).
+- **Insight Service (`insight/`)**: Deployed on **Render** as a Python Web Service (Root Directory configured to `insight`).
+  - *Render Free Tier Notice*: Render instances spin down after ~15 minutes of inactivity. Initial cold-start requests may experience a 30–50 second latency.
 - **C# Core Engine (`api/`)**: Deployed on **Render** as a Docker web service using `api/Dockerfile`.
   - *Render Free Tier Notice*: Render instances spin down after ~15 minutes of inactivity. The first inbound request may experience a 30–50 second cold-start latency.
 - **Database & Realtime (`db/`)**: Hosted on **Supabase**.
   - *Supabase Free Tier Notice*: Inactive free projects are paused after 7 days without queries.
-- **Network Modules (`network/`)**: Executed locally or on a standalone cloud VM (Vercel serverless functions cannot bind raw TCP/UDP listener sockets).
+- **Network Modules (`network/`)**: Executed locally or on a standalone cloud VM (serverless functions cannot bind raw TCP/UDP listener sockets).
 
 ---
 
@@ -319,13 +320,13 @@ All variables are listed with empty placeholders in [`.env.example`](file:///.en
 | `NEXT_PUBLIC_SUPABASE_URL` | Frontend (`web`) | Vercel Environment / `.env.local` | Supabase project API gateway URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Frontend (`web`) | Vercel Environment / `.env.local` | Public client-safe Supabase anon key |
 | `NEXT_PUBLIC_API_URL` | Frontend (`web`) | Vercel Environment / `.env.local` | Base URL of Core Engine API (Render or localhost) |
-| `NEXT_PUBLIC_INSIGHT_URL` | Frontend (`web`) | Vercel Environment / `.env.local` | Base URL of Python Insight Service (Vercel or localhost) |
-| `SUPABASE_URL` | Core Engine / Insight | Render / Vercel Environment | Internal Supabase REST endpoint |
-| `SUPABASE_SERVICE_ROLE_KEY` | Core Engine / Insight | Render / Vercel (**Server Only**) | Privileged Supabase key (bypasses RLS; NEVER in web) |
+| `NEXT_PUBLIC_INSIGHT_URL` | Frontend (`web`) | Vercel Environment / `.env.local` | Base URL of Python Insight Service (Render or localhost) |
+| `SUPABASE_URL` | Core Engine / Insight | Render Environment | Internal Supabase REST endpoint |
+| `SUPABASE_SERVICE_ROLE_KEY` | Core Engine / Insight | Render (**Server Only**) | Privileged Supabase key (bypasses RLS; NEVER in web) |
 | `SUPABASE_JWT_SETTINGS` | Core Engine (`api`) | Render Environment | Secret / key verification parameters for JWT validation |
 | `DATABASE_URL` | Core Engine (`api`) | Render Environment | Supabase PostgreSQL pooled connection string |
 | `INSIGHT_URL` | Core Engine (`api`) | Render Environment | Internal service endpoint for Insight microservice |
-| `ALLOWED_ORIGINS` | Core Engine / Insight | Render / Vercel Environment | CORS allowed web origins (e.g. `https://prolink.vercel.app`) |
+| `ALLOWED_ORIGINS` | Core Engine / Insight | Render Environment | CORS allowed web origins (e.g. `https://prolink.vercel.app`) |
 | `SMTP_HOST` | Network (`network`) | Local environment / VM | Target SMTP mail server hostname |
 | `SMTP_PORT` | Network (`network`) | Local environment / VM | Target SMTP mail server port (e.g., 587 or 25) |
 | `SMTP_USER` | Network (`network`) | Local environment / VM | Authentication username for SMTP relay |

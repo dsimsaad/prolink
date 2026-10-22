@@ -12,7 +12,7 @@ flowchart TD
         Browser["User Browser (Desktop / Mobile)"]
     end
 
-    subgraph VercelWeb["Vercel Project 1 (Frontend)"]
+    subgraph VercelWeb["Vercel (Frontend)"]
         NextJS["Next.js Web App\n(React 19 / App Router)"]
     end
 
@@ -23,11 +23,11 @@ flowchart TD
         SupaStorage["Supabase Storage\n(Job & Profile Images)"]
     end
 
-    subgraph RenderAPI["Render Web Service (Free Docker Tier)"]
+    subgraph RenderAPI["Render Web Service 1 (Core Engine)"]
         CSharpAPI["C# Core Engine\n(ASP.NET Core Web API & Custom DSA)"]
     end
 
-    subgraph VercelInsight["Vercel Project 2 (Data Science)"]
+    subgraph RenderInsight["Render Web Service 2 (Insight Data Science)"]
         PythonAPI["Python Insight Service\n(FastAPI / Scikit-Learn)"]
     end
 
@@ -89,8 +89,8 @@ flowchart TD
 ├────────────────────────┬───────────────────────────────────────────────┤
 │ Component              │ Hosting Provider & Configuration              │
 ├────────────────────────┼───────────────────────────────────────────────┤
-│ web/ (Next.js)         │ Vercel Project 1 (Root Directory = web)       │
-│ insight/ (FastAPI)     │ Vercel Project 2 (Root Directory = insight)   │
+│ web/ (Next.js)         │ Vercel (Root Directory = web)                 │
+│ insight/ (FastAPI)     │ Render Web Service (Root Directory = insight) │
 │ api/ (C# Core Engine)  │ Render Web Service (Free Tier Docker deploy)  │
 │ db/ (Postgres / Auth)  │ Supabase Hosted Cloud (managed database/auth) │
 │ network/ (CN Modules)  │ Standalone VM / Local Host (not on Vercel)    │
@@ -98,10 +98,10 @@ flowchart TD
 ```
 
 ### Hosting Characteristics & Constraints
-- **Vercel**: Hosts the Next.js frontend and Python FastAPI Insight Service as stateless serverless functions.
-- **Render (Free Tier)**: Runs the Dockerized C# Core Engine. *Note: Free instances spin down after ~15 minutes of inactivity; initial cold-start requests may incur a 30–50 second delay.*
+- **Vercel**: Hosts the Next.js frontend as a web application.
+- **Render (Free Tier)**: Runs the Dockerized C# Core Engine and Python FastAPI Insight Service. *Note: Free instances spin down after ~15 minutes of inactivity; initial cold-start requests may incur a 30–50 second delay.*
 - **Supabase (Free Tier)**: Free tier databases pause after 7 days of inactivity.
-- **Network Modules**: Raw TCP and UDP listener sockets cannot bind inside Vercel's serverless runtime. Therefore, all `network/` modules run locally or on a dedicated virtual machine.
+- **Network Modules**: Raw TCP and UDP listener sockets cannot bind inside serverless runtimes. Therefore, all `network/` modules run locally or on a dedicated virtual machine.
 
 ---
 

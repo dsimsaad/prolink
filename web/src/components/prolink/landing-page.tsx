@@ -138,6 +138,8 @@ export function LandingPage({
             <a href="#services">Find Professionals</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#trust">Trust & Safety</a>
+            <Link href="/faqs">FAQs</Link>
+            <Link href="/contact">Contact</Link>
           </nav>
           <div className="nav-actions">
             {isLoggedIn ? (
@@ -249,10 +251,12 @@ export function LandingPage({
               ["Find Professionals", "#services"],
               ["How It Works", "#how-it-works"],
               ["Trust & Safety", "#trust"],
+              ["FAQs", "/faqs"],
+              ["Contact", "/contact"],
             ].map(([text, href]) => (
-              <a key={href} href={href} onClick={() => setMenuOpen(false)}>
+              <Link key={href} href={href} onClick={() => setMenuOpen(false)}>
                 {text}
-              </a>
+              </Link>
             ))}
             {isLoggedIn ? (
               <>
