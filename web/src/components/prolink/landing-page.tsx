@@ -85,8 +85,6 @@ export function LandingPage({
     };
   }, [userMenuOpen]);
 
-  const router = useRouter();
-
   useEffect(() => {
     const supabase = createClient();
     const {
