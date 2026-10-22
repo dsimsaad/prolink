@@ -15,21 +15,6 @@ builder.Services.AddCors(o => o.AddPolicy("web", p => p
     .WithHeaders("Authorization", "Content-Type")
     .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")));
 
-var app = builder.Build();
-app.UseCors("web");
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapGet("/me", (HttpContext ctx) => Results.Ok(new {
-    id = ctx.User.FindFirst("sub")?.Value,
-    email = ctx.User.FindFirst("email")?.Value
-})).RequireAuthorization();
-
-app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "core-engine", time = DateTime.UtcNow }));
-
-app.Run();
-
 var supabaseUrl = (builder.Configuration["SUPABASE_URL"] ?? "").TrimEnd('/');
 var issuer = $"{supabaseUrl}/auth/v1";
 var keys = new SupabaseKeys($"{issuer}/.well-known/jwks.json",
@@ -48,4 +33,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKeyResolver = (token, securityToken, kid, parameters) => keys.Resolve(kid)
         };
     });
+
 builder.Services.AddAuthorization();
+
+var app = builder.Build();
+
+app.UseCors("web");
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapGet("/me", (HttpContext ctx) => Results.Ok(new {
+    id = ctx.User.FindFirst("sub")?.Value,
+    email = ctx.User.FindFirst("email")?.Value
+})).RequireAuthorization();
+
+app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "core-engine", time = DateTime.UtcNow }));
+
+app.Run();
