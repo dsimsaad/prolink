@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SiteShell } from "@/components/prolink/site-shell";
 
 export const metadata: Metadata = {
   title: "ProLink — Hire Trusted Professionals, Fast",
@@ -20,7 +21,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><SiteShell>{children}</SiteShell></body>
     </html>
   );
 }

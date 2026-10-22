@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
 import { Brand, Icon } from "./brand";
 import { BecomeProfessionalCta } from "./become-professional-cta";
-import { HomeNavbar, services } from "./home-navbar";
-import { useNavigationAccount, type NavigationAccountProps } from "./use-navigation-account";
+import { services } from "./home-navbar";
+import { useNavigationAccount } from "./use-navigation-account";
 
 const steps = [
   [
@@ -27,30 +26,11 @@ const steps = [
   ],
 ];
 
-export function LandingPage(props: NavigationAccountProps) {
-  const { proState, reviewNote } = useNavigationAccount(props);
-  const [announcement, setAnnouncement] = useState(true);
+export function LandingPage() {
+  const { proState, reviewNote } = useNavigationAccount();
 
   return (
     <>
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
-      {announcement && (
-        <div className="announcement">
-          <span>
-            Verified professionals. Transparent offers. Escrow-protected
-            payments.
-          </span>
-          <button
-            aria-label="Dismiss announcement"
-            onClick={() => setAnnouncement(false)}
-          >
-            ×
-          </button>
-        </div>
-      )}
-      <HomeNavbar {...props} />
       <main id="main">
         <section className="hero">
           <div className="container hero-grid">

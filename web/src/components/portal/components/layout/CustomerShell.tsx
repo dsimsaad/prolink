@@ -43,28 +43,13 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#34453B]">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-white border-b border-[#DCE8E0] h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div role="region" aria-label="Dashboard tools" className="bg-white border-b border-[#DCE8E0] h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
             className="lg:hidden p-1.5 text-[#34453B] hover:text-[#0C2A1B] cursor-pointer"
           >
             <Menu className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={() => marketplaceStore.navigate('/')}
-            className="flex items-center gap-2.5 cursor-pointer text-left focus:outline-none"
-          >
-            <div className="w-8 h-8 rounded-[8px] bg-[#0F6B3E] flex items-center justify-center text-white shadow-2xs font-bold text-lg">
-              <svg viewBox="0 0 32 32" className="w-5 h-5 fill-current">
-                <path d="M10 8h7a5 5 0 0 1 5 5c0 2.76-2.24 5-5 5h-4v6h-3V8zm3 3v4h4a2 2 0 0 0 0-4h-4z" />
-                <circle cx="20" cy="19" r="3.5" fill="#2FAE60" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold tracking-tight text-[#0C2A1B]">
-              ProLink
-            </span>
           </button>
 
           <span className="hidden sm:inline-block px-2 py-0.5 text-[11px] font-semibold text-[#0F6B3E] bg-[#E6F4EA] rounded-full border border-[#CDE9D6]">
@@ -205,7 +190,7 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
             )}
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Layout: Left Sidebar + Workspace Content */}
       <div className="flex-1 flex max-w-7xl w-full mx-auto">

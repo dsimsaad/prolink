@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "./brand";
+import { useNavigationAccount } from "./use-navigation-account";
 import { createClient } from "@/utils/supabase/client";
 import type { ProfessionalState } from "@/utils/professional";
 
@@ -40,6 +41,7 @@ export function BecomeProfessionalForm({
   areas,
 }: BecomeProfessionalFormProps) {
   const router = useRouter();
+  const { refreshAccount } = useNavigationAccount();
   const [currentState, setCurrentState] = useState<ProfessionalState>(
     initialData.state
   );
@@ -175,6 +177,7 @@ export function BecomeProfessionalForm({
       setAppliedDate(new Date().toISOString());
       setCurrentState("pending");
       window.scrollTo({ top: 0, behavior: "smooth" });
+      refreshAccount();
       router.refresh();
     } catch (err: unknown) {
       const message =

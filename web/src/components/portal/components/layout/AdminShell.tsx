@@ -118,7 +118,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
       {/* Main Content Column */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar with search box, environment badge, alerts bell, avatar */}
-        <header className="h-16 bg-white border-b border-[#DCE8E0] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 sticky top-0 z-30">
+        <div role="region" aria-label="Dashboard tools" className="h-16 bg-white border-b border-[#DCE8E0] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
@@ -227,7 +227,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
               )}
             </div>
           </div>
-        </header>
+        </div>
 
         {/* Mobile Sidebar */}
         {mobileSidebarOpen && (

@@ -1,6 +1,4 @@
 import "./contact.css";
-import { HomeNavbar } from "@/components/prolink/home-navbar";
-import { getProfessionalState } from "@/utils/professional";
 import { SiteFooter } from "@/components/prolink/site-footer";
 import { ContactForm } from "@/components/prolink/contact-form";
 import { Icon } from "@/components/prolink/brand";
@@ -11,15 +9,9 @@ export const metadata = {
     "Get in touch with the ProLink support team in Islamabad. Reach us by email, phone, or send us a direct message.",
 };
 
-export default async function ContactPage() {
-  const account = await getProfessionalState();
+export default function ContactPage() {
   return (
     <div className="contact-page">
-      <HomeNavbar
-        initialIsLoggedIn={account.state !== "logged_out"}
-        initialProState={account.state}
-        initialUserName={account.profile?.full_name || account.user?.email?.split("@")[0] || "User"}
-      />
       <main id="main">
         <section className="contact-hero">
           <div className="container">

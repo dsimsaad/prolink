@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Brand, Icon } from "./brand";
+import { Icon } from "./brand";
 import { createClient } from "@/utils/supabase/client";
 
 type AllowedRole = "customer" | "professional";
@@ -58,7 +58,6 @@ export function OnboardingForm({
     <div className="sign-in-page">
       <main className="auth-column">
         <div className="auth-top">
-          <Brand />
           <Link href="/#how-it-works" className="text-link">
             Explore ProLink <Icon name="arrow" />
           </Link>

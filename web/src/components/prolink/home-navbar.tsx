@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Brand } from "./brand";
 import { BecomeProfessionalCta } from "./become-professional-cta";
-import { useNavigationAccount, type NavigationAccountProps } from "./use-navigation-account";
+import { useNavigationAccount } from "./use-navigation-account";
 
 export const services = [
   "Plumbing",
@@ -15,8 +15,8 @@ export const services = [
   "Deep Cleaning",
   "Home Tutoring",
 ];
-export function HomeNavbar(props: NavigationAccountProps) {
-  const { isLoggedIn, proState, userName, handleSignOut } = useNavigationAccount(props);
+export function HomeNavbar() {
+  const { isLoggedIn, proState, userName, handleSignOut } = useNavigationAccount();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -46,15 +46,20 @@ export function HomeNavbar(props: NavigationAccountProps) {
   }, [userMenuOpen]);
 
   return (
-      <header className="site-header">
+      <header className="site-header" onClickCapture={(event) => {
+        if ((event.target as HTMLElement).closest('a')) {
+          setMenuOpen(false);
+          setUserMenuOpen(false);
+        }
+      }}>
         <div className="container nav-row">
           <Brand />
           <nav className="desktop-nav" aria-label="Main navigation">
             <Link href="/#services">Find Professionals</Link>
             <Link href="/#how-it-works">How It Works</Link>
             <Link href="/#trust">Trust & Safety</Link>
-            <Link href="/faqs" aria-current={pathname === "/faqs" ? "page" : undefined}>FAQs</Link>
-            <Link href="/contact" aria-current={pathname === "/contact" ? "page" : undefined}>Contact</Link>
+            <Link href="/faqs" prefetch onNavigate={() => { setMenuOpen(false); setUserMenuOpen(false); }} aria-current={pathname === "/faqs" ? "page" : undefined}>FAQs</Link>
+            <Link href="/contact" prefetch onNavigate={() => { setMenuOpen(false); setUserMenuOpen(false); }} aria-current={pathname === "/contact" ? "page" : undefined}>Contact</Link>
           </nav>
           <div className="nav-actions">
             {isLoggedIn ? (

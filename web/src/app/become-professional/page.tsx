@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { getProfessionalState } from "@/utils/professional";
-import { Brand } from "@/components/prolink/brand";
 import { SiteFooter } from "@/components/prolink/site-footer";
 import {
   BecomeProfessionalForm,
@@ -121,41 +120,8 @@ export default async function BecomeProfessionalPage() {
     appliedAt: proInfo.professionalProfile?.applied_at || null,
   };
 
-  const displayName =
-    proInfo.profile?.full_name ||
-    proInfo.user?.email ||
-    "User";
-
   return (
     <div className="pro-page-wrapper">
-      <header className="pro-page-header">
-        <div
-          className="container"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Brand />
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              fontSize: "13px",
-            }}
-          >
-            <span style={{ color: "var(--muted)" }}>
-              Signed in as <strong style={{ color: "var(--ink)" }}>{displayName}</strong>
-            </span>
-            <Link href="/" className="button outline small">
-              Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <main className="pro-page-container">
         <Link href="/" className="pro-back-link">
           ← Back to home
