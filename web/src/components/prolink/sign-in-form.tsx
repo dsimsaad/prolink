@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Icon } from "./brand";
+import { Brand, Icon } from "./brand";
 import { createClient } from "@/utils/supabase/client";
 import { getSignInDestination } from "@/utils/auth-destination";
 import { clearOAuthDestination, rememberOAuthDestination } from "@/utils/oauth-navigation";
@@ -126,6 +126,7 @@ export function SignInForm({
     <div className="sign-in-page">
       <main className="auth-column">
         <div className="auth-top">
+          <Brand />
           <Link href="/#how-it-works" className="text-link">
             Explore ProLink <Icon name="arrow" />
           </Link>

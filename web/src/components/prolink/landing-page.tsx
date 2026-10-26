@@ -6,6 +6,7 @@ import { Brand, Icon } from "./brand";
 import { BecomeProfessionalCta } from "./become-professional-cta";
 import { services } from "./home-navbar";
 import { useNavigationAccount } from "./use-navigation-account";
+import { ScrollToTop } from "./scroll-to-top";
 
 const steps = [
   [
@@ -49,9 +50,9 @@ export function LandingPage() {
                 <Link className="button" href="/sign-in">
                   Post a Job <Icon name="arrow" />
                 </Link>
-                <a className="button outline" href="#services">
+                <Link className="button outline" href="/services">
                   Explore Services
-                </a>
+                </Link>
               </div>
               <div className="popular">
                 <span>Popular:</span>
@@ -119,13 +120,13 @@ export function LandingPage() {
               <span className="eyebrow">Explore Services</span>
               <h2>Popular services in your city</h2>
             </div>
-            <Link className="text-link" href="/sign-in">
-              Find your professional <Icon name="arrow" />
+            <Link className="text-link" href="/services">
+              View all services <Icon name="arrow" />
             </Link>
           </div>
           <div className="service-grid">
             {services.slice(0, 6).map((service, i) => (
-              <Link key={service} href="/sign-in" className="service-card">
+              <Link key={service} href={`/services#${service.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} className="service-card">
                 <span className="icon-tile">
                   <Icon name={i % 2 === 0 ? "shield" : "check"} />
                 </span>
@@ -136,6 +137,11 @@ export function LandingPage() {
                 </span>
               </Link>
             ))}
+          </div>
+          <div style={{ textAlign: "center", marginTop: "32px" }}>
+            <Link className="button outline" href="/services">
+              View All Services &amp; Specializations <Icon name="arrow" />
+            </Link>
           </div>
         </section>
         <section id="how-it-works" className="section tinted">
@@ -223,6 +229,7 @@ export function LandingPage() {
             </div>
             <div>
               <h3>Discover ProLink</h3>
+              <Link href="/services">All Services</Link>
               <a href="#how-it-works">How It Works</a>
               <a href="#trust">Trust & Safety</a>
               <Link href="/faqs">FAQs</Link>
@@ -242,6 +249,7 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+      <ScrollToTop />
     </>
   );
 }

@@ -24,13 +24,17 @@ export function SiteFooter() {
           <div>
             <h3>Popular Services</h3>
             {services.map((service) => (
-              <Link key={service} href="/#services">
+              <Link key={service} href={`/services#${service.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
                 {service}
               </Link>
             ))}
+            <Link href="/services" style={{ fontWeight: 600, color: "var(--forest)" }}>
+              View All Services →
+            </Link>
           </div>
           <div>
             <h3>Discover ProLink</h3>
+            <Link href="/services">All Services</Link>
             <Link href="/#how-it-works">How It Works</Link>
             <Link href="/#trust">Trust & Safety</Link>
             <Link href="/faqs">FAQs</Link>

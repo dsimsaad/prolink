@@ -55,6 +55,7 @@ export function HomeNavbar() {
         <div className="container nav-row">
           <Brand />
           <nav className="desktop-nav" aria-label="Main navigation">
+            <Link href="/services" aria-current={pathname === "/services" ? "page" : undefined}>Services</Link>
             <Link href="/#services">Find Professionals</Link>
             <Link href="/#how-it-works">How It Works</Link>
             <Link href="/#trust">Trust & Safety</Link>
@@ -169,6 +170,7 @@ export function HomeNavbar() {
               </div>
             )}
             {[
+              ["Services", "/services"],
               ["Find Professionals", "/#services"],
               ["How It Works", "/#how-it-works"],
               ["Trust & Safety", "/#trust"],
@@ -209,10 +211,13 @@ export function HomeNavbar() {
         <nav className="category-nav" aria-label="Service categories">
           <div className="container">
             {services.map((service) => (
-              <Link key={service} href="/#services">
+              <Link key={service} href={`/services#${service.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
                 {service}
               </Link>
             ))}
+            <Link href="/services" style={{ fontWeight: 700, color: "var(--forest)" }}>
+              All Services →
+            </Link>
           </div>
         </nav>
       </header>
