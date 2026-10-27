@@ -5,7 +5,7 @@ This directory contains the authoritative PostgreSQL database schema, helper fun
 
 ---
 
-## 1. Migration Run Order
+## 1. Migration & Script Run Order
 
 All SQL scripts must be executed in the **Supabase Dashboard $\rightarrow$ SQL Editor** in the following sequence:
 
@@ -16,8 +16,11 @@ All SQL scripts must be executed in the **Supabase Dashboard $\rightarrow$ SQL E
 | **3** | [`db/migrations/003_rls.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/003_rls.sql) | Security Migration | Enables RLS on all tables, defines client/admin policies, and configures Realtime. |
 | **4** | [`db/migrations/004_google_onboarding.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/004_google_onboarding.sql) | Legacy Migration | *(Superseded by 005)* Added onboarding flag and RPC for Google OAuth. Safe to run before 005. |
 | **5** | [`db/migrations/005_dual_role_professional_applications.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/005_dual_role_professional_applications.sql) | Dual-Role Migration | Migrates account roles to unified `user` / `admin`, adds application review lifecycle, drops legacy 004 onboarding objects, adds application RPCs, safety triggers, and RLS updates. |
-| **6** | [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) | Seed Data | Seeds 8 standard trade categories, 12 placeholder areas, and graph travel edges. |
-| **7** | [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) | Verification | Transactional test suite verifying RLS policies, trigger guards, dual-role workflows, and constraints. |
+| **6** | [`db/migrations/006_admin_portal.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/006_admin_portal.sql) | Admin Portal Migration | Adds `profiles` suspension fields, `admin_actions` audit table, `reports` moderation table, `job_events.note`, admin RPCs, disputed-only chat privacy policy, and admin indexes. |
+| **7** | [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) | Seed Data | Seeds 8 standard trade categories, 12 placeholder areas, and graph travel edges. |
+| **8** | [`db/seed/002_admin_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/002_admin_demo_data.sql) | Demo Seed Data | *(Development Only)* Populates 24 demo users (`@example.invalid`), 12 approved pros, 3 pending & 1 rejected application, 40 jobs across all statuses over 30 days, offers, chats, reviews, 3 disputed jobs, 6 reports, and audit entries. |
+| **9** | [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) | Verification | Transactional test suite (auto-rolled back) verifying RLS policies, trigger guards, dual-role workflows, and admin portal functions (Tests 1–32). |
+| **Cleanup** | [`db/seed/999_remove_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/999_remove_demo_data.sql) | Demo Cleanup | Removes all records inserted by `002_admin_demo_data.sql`. |
 
 ---
 
@@ -56,12 +59,18 @@ erDiagram
     
     PROFILES ||--o{ NOTIFICATIONS : "receives alerts"
     JOBS ||--o{ JOB_EVENTS : "state audit log"
+    PROFILES ||--o{ ADMIN_ACTIONS : "admin actor"
+    PROFILES ||--o{ REPORTS : "reporter / target / resolver"
+    JOBS ||--o{ REPORTS : "reported job"
 
     PROFILES {
         uuid id PK
         text role "user | admin"
         text full_name
         bigint area_id FK
+        boolean is_suspended
+        text suspended_reason
+        timestamptz suspended_at
         timestamptz created_at
         timestamptz updated_at
     }
@@ -91,7 +100,7 @@ erDiagram
 
     CATEGORIES {
         bigint id PK
-        text name UK
+        text name UK "case-insensitive unique"
         bigint parent_id FK
         boolean is_active
     }
@@ -180,157 +189,172 @@ erDiagram
         text from_status
         text to_status
         uuid actor_id FK
+        text note
         timestamptz at
+    }
+
+    ADMIN_ACTIONS {
+        uuid id PK
+        uuid admin_id FK
+        text action
+        text target_type
+        text target_id
+        jsonb details
+        timestamptz created_at
+    }
+
+    REPORTS {
+        uuid id PK
+        uuid reporter_id FK
+        uuid target_user_id FK
+        uuid target_job_id FK
+        text reason
+        text details
+        text status "open | reviewing | resolved | dismissed"
+        text resolution_note
+        uuid resolved_by FK
+        timestamptz resolved_at
+        timestamptz created_at
     }
 ```
 
 ---
 
-## 3. The Dual-Role Model
+## 3. The Dual-Role & Admin Governance Model
 
-Under the unified dual-role architecture:
-1. **Unified User Accounts**: Every registered user has `profiles.role = 'user'`. There is no role selection during signup. All users can immediately post jobs, compare quotes, and hire professionals.
-2. **Applying as a Professional**: Any user account can apply to offer professional services. Applying creates a `professional_profiles` record with `status = 'pending'`, along with their selected trade skills, service coverage areas, and verified phone number.
-3. **Application Review & Approval**: Only an administrator (`profiles.role = 'admin'`) can approve, reject, or suspend an application.
-4. **Visibility & Capabilities**: Only professionals with `status = 'approved'` can view Open jobs in the marketplace, submit offers, appear in customer matching, and have their profile publicly visible.
-
-### Application Status Flow
-
-```mermaid
-stateDiagram-v2
-    [*] --> None : User Registers (role = 'user')
-    None --> Pending : apply_as_professional()
-    
-    Pending --> Approved : review(approved) [Admin]
-    Pending --> Rejected : review(rejected, with note) [Admin]
-    
-    Rejected --> Pending : apply_as_professional() [Reapply]
-    
-    Approved --> Suspended : review(suspended, with note) [Admin]
-    Suspended --> Approved : review(approved) [Admin Reinstatement]
-    
-    state Approved {
-        [*] --> MarketActive
-        MarketActive: Visible to all authenticated users
-        MarketActive: Can view Open & Offers received jobs
-        MarketActive: Can submit job offers
-    }
-
-    state Pending {
-        [*] --> InReview
-        InReview: Profile hidden from public
-        InReview: Cannot view Open jobs
-        InReview: Cannot submit offers
-        InReview: Modifiable skills and areas
-    }
-```
+1. **Unified User Accounts**: Every registered user has `profiles.role = 'user'`. All users can post jobs, compare quotes, and hire professionals.
+2. **Applying as a Professional**: Any user account can apply to offer professional services via `apply_as_professional(...)`, creating a `professional_profiles` record with `status = 'pending'`.
+3. **Application Review & Approval**: Only an administrator (`profiles.role = 'admin'`) can approve, reject, or suspend an application via `review_professional_application(...)`.
+4. **Account Suspension**: Administrators can suspend or unsuspend user accounts via `admin_set_user_suspended(...)`. A suspended user (`profiles.is_suspended = true`) returns `false` from `is_approved_professional(uid)` and is signed out on login.
+5. **Audit Trail**: Every administrative mutation writes an immutable record to `public.admin_actions`.
 
 ---
 
 ## 4. Database Functions & RPC Signatures
 
-The web frontend and administrative interfaces interact with the following database functions:
-
 ### 1. `public.apply_as_professional`
-* **Signature**:
-  ```sql
-  apply_as_professional(
-      p_bio text,
-      p_years int,
-      p_category_ids bigint[],
-      p_area_ids bigint[],
-      p_phone text
-  ) RETURNS void
-  ```
-* **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated`.
-* **Behavior**:
-  - Validates bio length (30 to 1,000 characters).
-  - Validates years of experience (0 to 60).
-  - Validates trade categories (1 to 5 active categories).
-  - Validates coverage areas (1 to 12 existing areas).
-  - Validates phone format (plausible international/local 10 to 15 digits).
-  - If no professional profile exists, inserts a new row with `status = 'pending'` and `verified = false`.
-  - If the existing status is `'rejected'`, updates the row back to `'pending'`, resetting `reviewed_at`, `reviewed_by`, and `review_note`.
-  - If status is `'pending'`, `'approved'`, or `'suspended'`, raises exception `22023`.
-  - Atomically replaces `professional_skills` and `professional_areas`, and upserts `contact_details(phone)`.
+```sql
+apply_as_professional(
+    p_bio text,
+    p_years int,
+    p_category_ids bigint[],
+    p_area_ids bigint[],
+    p_phone text
+) RETURNS void
+```
+- **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated`.
+- **Behavior**: Validates bio (30–1,000 chars), experience (0–60), categories (1–5 active), areas (1–12), and phone (10–15 digits). Inserts or resets a `'rejected'` application to `'pending'`, replaces skills and areas, and upserts `contact_details(phone)`.
 
 ### 2. `public.review_professional_application`
-* **Signature**:
-  ```sql
-  review_professional_application(
-      p_professional_id uuid,
-      p_decision text,
-      p_note text
-  ) RETURNS void
-  ```
-* **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated` (function enforces admin check internally).
-* **Behavior**:
-  - Requires caller to be an administrator (`public.is_admin() = true`).
-  - Restricts `p_decision` to `'approved'`, `'rejected'`, or `'suspended'`.
-  - Requires a non-empty `p_note` when rejecting or suspending.
-  - Forbids administrators from reviewing their own application.
-  - Updates `status`, sets `verified = (p_decision = 'approved')`, records `reviewed_by = auth.uid()`, `reviewed_at = now()`, and `review_note`.
-  - Generates an in-app notification (`type = 'professional_application_reviewed'`) for the applicant.
+```sql
+review_professional_application(
+    p_professional_id uuid,
+    p_decision text,
+    p_note text
+) RETURNS void
+```
+- **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated` (enforces `public.is_admin()`).
+- **Behavior**: Validates `p_decision IN ('approved', 'rejected', 'suspended')`, requires a note when rejecting or suspending, prevents self-review, updates `professional_profiles`, inserts a notification for the applicant, and records an audit entry via `log_admin_action`.
 
-### 3. `public.is_approved_professional`
-* **Signature**:
-  ```sql
-  is_approved_professional(uid uuid) RETURNS boolean
-  ```
-* **Security**: `STABLE`, `SECURITY DEFINER`, `SET search_path = ''`.
-* **Behavior**: Returns `true` if and only if the specified user has a `professional_profiles` record with `status = 'approved'`.
+### 3. `public.admin_set_user_suspended`
+```sql
+admin_set_user_suspended(
+    p_user_id uuid,
+    p_suspended boolean,
+    p_reason text DEFAULT NULL
+) RETURNS void
+```
+- **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated` (enforces `public.is_admin()`).
+- **Behavior**: Requires a non-empty reason when `p_suspended = true`. Prevents an admin from suspending themselves or another admin. Updates `profiles.is_suspended`, `suspended_reason`, and `suspended_at`, and writes to `admin_actions`.
 
-### 4. `public.is_admin`
-* **Signature**:
-  ```sql
-  is_admin() RETURNS boolean
-  ```
-* **Security**: `STABLE`, `SECURITY DEFINER`, `SET search_path = ''`.
-* **Behavior**: Returns `true` if the currently authenticated user (`auth.uid()`) has `role = 'admin'` in `public.profiles`.
+### 4. `public.admin_create_category` & `public.admin_update_category`
+```sql
+admin_create_category(
+    p_name text,
+    p_parent_id bigint DEFAULT NULL
+) RETURNS bigint
 
-### 5. `public.protect_sensitive_columns`
-* **Trigger Target**: `BEFORE UPDATE ON public.profiles` and `BEFORE UPDATE ON public.professional_profiles`.
-* **Behavior**: Blocks direct client-initiated updates (`CURRENT_USER IN ('authenticated', 'anon')`) to:
-  - `profiles.role`
-  - `professional_profiles.status`
-  - `professional_profiles.verified`
-  - `professional_profiles.applied_at`, `reviewed_at`, `reviewed_by`, `review_note`
-  - `professional_profiles.response_rate`, `rating_count`, `rating_sum`, `avg_rating_bayes`
+admin_update_category(
+    p_id bigint,
+    p_name text,
+    p_is_active boolean
+) RETURNS void
+```
+- **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated` (enforces `public.is_admin()`).
+- **Behavior**: Validates trimmed category name length (2 to 60 characters), enforces case-insensitive uniqueness, inserts or updates `public.categories`, and logs to `admin_actions`.
 
-### 6. Safety Triggers
-* `trg_validate_offer` on `public.offers`: Requires offering professional to satisfy `is_approved_professional()`, and forbids self-offers (`professional_id <> job.customer_id`).
-* `trg_validate_review` on `public.reviews`: Requires job to be `Completed`, reviewer to match customer, professional to match assigned professional, and forbids self-reviews (`reviewer_id <> professional_id`).
-* `trg_validate_conversation` on `public.conversations`: Forbids self-conversations (`customer_id <> professional_id`).
+### 5. `public.admin_resolve_report`
+```sql
+admin_resolve_report(
+    p_report_id uuid,
+    p_status text,
+    p_note text DEFAULT NULL
+) RETURNS void
+```
+- **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated` (enforces `public.is_admin()`).
+- **Behavior**: Validates `p_status IN ('reviewing', 'resolved', 'dismissed')`, requires a non-empty note for `'resolved'` and `'dismissed'`, updates `public.reports`, and logs to `admin_actions`.
+
+### 6. `public.admin_overview`
+```sql
+admin_overview() RETURNS jsonb
+```
+- **Security**: `STABLE`, `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated` (enforces `public.is_admin()`).
+- **Behavior**: Returns a JSON summary containing `total_users`, `new_users_last_7_days`, `professionals_by_status`, `jobs_by_status`, `jobs_last_7_days`, `open_reports`, `disputed_jobs`, and `pending_applications`.
+
+### 7. `public.admin_jobs_by_day`
+```sql
+admin_jobs_by_day(
+    p_days int DEFAULT 30
+) RETURNS TABLE(day date, job_count bigint)
+```
+- **Security**: `STABLE`, `SECURITY DEFINER`, `SET search_path = ''`. Granted to `authenticated` (enforces `public.is_admin()`).
+- **Behavior**: Accepts `p_days` between 1 and 60 and returns one row per calendar day (including days with zero jobs).
+
+### 8. `public.log_admin_action` (Internal)
+```sql
+log_admin_action(
+    p_action text,
+    p_target_type text,
+    p_target_id text,
+    p_details jsonb DEFAULT '{}'::jsonb
+) RETURNS uuid
+```
+- **Security**: `SECURITY DEFINER`, `SET search_path = ''`. Execution is revoked from `public`, `anon`, and `authenticated`; invoked only by internal `SECURITY DEFINER` admin functions.
+
+### 9. `public.is_approved_professional` & `public.is_admin`
+```sql
+is_approved_professional(uid uuid) RETURNS boolean
+is_admin() RETURNS boolean
+```
+- `is_approved_professional(uid)` returns `true` only if `professional_profiles.status = 'approved'` AND `profiles.is_suspended = false`.
+- `is_admin()` returns `true` if the current user (`auth.uid()`) has `profiles.role = 'admin'`.
 
 ---
 
-## 5. Row Level Security (RLS) Policy Adjustments
+## 5. Row Level Security (RLS) Summary for Admin Portal
 
 | Table | Policy Name | Command | Access Criteria |
 | :--- | :--- | :---: | :--- |
-| `jobs` | `jobs_select_authorized` | `SELECT` | Job customer, assigned professional, admin, OR approved professional (`is_approved_professional(auth.uid())`) when status is `Open` or `Offers received`. |
-| `professional_profiles` | `professional_profiles_read_authenticated` | `SELECT` | Visible if `status = 'approved'`, owned by caller (`profile_id = auth.uid()`), or caller is an admin. |
-| `professional_profiles` | `professional_profiles_update_owner` | `UPDATE` | Owner can update non-protected fields (protected fields blocked by trigger). |
-| `professional_profiles` | `professional_profiles_admin_update` | `UPDATE` | Admins can update any professional profile. |
-| `professional_skills` | `professional_skills_read` | `SELECT` | Visible if parent profile is `approved`, owned by caller, or caller is admin. |
-| `professional_skills` | `professional_skills_insert_owner` / `update` / `delete` | Write | Modifiable by owner only while application status is `pending` or `approved`. |
-| `professional_areas` | `professional_areas_read` | `SELECT` | Visible if parent profile is `approved`, owned by caller, or caller is admin. |
-| `professional_areas` | `professional_areas_insert_owner` / `update` / `delete` | Write | Modifiable by owner only while application status is `pending` or `approved`. |
+| `admin_actions` | `admin_actions_select_admin` | `SELECT` | `public.is_admin()` only. No client write policies exist. |
+| `reports` | `reports_insert_own` | `INSERT` | `reporter_id = (SELECT auth.uid())`. |
+| `reports` | `reports_select_own_or_admin` | `SELECT` | Reporter (`reporter_id = (SELECT auth.uid())`) or `public.is_admin()`. Updates only via `admin_resolve_report`. |
+| `messages` | `messages_select_participants` | `SELECT` | Conversation participants (`customer_id` or `professional_id`), OR `public.is_admin()` **only when the associated job status is `'Disputed'`**. |
+| `job_events` | `job_events_select_admin` | `SELECT` | `public.is_admin()`, job customer, or assigned professional. |
 
 ---
 
-## 6. Key Assumptions & Follow-Up Directives
+## 6. How to Run Migration 006, Demo Seed & Admin Setup
 
-1. **Seed Data Sets**:
-   All seed and test professionals must be inserted with `status = 'approved'` and `verified = true`.
-2. **Backend Matching Engine & Data Generator**:
-   - The Python synthetic data generator and C# Core API matching engine must query for:
-     `status = 'approved' AND availability = 'available'`
-   - Matching queries must explicitly exclude professionals where `professional_id = job.customer_id` to prevent self-matching.
-3. **Admin Promotion**:
-   Administrators cannot be created through signup or public RPCs. Administrators must be promoted manually by executing an SQL statement in the Supabase SQL editor:
-   ```sql
-   UPDATE public.profiles SET role = 'admin' WHERE id = '<target-user-uuid>';
-   ```
-4. **Superseded 004 Onboarding Artifacts**:
-   The `onboarding_completed` column and `complete_onboarding()` function from migration 004 are superseded by the dual-role model. Migration 005 safely drops them with `IF EXISTS`. Google OAuth signups do not require a role selection step; all signups default directly to role `user`.
+1. **Apply Migration 006**:
+   - Open the **Supabase SQL Editor**, paste the contents of [`db/migrations/006_admin_portal.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/006_admin_portal.sql), and click **Run**.
+2. **Load Demo Data (Optional, Development Only)**:
+   - Confirm [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) has been applied.
+   - Run [`db/seed/002_admin_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/002_admin_demo_data.sql) in the SQL Editor.
+   - To remove all demo records later, run [`db/seed/999_remove_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/999_remove_demo_data.sql).
+3. **Create the Administrator Account**:
+   - Follow the step-by-step instructions in [`db/ADMIN_SETUP.md`](file:///Users/mrcom/Documents/prolink/db/ADMIN_SETUP.md): register the user via the live site or Supabase Authentication $\rightarrow$ Users $\rightarrow$ Add user, then promote the account in the SQL Editor:
+     ```sql
+     update public.profiles set role = 'admin' where id = (select id from auth.users where email = '<ADMIN_EMAIL>');
+     ```
+4. **Run Automated RLS Tests**:
+   - Paste [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) into the SQL Editor and run it. Check the **Messages** tab to verify that `TEST 1` through `TEST 32` report `PASS` before the transaction rolls back.

@@ -814,6 +814,267 @@ BEGIN
         RAISE WARNING 'TEST 25 [Offers from unapproved/pending professional blocked by trigger]: FAIL';
     END IF;
 
+    -- Migration 006 Admin Portal tests (Tests 26 to 32)
+    DECLARE
+        v_a2_id uuid := 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+        v_disputed_job_id uuid := gen_random_uuid();
+        v_disputed_conv_id uuid := gen_random_uuid();
+        v_report_id uuid := gen_random_uuid();
+        v_new_cat_id bigint;
+        v_audit_before int;
+        v_audit_after int;
+        v_overview_json jsonb;
+        v_is_approved boolean;
+    BEGIN
+        -- Setup second admin and a disputed job with a conversation and message
+        PERFORM set_config('request.jwt.claims', '', true);
+
+        INSERT INTO auth.users (id, email, raw_user_meta_data)
+        VALUES (v_a2_id, 'a2@example.invalid', '{"full_name":"Admin Two"}'::jsonb)
+        ON CONFLICT (id) DO NOTHING;
+
+        INSERT INTO public.profiles (id, role, full_name, area_id)
+        VALUES (v_a2_id, 'admin', 'Admin Two', v_area1_id)
+        ON CONFLICT (id) DO UPDATE SET role = 'admin';
+
+        INSERT INTO public.jobs (id, customer_id, title, description, category_id, area_id, status, assigned_professional_id)
+        VALUES (v_disputed_job_id, v_c1_id, 'Disputed Pipe Fix', 'Disputed work item', v_cat_id, v_area1_id, 'Disputed', v_p1_id);
+
+        INSERT INTO public.conversations (id, job_id, customer_id, professional_id)
+        VALUES (v_disputed_conv_id, v_disputed_job_id, v_c1_id, v_p1_id);
+
+        INSERT INTO public.messages (conversation_id, sender_id, body)
+        VALUES (v_disputed_conv_id, v_c1_id, 'Disputed chat message visible to admin.');
+
+        INSERT INTO public.reports (id, reporter_id, target_user_id, target_job_id, reason, details)
+        VALUES (v_report_id, v_c1_id, v_p1_id, v_disputed_job_id, 'Work quality dispute', 'Details for report test');
+
+        -- TEST 26: Non-admin cannot call any admin function or read admin_actions
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_c1_id), true);
+
+        v_error_caught := false;
+        BEGIN
+            PERFORM public.admin_set_user_suspended(v_p1_id, true, 'Attempt by non-admin');
+        EXCEPTION
+            WHEN SQLSTATE '42501' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_error_caught THEN
+            RAISE NOTICE 'TEST 26A [Non-admin blocked from admin_set_user_suspended]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 26A [Non-admin blocked from admin_set_user_suspended]: FAIL';
+        END IF;
+
+        v_error_caught := false;
+        BEGIN
+            PERFORM public.admin_create_category('Unauthorized Cat', NULL);
+        EXCEPTION
+            WHEN SQLSTATE '42501' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_error_caught THEN
+            RAISE NOTICE 'TEST 26B [Non-admin blocked from admin_create_category]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 26B [Non-admin blocked from admin_create_category]: FAIL';
+        END IF;
+
+        v_error_caught := false;
+        BEGIN
+            PERFORM public.admin_resolve_report(v_report_id, 'resolved', 'Unauthorized resolve');
+        EXCEPTION
+            WHEN SQLSTATE '42501' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_error_caught THEN
+            RAISE NOTICE 'TEST 26C [Non-admin blocked from admin_resolve_report]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 26C [Non-admin blocked from admin_resolve_report]: FAIL';
+        END IF;
+
+        v_error_caught := false;
+        BEGIN
+            PERFORM public.admin_overview();
+        EXCEPTION
+            WHEN SQLSTATE '42501' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_error_caught THEN
+            RAISE NOTICE 'TEST 26D [Non-admin blocked from admin_overview]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 26D [Non-admin blocked from admin_overview]: FAIL';
+        END IF;
+
+        -- Seed one audit row as Admin 1, then verify Customer 1 cannot read admin_actions under authenticated role
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_a1_id), true);
+        PERFORM public.admin_resolve_report(v_report_id, 'reviewing', 'Initial triage');
+
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_c1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT count(*) INTO v_count FROM public.admin_actions;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        IF v_count = 0 THEN
+            RAISE NOTICE 'TEST 26E [Non-admin cannot read admin_actions]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 26E [Non-admin cannot read admin_actions]: FAIL (Visible: %)', v_count;
+        END IF;
+
+        -- TEST 27: Admin can read admin_actions and call admin_overview and admin_jobs_by_day
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_a1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT count(*) INTO v_count FROM public.admin_actions;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        v_overview_json := public.admin_overview();
+        SELECT count(*) INTO v_area_count FROM public.admin_jobs_by_day(7);
+
+        IF v_count >= 1 AND (v_overview_json->>'total_users')::int >= 5 AND v_area_count = 7 THEN
+            RAISE NOTICE 'TEST 27 [Admin can read admin_actions and call overview/jobs_by_day]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 27 [Admin can read admin_actions and call overview/jobs_by_day]: FAIL';
+        END IF;
+
+        -- TEST 28: Suspending requires a reason and cannot target an admin or self
+        v_error_caught := false;
+        BEGIN
+            PERFORM public.admin_set_user_suspended(v_c2_id, true, '   ');
+        EXCEPTION
+            WHEN SQLSTATE '22023' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_error_caught THEN
+            RAISE NOTICE 'TEST 28A [Suspending without a reason is rejected]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 28A [Suspending without a reason is rejected]: FAIL';
+        END IF;
+
+        v_error_caught := false;
+        BEGIN
+            PERFORM public.admin_set_user_suspended(v_a1_id, true, 'Self suspend attempt');
+        EXCEPTION
+            WHEN SQLSTATE '42501' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_error_caught THEN
+            RAISE NOTICE 'TEST 28B [Admin cannot suspend self]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 28B [Admin cannot suspend self]: FAIL';
+        END IF;
+
+        v_error_caught := false;
+        BEGIN
+            PERFORM public.admin_set_user_suspended(v_a2_id, true, 'Suspend another admin attempt');
+        EXCEPTION
+            WHEN SQLSTATE '42501' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_error_caught THEN
+            RAISE NOTICE 'TEST 28C [Admin cannot suspend another admin]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 28C [Admin cannot suspend another admin]: FAIL';
+        END IF;
+
+        -- TEST 29: Duplicate category names (case-insensitive) are rejected
+        v_new_cat_id := public.admin_create_category('Solar Panel Setup', NULL);
+
+        v_error_caught := false;
+        BEGIN
+            PERFORM public.admin_create_category('  solar panel setup  ', NULL);
+        EXCEPTION
+            WHEN SQLSTATE '23505' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_error_caught AND v_new_cat_id IS NOT NULL THEN
+            RAISE NOTICE 'TEST 29 [Case-insensitive duplicate category name rejected]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 29 [Case-insensitive duplicate category name rejected]: FAIL';
+        END IF;
+
+        -- TEST 30: Admin cannot read messages of a non-disputed chat, but CAN read messages of a disputed chat
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_a1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT count(*) INTO v_count
+        FROM public.messages
+        WHERE conversation_id = v_conversation_id;
+
+        SELECT count(*) INTO v_skill_count
+        FROM public.messages
+        WHERE conversation_id = v_disputed_conv_id;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        IF v_count = 0 AND v_skill_count = 1 THEN
+            RAISE NOTICE 'TEST 30 [Admin blocked from non-disputed chat messages but allowed on Disputed job chat]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 30 [Admin message privacy policy]: FAIL (NonDisputed: %, Disputed: %)', v_count, v_skill_count;
+        END IF;
+
+        -- TEST 31: Suspended professionals are not approved professionals
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_a1_id), true);
+        SELECT count(*) INTO v_audit_before FROM public.admin_actions;
+
+        -- v_p1_id has professional_profiles.status = 'approved'
+        PERFORM public.admin_set_user_suspended(v_p1_id, true, 'Repeated no-show complaints under investigation');
+        v_is_approved := public.is_approved_professional(v_p1_id);
+
+        IF v_is_approved = false THEN
+            RAISE NOTICE 'TEST 31 [Suspended professional returns false from is_approved_professional]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 31 [Suspended professional returns false from is_approved_professional]: FAIL';
+        END IF;
+
+        -- Unsuspend v_p1_id and verify audit rows were written for admin actions
+        PERFORM public.admin_set_user_suspended(v_p1_id, false, 'Investigation cleared');
+        PERFORM public.admin_update_category(v_new_cat_id, 'Solar & Inverter Setup', false);
+        PERFORM public.admin_resolve_report(v_report_id, 'resolved', 'Dispute reviewed and resolved by admin.');
+
+        SELECT count(*) INTO v_audit_after FROM public.admin_actions;
+
+        -- TEST 32: Admin actions write audit rows
+        IF v_audit_after >= v_audit_before + 4 THEN
+            RAISE NOTICE 'TEST 32 [Admin functions write audit rows to admin_actions]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 32 [Admin functions write audit rows to admin_actions]: FAIL (Before: %, After: %)', v_audit_before, v_audit_after;
+        END IF;
+    END;
+
     RAISE NOTICE '================================================================';
     RAISE NOTICE 'ALL DUAL-ROLE RLS & APPLICATION TESTS COMPLETED (ROLLING BACK)';
     RAISE NOTICE '================================================================';
