@@ -358,3 +358,17 @@ is_admin() RETURNS boolean
      ```
 4. **Run Automated RLS Tests**:
    - Paste [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) into the SQL Editor and run it. Check the **Messages** tab to verify that `TEST 1` through `TEST 32` report `PASS` before the transaction rolls back.
+
+### Manual Admin Verification Checklist
+- [ ] A non-admin cannot open `/admin` (redirected to `"/"`) or call `/admin` C# API endpoints (`403 Forbidden`).
+- [ ] An active admin can open `/admin` and call `/admin` C# API endpoints (`200 OK`).
+- [ ] Signing in on `/sign-in` as an admin sends the user directly to `/admin`.
+- [ ] Signing in as a suspended user (`profiles.is_suspended = true`) immediately signs the user out and shows a clear suspension message on `/sign-in`.
+- [ ] Approving and rejecting professional applications in `/admin/applications` updates `professional_profiles.status` and writes an entry to `admin_actions` (visible in `/admin/audit`).
+- [ ] Creating, renaming, activating, and deactivating a category in `/admin/categories` updates `categories` and logs to `admin_actions`.
+- [ ] Force-cancelling a job (`/admin/jobs/[id]`) and resolving a dispute (`/admin/disputes/[id]`) update `jobs.status` and atomically write rows to `job_events` (with note) and `admin_actions`.
+- [ ] Hammering an `/admin/*` endpoint past the sliding-window rate limit returns `429 Too Many Requests` with a `Retry-After` header.
+- [ ] User prefix suggestions (`/admin/users/suggest`) and full-text search (`/admin/users/search`) return sensible ranked matches.
+- [ ] Analytics numbers on `/admin/analytics` (funnel, top categories, top areas, jobs per day) match the database counts.
+- [ ] Clicking **Reload engine data** on `/admin` calls `POST /admin/engine/reload` and increments the displayed engine state version.
+

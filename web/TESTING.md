@@ -133,3 +133,40 @@ Verify the CTA appearance across professional lifecycle states:
 * **Expected Result**:
   - Displays notice card with red alert badge: "Professional account on hold".
   - Shows admin note if present and contact instructions for `support@prolink.pk`.
+
+---
+
+## 7. Admin Portal Setup & Verification Guide (`006_admin_portal.sql`)
+
+### A. Database Migration & Demo Data
+1. **Run Migration 006**:
+   - Open the **Supabase SQL Editor**, paste the contents of `db/migrations/006_admin_portal.sql`, and click **Run**.
+2. **Load Demo Data (Development Only)**:
+   - Ensure `db/seed/001_categories_areas.sql` has been applied first.
+   - Run `db/seed/002_admin_demo_data.sql` in the Supabase SQL Editor to create demo users (`@example.invalid`), 12 approved professionals, 3 pending and 1 rejected application, 40 jobs across all statuses over the last 30 days, offers, conversations, 3 disputed jobs with notes, 6 reports, and initial audit log rows.
+3. **Remove Demo Data**:
+   - Run `db/seed/999_remove_demo_data.sql` in the Supabase SQL Editor to cleanly delete all demo rows.
+
+### B. Creating the Administrator Account (Steps Only)
+1. Register the account on the live site (`/sign-in?mode=signup`) with your chosen email, or in **Supabase Dashboard $\rightarrow$ Authentication $\rightarrow$ Users $\rightarrow$ Add user**.
+2. Run the following query in the **Supabase SQL Editor**:
+   ```sql
+   update public.profiles set role = 'admin' where id = (select id from auth.users where email = '<ADMIN_EMAIL>');
+   ```
+3. Change or rotate the administrator password before showing the portal to anyone.
+
+### C. Manual Admin Portal Verification Checklist
+- [ ] **Non-admin blocked**: A non-admin user cannot open `/admin` (redirected to `"/"`) and receives `403 Forbidden` when calling any `/admin/*` C# API endpoint.
+- [ ] **Admin allowed**: An active admin (`profiles.role = 'admin'`, `is_suspended = false`) can access `/admin` and all `/admin/*` endpoints.
+- [ ] **Admin post-login redirect**: Signing in on `/sign-in` (email or Google) as an admin sends the user directly to `/admin`.
+- [ ] **Admin navigation UI**: When an admin visits public pages (`/`), the user menu displays an **Admin** link (`/admin`) and hides all **Become a professional** prompts.
+- [ ] **Suspended account sign-out**: Signing in as a suspended user (`profiles.is_suspended = true`) immediately signs the user out on the server and displays a clear suspension message on `/sign-in`.
+- [ ] **Application moderation**: Approving, rejecting (minimum 10-character note), or suspending applications in `/admin/applications` updates the applicant's status and writes an entry to the audit log (`admin_actions`).
+- [ ] **Category management**: Creating, renaming, activating, and deactivating a category in `/admin/categories` updates `public.categories` and writes an entry to `admin_actions`.
+- [ ] **Force-cancel & dispute resolution**: Force-cancelling a job in `/admin/jobs/[id]` and resolving a disputed job in `/admin/disputes/[id]` transition `jobs.status` (validated by `JobStateMachine`) and atomically write rows to `job_events` (with note) and `admin_actions`.
+- [ ] **Dispute chat privacy**: On `/admin/disputes/[id]`, chat messages are visible while the job is `Disputed`, whereas non-disputed job conversations remain private under RLS.
+- [ ] **Rate limiting (`429`)**: Sending requests beyond the configured sliding window (`60` requests per `60` seconds by default) returns `429 Too Many Requests` with a `Retry-After` header.
+- [ ] **User suggestions & search**: Typing in the search box on `/admin/users` displays prefix suggestions (`GET /admin/users/suggest` via `Trie`) and full-text ranked results (`GET /admin/users/search` via `InvertedIndex` + `MergeSort`).
+- [ ] **Analytics accuracy**: Funnel counts, top categories, top areas (`MinHeap.TopK` + `MergeSort`), and daily job counts on `/admin/analytics` match the database records.
+- [ ] **Engine reload**: Clicking **Reload engine data** on `/admin` calls `POST /admin/engine/reload`, rebuilds the in-memory indices and caches, and increments the displayed engine state version.
+
