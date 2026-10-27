@@ -12,6 +12,10 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
     pathname === "/" ||
     pathname === "/services" ||
     pathname?.startsWith("/services/") ||
+    pathname === "/features" ||
+    pathname?.startsWith("/features/") ||
+    pathname === "/about" ||
+    pathname?.startsWith("/about/") ||
     pathname === "/faqs" ||
     pathname === "/faq" ||
     pathname === "/contact" ||

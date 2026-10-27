@@ -1,0 +1,242 @@
+/* ProLink Features Page Stylesheet */
+
+.features-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  color: #34453b;
+  font-family: var(--font-sans, "Figtree", Arial, sans-serif);
+}
+
+.features-hero {
+  background: #f4faf6;
+  border-bottom: 1px solid #dce8e0;
+  padding: 60px 0 48px;
+  text-align: center;
+}
+
+.features-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #e6f4ea;
+  border: 1px solid #cde9d6;
+  color: #0f6b3e;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+}
+
+.features-hero h1 {
+  font-size: 40px;
+  font-weight: 800;
+  color: #0c2a1b;
+  margin: 0 0 14px;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.features-hero p {
+  font-size: 16px;
+  color: #4b6354;
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.features-main-container {
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+  flex: 1;
+}
+
+.features-section-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.features-section-header h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0c2a1b;
+  margin: 6px 0 10px;
+}
+
+.features-section-header p {
+  font-size: 15px;
+  color: #4b6354;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.features-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.feature-item-card {
+  border: 1px solid #dce8e0;
+  border-radius: 16px;
+  background: white;
+  padding: 26px 24px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feature-item-card:hover {
+  border-color: #0f6b3e;
+  box-shadow: 0 8px 24px rgba(15, 107, 62, 0.08);
+  transform: translateY(-2px);
+}
+
+.feature-item-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #e6f4ea;
+  color: #0f6b3e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-item-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0f6b3e;
+  background: #f4faf6;
+  border: 1px solid #dce8e0;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.feature-item-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0c2a1b;
+  margin: 0;
+}
+
+.feature-item-card p {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #4b6354;
+  margin: 0;
+}
+
+.features-workflow-strip {
+  margin-top: 64px;
+  background: #f4faf6;
+  border: 1px solid #dce8e0;
+  border-radius: 20px;
+  padding: 40px 32px;
+}
+
+.features-workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.features-workflow-step {
+  background: white;
+  border: 1px solid #dce8e0;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.features-workflow-step span {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #0f6b3e;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.features-workflow-step h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0c2a1b;
+  margin: 0 0 6px;
+}
+
+.features-workflow-step p {
+  font-size: 13.5px;
+  color: #4b6354;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.features-cta-banner {
+  margin-top: 56px;
+  border: 1px solid #dce8e0;
+  border-radius: 18px;
+  padding: 36px 28px;
+  text-align: center;
+  background: white;
+}
+
+.features-cta-banner h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0c2a1b;
+  margin: 0 0 8px;
+}
+
+.features-cta-banner p {
+  font-size: 14.5px;
+  color: #4b6354;
+  max-width: 520px;
+  margin: 0 auto 22px;
+  line-height: 1.6;
+}
+
+.features-cta-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+@media (max-width: 960px) {
+  .features-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .features-workflow-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .features-hero {
+    padding: 40px 0 32px;
+  }
+  .features-hero h1 {
+    font-size: 28px;
+  }
+  .features-main-container {
+    padding: 36px 16px 56px;
+  }
+  .features-cards-grid,
+  .features-workflow-grid {
+    grid-template-columns: 1fr;
+  }
+  .features-workflow-strip {
+    padding: 28px 18px;
+  }
+}

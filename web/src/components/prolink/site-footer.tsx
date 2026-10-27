@@ -35,21 +35,21 @@ export function SiteFooter() {
           <div>
             <h3>Discover ProLink</h3>
             <Link href="/services">All Services</Link>
-            <Link href="/#how-it-works">How It Works</Link>
-            <Link href="/#trust">Trust & Safety</Link>
+            <Link href="/features">Features</Link>
+            <Link href="/about">About Us</Link>
             <Link href="/faqs">FAQs</Link>
             <Link href="/contact">Contact Us</Link>
             <Link href="/sign-in">Sign In</Link>
           </div>
           <div>
             <h3>Active Hubs</h3>
-            {["Islamabad", "Lahore", "Karachi", "Rawalpindi"].map((city) => (
+            {["Lahore"].map((city) => (
               <span key={city}>{city}</span>
             ))}
           </div>
         </div>
         <div className="footer-bottom">
-          <span>© 2026 ProLink Technologies Pakistan (Pvt) Ltd.</span>
+          <span>© 2026 ProLink.</span>
           <span>English (Pakistan) · PKR (Rs)</span>
         </div>
       </div>

@@ -9,6 +9,7 @@ Menu,
 PlusCircle,
 X
 } from 'lucide-react';
+import Image from 'next/image';
 import React,{ useState } from 'react';
 import { MOCK_NOTIFICATIONS } from '../../data/mockData';
 import { marketplaceStore,useMarketplace } from '../../store/marketplaceStore';
@@ -50,6 +51,23 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
             className="lg:hidden p-1.5 text-[#34453B] hover:text-[#0C2A1B] cursor-pointer"
           >
             <Menu className="w-5 h-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => marketplaceStore.navigate('/user/overview')}
+            aria-label="ProLink Dashboard"
+            className="flex items-center gap-3 cursor-pointer focus:outline-none"
+          >
+            <Image
+              src="/images/logo.png"
+              alt="ProLink"
+              width={144}
+              height={40}
+              priority
+              className="h-8 w-auto object-contain"
+              style={{ height: 'auto', width: 'auto', maxHeight: '36px' }}
+            />
           </button>
 
           <span className="hidden sm:inline-block px-2 py-0.5 text-[11px] font-semibold text-[#0F6B3E] bg-[#E6F4EA] rounded-full border border-[#CDE9D6]">
@@ -193,7 +211,7 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
       </div>
 
       {/* Main Layout: Left Sidebar + Workspace Content */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
+      <div className="flex-1 flex w-full">
         {/* Left Sidebar (Desktop) */}
         <aside className="hidden lg:block w-64 border-r border-[#DCE8E0] py-6 px-4 space-y-1 shrink-0">
           {navItems.map((item) => {

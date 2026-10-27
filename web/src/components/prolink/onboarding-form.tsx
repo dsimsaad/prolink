@@ -200,7 +200,7 @@ export function OnboardingForm({
         </div>
         <footer className="auth-footer">
           <Icon name="shield" />
-          <span>Protected by ProLink Escrow & Trust</span>
+          <span>Verified Professionals &amp; Trusted Service</span>
           <Link href="/">Back to home</Link>
         </footer>
       </main>
@@ -227,7 +227,7 @@ export function OnboardingForm({
           </div>
           <blockquote>
             “Joining ProLink as a certified electrician gave me verified leads
-            and guaranteed payment escrow without middlemen cuts.”
+            and direct customer bookings without middlemen cuts.”
           </blockquote>
           <div className="testimonial-person">
             <span className="avatar" aria-hidden="true">

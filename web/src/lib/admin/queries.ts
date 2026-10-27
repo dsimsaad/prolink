@@ -17,10 +17,66 @@ import type {
 
 export async function fetchAdminOverview(supabase: SupabaseClient): Promise<AdminOverviewStats> {
   const { data, error } = await supabase.rpc("admin_overview");
-  if (error) {
-    throw new Error(error.message);
+  if (!error && data) {
+    return data as AdminOverviewStats;
   }
-  return data as AdminOverviewStats;
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const [profilesRes, prosRes, jobsRes, reportsRes] = await Promise.all([
+    supabase.from("profiles").select("id, created_at"),
+    supabase.from("professional_profiles").select("status"),
+    supabase.from("jobs").select("status, created_at"),
+    supabase.from("reports").select("status").eq("status", "open"),
+  ]);
+
+  const profiles = (profilesRes.data ?? []) as { id: string; created_at: string }[];
+  const pros = (prosRes.data ?? []) as { status: ApplicationStatus }[];
+  const jobs = (jobsRes.data ?? []) as { status: JobStatus; created_at: string }[];
+  const openReports = reportsRes.error ? 0 : (reportsRes.data ?? []).length;
+
+  const prosByStatus: Record<ApplicationStatus, number> = {
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    suspended: 0,
+  };
+  for (const p of pros) {
+    if (p.status in prosByStatus) {
+      prosByStatus[p.status] += 1;
+    }
+  }
+
+  const jobsByStatus: Record<JobStatus, number> = {
+    Draft: 0,
+    Open: 0,
+    "Offers received": 0,
+    Assigned: 0,
+    "In progress": 0,
+    Completed: 0,
+    Cancelled: 0,
+    Expired: 0,
+    Disputed: 0,
+  };
+  let jobsLast7Days = 0;
+  for (const j of jobs) {
+    if (j.status in jobsByStatus) {
+      jobsByStatus[j.status] += 1;
+    }
+    if (j.created_at >= sevenDaysAgo) {
+      jobsLast7Days += 1;
+    }
+  }
+
+  return {
+    total_users: profiles.length,
+    new_users_last_7_days: profiles.filter((p) => p.created_at >= sevenDaysAgo).length,
+    professionals_by_status: prosByStatus,
+    jobs_by_status: jobsByStatus,
+    jobs_last_7_days: jobsLast7Days,
+    open_reports: openReports,
+    disputed_jobs: jobsByStatus.Disputed,
+    pending_applications: prosByStatus.pending,
+  };
 }
 
 export async function fetchAdminJobsByDay(
@@ -28,12 +84,40 @@ export async function fetchAdminJobsByDay(
   days = 30
 ): Promise<DailyJobCount[]> {
   const { data, error } = await supabase.rpc("admin_jobs_by_day", { p_days: days });
-  if (error) {
-    throw new Error(error.message);
+  if (!error && data) {
+    return ((data as { day: string; job_count: number }[] | null) ?? []).map((row) => ({
+      day: row.day,
+      job_count: Number(row.job_count),
+    }));
   }
-  return ((data as { day: string; job_count: number }[] | null) ?? []).map((row) => ({
-    day: row.day,
-    job_count: Number(row.job_count),
+
+  const safeDays = Math.min(60, Math.max(1, days));
+  const now = new Date();
+  const start = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (safeDays - 1))
+  );
+
+  const { data: jobsData } = await supabase
+    .from("jobs")
+    .select("created_at")
+    .gte("created_at", start.toISOString());
+
+  const counts = new Map<string, number>();
+  for (let i = 0; i < safeDays; i++) {
+    const d = new Date(start.getTime() + i * 86_400_000);
+    counts.set(d.toISOString().slice(0, 10), 0);
+  }
+
+  for (const j of (jobsData ?? []) as { created_at: string }[]) {
+    const dayKey = j.created_at.slice(0, 10);
+    if (counts.has(dayKey)) {
+      counts.set(dayKey, (counts.get(dayKey) ?? 0) + 1);
+    }
+  }
+
+  return Array.from(counts.entries()).map(([day, job_count]) => ({
+    day,
+    job_count,
   }));
 }
 
@@ -57,7 +141,7 @@ export async function fetchAdminApplications(
     .range(from, to);
 
   if (error) {
-    throw new Error(error.message);
+    return { rows: [], totalCount: 0 };
   }
 
   const list = (proRows ?? []) as {
@@ -186,7 +270,32 @@ export async function fetchAdminUsers(
     .range(from, to);
 
   if (error) {
-    throw new Error(error.message);
+    let fallbackQuery = supabase
+      .from("profiles")
+      .select("id, full_name, role, created_at", { count: "exact" });
+    if (options.filterIds && options.filterIds.length > 0) {
+      fallbackQuery = fallbackQuery.in("id", options.filterIds);
+    }
+    const fallbackRes = await fallbackQuery
+      .order("created_at", { ascending: false })
+      .range(from, to);
+    if (fallbackRes.error) {
+      throw new Error(fallbackRes.error.message);
+    }
+    const fallbackRows = (
+      (fallbackRes.data ?? []) as {
+        id: string;
+        full_name: string;
+        role: "user" | "admin";
+        created_at: string;
+      }[]
+    ).map((u) => ({
+      ...u,
+      is_suspended: false,
+      suspended_reason: null,
+      suspended_at: null,
+    }));
+    return { rows: fallbackRows, totalCount: fallbackRes.count ?? fallbackRows.length };
   }
 
   const rows = ((data ?? []) as AdminUserRow[]).map((u) => ({
@@ -335,7 +444,7 @@ export async function fetchAdminJobs(
     .range(from, to);
 
   if (error) {
-    throw new Error(error.message);
+    return { rows: [], totalCount: 0 };
   }
 
   const rawJobs = (data ?? []) as {
@@ -552,7 +661,7 @@ export async function fetchAdminReports(
     .range(from, to);
 
   if (error) {
-    throw new Error(error.message);
+    return { rows: [], totalCount: 0 };
   }
 
   const rawReports = (data ?? []) as {

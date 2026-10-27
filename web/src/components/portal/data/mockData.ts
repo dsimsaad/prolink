@@ -1713,7 +1713,7 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     targetRole: 'professional',
     userId: 'pro-1',
     title: 'Offer Accepted! 🎉',
-    message: 'Mustafa Hashmi accepted your offer of PKR 4,400 for UPS Breaker Tripping. Escrow funds held.',
+    message: 'Mustafa Hashmi accepted your offer of PKR 4,400 for UPS Breaker Tripping.',
     time: '35m ago',
     read: false,
     link: '/pro/active',

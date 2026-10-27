@@ -38,7 +38,7 @@ export const AdminJobsOffersPage: React.FC = () => {
     await api.updateJobStatus(jobId, 'cancelled');
     await fetchJobs();
     setSelectedJob(null);
-    marketplaceStore.addToast('Job Cancelled', `Job #${jobId} was force-cancelled by admin. Escrow refunded.`, 'info');
+    marketplaceStore.addToast('Job Cancelled', `Job #${jobId} was force-cancelled by admin.`, 'info');
   };
 
   const handleFlagJob = async (jobId: string) => {
@@ -53,7 +53,7 @@ export const AdminJobsOffersPage: React.FC = () => {
       <div>
         <h1 className="text-2xl font-bold text-[#0C2A1B]">Jobs & Offers Telemetry</h1>
         <p className="text-xs text-[#6A7B70] mt-0.5">
-          Real-time oversight of all customer requests, bidding activity, and escrow contracts.
+          Real-time oversight of all customer requests and bidding activity.
         </p>
       </div>
 
@@ -221,7 +221,7 @@ export const AdminJobsOffersPage: React.FC = () => {
                 className="w-full text-xs font-bold"
               >
                 <XCircle className="w-4 h-4 mr-1.5" />
-                Force-Cancel Job & Refund Escrow
+                Force-Cancel Job
               </Button>
             </div>
           </div>

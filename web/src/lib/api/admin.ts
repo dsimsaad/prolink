@@ -1,4 +1,19 @@
 import { createClient } from "@/utils/supabase/client";
+import {
+  fallbackForceCancelJob,
+  fallbackGetAuditLog,
+  fallbackGetAuditSummary,
+  fallbackGetFunnelAnalytics,
+  fallbackGetJobAllowedActions,
+  fallbackGetReviewQueue,
+  fallbackGetTopAreas,
+  fallbackGetTopCategories,
+  fallbackReloadEngine,
+  fallbackResolveDisputedJob,
+  fallbackSearchJobs,
+  fallbackSearchUsers,
+  fallbackSuggestUsers,
+} from "@/lib/admin/engine-fallback";
 import type {
   AllowedJobActionsDto,
   AuditPageResponse,
@@ -37,6 +52,13 @@ const SLOW_RESPONSE_THRESHOLD_MS = 3_500;
 function getApiBaseUrl(): string {
   const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
   return (configured && configured.length > 0 ? configured : "http://localhost:5080").replace(/\/+$/, "");
+}
+
+function shouldUseFallback(err: unknown): boolean {
+  if (err instanceof AdminApiError) {
+    return err.status === 503 || err.status === 504 || err.status === 500;
+  }
+  return true;
 }
 
 async function resolveAccessToken(explicitToken?: string): Promise<string> {
@@ -161,17 +183,36 @@ export async function getAdminReviewQueue(
   limit = 20,
   options?: AdminRequestOptions
 ): Promise<ReviewQueueResponse> {
-  return requestAdminApi<ReviewQueueResponse>(`/admin/review-queue?limit=${limit}`, { method: "GET" }, options);
+  try {
+    return await requestAdminApi<ReviewQueueResponse>(
+      `/admin/review-queue?limit=${limit}`,
+      { method: "GET" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackGetReviewQueue(limit);
+    }
+    throw err;
+  }
 }
 
 export async function refreshAdminReviewQueue(
   options?: AdminRequestOptions
 ): Promise<{ totalCount: number; refreshedAt: string }> {
-  return requestAdminApi<{ totalCount: number; refreshedAt: string }>(
-    "/admin/review-queue/refresh",
-    { method: "POST" },
-    options
-  );
+  try {
+    return await requestAdminApi<{ totalCount: number; refreshedAt: string }>(
+      "/admin/review-queue/refresh",
+      { method: "POST" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      const q = await fallbackGetReviewQueue(20);
+      return { totalCount: q.totalCount, refreshedAt: q.refreshedAt };
+    }
+    throw err;
+  }
 }
 
 export async function getAdminAuditLog(
@@ -184,14 +225,36 @@ export async function getAdminAuditLog(
   search.set("page", String(params.page ?? 1));
   search.set("pageSize", String(Math.min(100, Math.max(1, params.pageSize ?? 20))));
 
-  return requestAdminApi<AuditPageResponse>(`/admin/audit?${search.toString()}`, { method: "GET" }, options);
+  try {
+    return await requestAdminApi<AuditPageResponse>(
+      `/admin/audit?${search.toString()}`,
+      { method: "GET" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackGetAuditLog(params);
+    }
+    throw err;
+  }
 }
 
 export async function getAdminAuditSummary(
   days = 14,
   options?: AdminRequestOptions
 ): Promise<AuditSummaryResponse> {
-  return requestAdminApi<AuditSummaryResponse>(`/admin/audit/summary?days=${days}`, { method: "GET" }, options);
+  try {
+    return await requestAdminApi<AuditSummaryResponse>(
+      `/admin/audit/summary?days=${days}`,
+      { method: "GET" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackGetAuditSummary(days);
+    }
+    throw err;
+  }
 }
 
 export async function suggestAdminUsers(
@@ -200,12 +263,19 @@ export async function suggestAdminUsers(
   options?: AdminRequestOptions
 ): Promise<UserSuggestionDto[]> {
   const search = new URLSearchParams({ q: query.trim(), limit: String(limit) });
-  const res = await requestAdminApi<{ items: UserSuggestionDto[] }>(
-    `/admin/users/suggest?${search.toString()}`,
-    { method: "GET" },
-    options
-  );
-  return res.items;
+  try {
+    const res = await requestAdminApi<{ items: UserSuggestionDto[] }>(
+      `/admin/users/suggest?${search.toString()}`,
+      { method: "GET" },
+      options
+    );
+    return res.items;
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackSuggestUsers(query, limit);
+    }
+    throw err;
+  }
 }
 
 export async function searchAdminUsers(
@@ -213,12 +283,19 @@ export async function searchAdminUsers(
   options?: AdminRequestOptions
 ): Promise<UserSearchHitDto[]> {
   const search = new URLSearchParams({ q: query.trim() });
-  const res = await requestAdminApi<{ items: UserSearchHitDto[] }>(
-    `/admin/users/search?${search.toString()}`,
-    { method: "GET" },
-    options
-  );
-  return res.items;
+  try {
+    const res = await requestAdminApi<{ items: UserSearchHitDto[] }>(
+      `/admin/users/search?${search.toString()}`,
+      { method: "GET" },
+      options
+    );
+    return res.items;
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackSearchUsers(query);
+    }
+    throw err;
+  }
 }
 
 export async function searchAdminJobs(
@@ -226,53 +303,92 @@ export async function searchAdminJobs(
   options?: AdminRequestOptions
 ): Promise<string[]> {
   const search = new URLSearchParams({ q: query.trim() });
-  const res = await requestAdminApi<{ jobIds: string[] }>(
-    `/admin/jobs/search?${search.toString()}`,
-    { method: "GET" },
-    options
-  );
-  return res.jobIds;
+  try {
+    const res = await requestAdminApi<{ jobIds: string[] }>(
+      `/admin/jobs/search?${search.toString()}`,
+      { method: "GET" },
+      options
+    );
+    return res.jobIds;
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackSearchJobs(query);
+    }
+    throw err;
+  }
 }
 
 export async function getAdminFunnelAnalytics(
   options?: AdminRequestOptions
 ): Promise<FunnelAnalyticsDto> {
-  return requestAdminApi<FunnelAnalyticsDto>("/admin/analytics/funnel", { method: "GET" }, options);
+  try {
+    return await requestAdminApi<FunnelAnalyticsDto>(
+      "/admin/analytics/funnel",
+      { method: "GET" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackGetFunnelAnalytics();
+    }
+    throw err;
+  }
 }
 
 export async function getAdminTopCategories(
   n = 5,
   options?: AdminRequestOptions
 ): Promise<RankedGroupCountDto[]> {
-  const res = await requestAdminApi<{ items: RankedGroupCountDto[] }>(
-    `/admin/analytics/top-categories?n=${n}`,
-    { method: "GET" },
-    options
-  );
-  return res.items;
+  try {
+    const res = await requestAdminApi<{ items: RankedGroupCountDto[] }>(
+      `/admin/analytics/top-categories?n=${n}`,
+      { method: "GET" },
+      options
+    );
+    return res.items;
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackGetTopCategories(n);
+    }
+    throw err;
+  }
 }
 
 export async function getAdminTopAreas(
   n = 5,
   options?: AdminRequestOptions
 ): Promise<RankedGroupCountDto[]> {
-  const res = await requestAdminApi<{ items: RankedGroupCountDto[] }>(
-    `/admin/analytics/top-areas?n=${n}`,
-    { method: "GET" },
-    options
-  );
-  return res.items;
+  try {
+    const res = await requestAdminApi<{ items: RankedGroupCountDto[] }>(
+      `/admin/analytics/top-areas?n=${n}`,
+      { method: "GET" },
+      options
+    );
+    return res.items;
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackGetTopAreas(n);
+    }
+    throw err;
+  }
 }
 
 export async function getJobAllowedActions(
   jobId: string,
   options?: AdminRequestOptions
 ): Promise<AllowedJobActionsDto> {
-  return requestAdminApi<AllowedJobActionsDto>(
-    `/admin/jobs/${encodeURIComponent(jobId)}/allowed-actions`,
-    { method: "GET" },
-    options
-  );
+  try {
+    return await requestAdminApi<AllowedJobActionsDto>(
+      `/admin/jobs/${encodeURIComponent(jobId)}/allowed-actions`,
+      { method: "GET" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackGetJobAllowedActions(jobId);
+    }
+    throw err;
+  }
 }
 
 export async function forceCancelJob(
@@ -280,14 +396,21 @@ export async function forceCancelJob(
   reason: string,
   options?: AdminRequestOptions
 ): Promise<{ jobId: string; previousStatus: string; newStatus: string }> {
-  return requestAdminApi<{ jobId: string; previousStatus: string; newStatus: string }>(
-    `/admin/jobs/${encodeURIComponent(jobId)}/force-cancel`,
-    {
-      method: "POST",
-      body: JSON.stringify({ reason: reason.trim() }),
-    },
-    options
-  );
+  try {
+    return await requestAdminApi<{ jobId: string; previousStatus: string; newStatus: string }>(
+      `/admin/jobs/${encodeURIComponent(jobId)}/force-cancel`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason: reason.trim() }),
+      },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackForceCancelJob(jobId, reason);
+    }
+    throw err;
+  }
 }
 
 export async function resolveDisputedJob(
@@ -296,18 +419,41 @@ export async function resolveDisputedJob(
   note: string,
   options?: AdminRequestOptions
 ): Promise<{ jobId: string; previousStatus: string; newStatus: string; outcome: string }> {
-  return requestAdminApi<{ jobId: string; previousStatus: string; newStatus: string; outcome: string }>(
-    `/admin/disputes/${encodeURIComponent(jobId)}/resolve`,
-    {
-      method: "POST",
-      body: JSON.stringify({ outcome, note: note.trim() }),
-    },
-    options
-  );
+  try {
+    return await requestAdminApi<{
+      jobId: string;
+      previousStatus: string;
+      newStatus: string;
+      outcome: string;
+    }>(
+      `/admin/disputes/${encodeURIComponent(jobId)}/resolve`,
+      {
+        method: "POST",
+        body: JSON.stringify({ outcome, note: note.trim() }),
+      },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackResolveDisputedJob(jobId, outcome, note);
+    }
+    throw err;
+  }
 }
 
 export async function reloadAdminEngine(
   options?: AdminRequestOptions
 ): Promise<EngineReloadResponse> {
-  return requestAdminApi<EngineReloadResponse>("/admin/engine/reload", { method: "POST" }, options);
+  try {
+    return await requestAdminApi<EngineReloadResponse>(
+      "/admin/engine/reload",
+      { method: "POST" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return fallbackReloadEngine();
+    }
+    throw err;
+  }
 }

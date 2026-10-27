@@ -57,7 +57,7 @@ export default function ContactPage() {
                   >
                     support@prolink.pk
                   </a>
-                  <div className="contact-sub-text">Escrow Disputes: disputes@prolink.pk</div>
+                  <div className="contact-sub-text">Disputes &amp; Support: disputes@prolink.pk</div>
                 </div>
               </div>
 
@@ -68,11 +68,9 @@ export default function ContactPage() {
                 <div className="contact-card-content">
                   <h3>Head Office</h3>
                   <p>
-                    ProLink Technologies Pakistan (Pvt) Ltd.
+                    ProLink Head Office
                     <br />
-                    4th Floor, Evacuee Trust Complex, F-5/1,
-                    <br />
-                    Islamabad, 44000, Pakistan
+                    Lahore, Pakistan
                   </p>
                 </div>
               </div>
@@ -85,7 +83,7 @@ export default function ContactPage() {
                   <h3>Operating Hours</h3>
                   <p>Monday through Saturday: 9:00 AM – 8:00 PM PKT</p>
                   <div style={{ fontSize: "12px", color: "#0f6b3e", fontWeight: 700 }}>
-                    Emergency escalation available 24/7 for active escrow jobs
+                    Priority escalation available 24/7 for active service jobs
                   </div>
                 </div>
               </div>

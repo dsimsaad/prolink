@@ -75,7 +75,7 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
       const completed = await api.completeJobAndReview(job.id, review);
       setJob(completed);
       setReviewModalOpen(false);
-      marketplaceStore.addToast('Job Completed & Reviewed! ⭐', 'Escrow funds released to technician.', 'success');
+      marketplaceStore.addToast('Job Completed & Reviewed! ⭐', 'Your review has been submitted.', 'success');
     } catch {
       marketplaceStore.addToast('Action failed', 'Could not submit review', 'error');
     }
@@ -216,21 +216,21 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
             />
           </div>
 
-          {/* Escrow Payment Status Box */}
+          {/* Payment Status Box */}
           <div className="bg-white border border-[#DCE8E0] rounded-[10px] p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#0C2A1B]">Escrow Protection</h3>
+              <h3 className="text-sm font-bold text-[#0C2A1B]">Booking &amp; Pricing</h3>
               <CreditCard className="w-4 h-4 text-[#0F6B3E]" />
             </div>
             <div className="p-3 bg-[#F4FAF6] border border-[#DCE8E0] rounded-[8px] space-y-1.5 text-xs">
               <div className="flex justify-between items-center font-semibold">
-                <span className="text-[#34453B]">Escrow Status:</span>
+                <span className="text-[#34453B]">Booking Status:</span>
                 <span className={job.status === 'completed' ? 'text-[#2FAE60]' : 'text-[#0F6B3E]'}>
-                  {job.status === 'completed' ? 'Funds Released' : job.status === 'in_progress' ? 'Held in Escrow' : 'Awaiting Booking'}
+                  {job.status === 'completed' ? 'Completed' : job.status === 'in_progress' ? 'In Progress' : 'Awaiting Booking'}
                 </span>
               </div>
               <p className="text-[11px] text-[#6A7B70] leading-snug">
-                Funds are protected in ProLink partner banking channels. No cash is paid until you verify work completion.
+                Quotes are itemized upfront before work begins.
               </p>
             </div>
           </div>

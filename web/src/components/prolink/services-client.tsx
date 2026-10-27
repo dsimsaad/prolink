@@ -269,7 +269,7 @@ export function ServicesClient() {
           <p>
             Explore our comprehensive range of on-demand home and commercial
             services. Every service is fulfilled by biometric-verified tradespeople,
-            backed by transparent pricing and escrow payment protection.
+            backed by transparent pricing and verified quality standards.
           </p>
 
           <div className="services-search-bar">
@@ -404,9 +404,6 @@ export function ServicesClient() {
                     <div className="service-trust-features">
                       <span className="service-trust-item">
                         <Icon name="shield" /> {service.verifiedProsCount}+ Verified Pros
-                      </span>
-                      <span className="service-trust-item">
-                        <Icon name="card" /> Escrow Protected
                       </span>
                     </div>
                     <Link

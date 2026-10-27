@@ -62,7 +62,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
         <div className="flex items-start justify-between pb-3 border-b border-[#DCE8E0]">
           <div>
             <span className="text-xs font-semibold text-[#0F6B3E] uppercase tracking-wider">
-              Mark Job Completed & Release Escrow
+              Mark Job Completed
             </span>
             <h3 className="text-lg font-bold text-[#0C2A1B] mt-0.5">
               Review {proName}
@@ -143,10 +143,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             />
           </div>
 
-          {/* Escrow Release Notice */}
+          {/* Completion Notice */}
           <div className="p-3 bg-[#E6F4EA] rounded-[8px] border border-[#CDE9D6] text-xs text-[#0B5632] flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-[#2FAE60] shrink-0" />
-            <span>Submitting this review releases the held escrow payment directly to the professional&apos;s account.</span>
+            <span>Submitting this review marks the job as completed and publishes your verified feedback.</span>
           </div>
 
           <div className="flex gap-2 pt-2">

@@ -20,9 +20,8 @@ export const services = [
 
 const navigation = [
   { href: "/services", label: "Services" },
-  { href: "/#services", label: "Find Professionals" },
-  { href: "/#how-it-works", label: "How It Works" },
-  { href: "/#trust", label: "Trust & Safety" },
+  { href: "/features", label: "Features" },
+  { href: "/about", label: "About" },
   { href: "/faqs", label: "FAQs" },
   { href: "/contact", label: "Contact" },
 ];

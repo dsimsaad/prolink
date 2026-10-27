@@ -33,7 +33,7 @@ export const AdminOverview: React.FC = () => {
       value: 'PKR 574.0k',
       delta: { value: '+12.4%', direction: 'positive' },
       sparkline: [171, 210, 299, 396, 470, 574],
-      tooltip: '5% escrow platform commission'
+      tooltip: '5% platform commission'
     },
     {
       id: 'active-users',
@@ -89,8 +89,8 @@ export const AdminOverview: React.FC = () => {
       onClick: () => marketplaceStore.navigate('/admin/verification')
     },
     {
-      id: 'escrow-held',
-      label: 'Active Escrow Held',
+      id: 'active-bookings',
+      label: 'Active Bookings Value',
       value: 'PKR 842.5k',
       delta: { value: 'In safe custody', direction: 'neutral' },
       sparkline: [400, 600, 750, 842.5]
@@ -281,7 +281,7 @@ export const AdminOverview: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <span className="text-[#A3B1A8] block">Escrow Ledger Invariants</span>
+            <span className="text-[#A3B1A8] block">Database Integrity</span>
             <div className="text-xl font-bold text-white font-mono tabular-nums">Balanced</div>
             <span className="text-[10px] text-[#2FAE60]">Zero discrepancies</span>
           </div>

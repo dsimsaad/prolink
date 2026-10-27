@@ -19,11 +19,11 @@ const steps = [
   ],
   [
     "Compare & hire safely",
-    "Compare reviews and itemized quotes. Accept your best match with secure escrow.",
+    "Compare reviews and itemized quotes. Accept the best match for your job.",
   ],
   [
-    "Track & release funds",
-    "Once the work is complete and you are satisfied, release your payment.",
+    "Track & complete job",
+    "Coordinate directly with your hired professional until the job is done.",
   ],
 ];
 
@@ -44,7 +44,7 @@ export function LandingPage() {
               <p className="hero-description">
                 Post your job in 60 seconds. Receive verified offers from
                 top-rated electricians, plumbers, HVAC specialists and painters
-                nearby. Escrow protected.
+                nearby.
               </p>
               <div className="hero-actions">
                 <Link className="button" href="/sign-in">
@@ -138,11 +138,6 @@ export function LandingPage() {
               </Link>
             ))}
           </div>
-          <div style={{ textAlign: "center", marginTop: "32px" }}>
-            <Link className="button outline" href="/services">
-              View All Services &amp; Specializations <Icon name="arrow" />
-            </Link>
-          </div>
         </section>
         <section id="how-it-works" className="section tinted">
           <div className="container">
@@ -174,8 +169,8 @@ export function LandingPage() {
               ],
               [
                 "card",
-                "Escrow Money Protection",
-                "Your payment is held securely until you confirm the job is complete.",
+                "Transparent Pricing",
+                "Compare clear, upfront itemized quotes and inspection fees before work begins.",
               ],
               [
                 "check",
@@ -232,21 +227,21 @@ export function LandingPage() {
             <div>
               <h3>Discover ProLink</h3>
               <Link href="/services">All Services</Link>
-              <a href="#how-it-works">How It Works</a>
-              <a href="#trust">Trust & Safety</a>
+              <Link href="/features">Features</Link>
+              <Link href="/about">About Us</Link>
               <Link href="/faqs">FAQs</Link>
               <Link href="/contact">Contact Us</Link>
               <Link href="/sign-in">Sign In</Link>
             </div>
             <div>
               <h3>Active Hubs</h3>
-              {["Islamabad", "Lahore", "Karachi", "Rawalpindi"].map((city) => (
+              {["Lahore"].map((city) => (
                 <span key={city}>{city}</span>
               ))}
             </div>
           </div>
           <div className="footer-bottom">
-            <span>© 2026 ProLink Technologies Pakistan (Pvt) Ltd.</span>
+            <span>© 2026 ProLink.</span>
             <span>English (Pakistan) · PKR (Rs)</span>
           </div>
         </div>

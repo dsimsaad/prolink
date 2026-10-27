@@ -13,11 +13,11 @@ interface FaqItem {
 
 const faqs: FaqItem[] = [
   {
-    id: "escrow",
+    id: "pricing",
     category: "payments",
-    question: "How does ProLink protect my payment?",
+    question: "How does pricing work on ProLink?",
     answer:
-      "Every transaction on ProLink is protected by our secure escrow system. When you accept an offer, funds are held safely in escrow. They are only released to the tradesperson after the job is completed and you have verified the work to your complete satisfaction.",
+      "Every job on ProLink uses transparent, upfront itemized quotes. Professionals submit their estimated price, arrival time, and diagnostic fee before you hire them, so you can compare options and agree on pricing before any work begins.",
   },
   {
     id: "verification",
@@ -52,7 +52,7 @@ const faqs: FaqItem[] = [
     category: "customers",
     question: "What should I do if I am not satisfied with the completed work?",
     answer:
-      "Because payments are held in escrow, funds are never released until you give your final approval. If an issue arises, you can request adjustments or contact ProLink support. Our team investigates the job history and mediates a fair resolution or refund.",
+      "If an issue arises with a job, you can request adjustments directly from the professional or submit a report to ProLink support. Our moderation team reviews the job history and chat transcript to help mediate a fair resolution.",
   },
   {
     id: "quotes",
@@ -88,13 +88,13 @@ const categories = [
   { id: "all", label: "All Questions" },
   { id: "customers", label: "For Customers" },
   { id: "pros", label: "For Professionals" },
-  { id: "payments", label: "Payments & Escrow" },
+  { id: "payments", label: "Pricing & Payments" },
   { id: "trust", label: "Trust & Safety" },
 ];
 
 export function FaqsClient() {
   const [activeCategory, setActiveCategory] = useState("all");
-  const [openIds, setOpenIds] = useState<string[]>(["escrow", "verification"]);
+  const [openIds, setOpenIds] = useState<string[]>(["pricing", "verification"]);
 
   const toggleItem = (id: string) => {
     setOpenIds((prev) =>
@@ -118,7 +118,7 @@ export function FaqsClient() {
           <h1>Frequently Asked Questions</h1>
           <p>
             Everything you need to know about hiring verified artisans, joining as
-            a tradesperson, and our escrow payment protection.
+            a tradesperson, and transparent pricing.
           </p>
         </div>
       </section>

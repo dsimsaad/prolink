@@ -294,7 +294,7 @@ export const CustomerOverview: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <span className="text-xs font-bold text-[#0F6B3E] tabular-nums">PKR 4,400</span>
-                  <span className="text-[10px] text-[#6A7B70] block">Held in Escrow</span>
+                  <span className="text-[10px] text-[#6A7B70] block">Agreed Quote</span>
                 </div>
               </div>
 
@@ -314,7 +314,7 @@ export const CustomerOverview: React.FC = () => {
             <div className="space-y-1.5 text-xs">
               <div className="flex items-center gap-2 text-[#0F6B3E] font-semibold">
                 <CheckCircle2 className="w-4 h-4 text-[#2FAE60]" />
-                <span>Job confirmed & Escrow deposit held</span>
+                <span>Job confirmed &amp; professional assigned</span>
               </div>
               <div className="flex items-center gap-2 text-[#0F6B3E] font-semibold">
                 <CheckCircle2 className="w-4 h-4 text-[#2FAE60]" />

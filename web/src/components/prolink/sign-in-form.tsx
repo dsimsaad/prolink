@@ -343,7 +343,7 @@ export function SignInForm({
 
         <footer className="auth-footer">
           <Icon name="shield" />
-          <span>Protected by ProLink Escrow & Trust</span>
+          <span>Verified Professionals &amp; Trusted Service</span>
           <Link href="/">Back to home</Link>
         </footer>
       </main>
