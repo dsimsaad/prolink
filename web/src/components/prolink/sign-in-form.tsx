@@ -8,6 +8,7 @@ import { Brand, Icon } from "./brand";
 import { createClient } from "@/utils/supabase/client";
 import { getSignInDestination } from "@/utils/auth-destination";
 import { clearOAuthDestination, rememberOAuthDestination } from "@/utils/oauth-navigation";
+import { resolvePostLoginAction } from "@/app/sign-in/actions";
 
 export function SignInForm({
   defaultMode,
@@ -38,22 +39,28 @@ export function SignInForm({
       setMessage("");
       setLoading(true);
       const supabase = createClient();
-      const redirectUrl = new URL(`${window.location.origin}/auth/callback`);
-      // Use the exact callback URL for normal Google sign-in.
-      if (safeNext !== "/user") redirectUrl.searchParams.set("next", safeNext);
+      // Store intended destination in cookie and sessionStorage so callback routes to /become-professional
+      document.cookie = `prolink_oauth_next=${encodeURIComponent(safeNext)}; path=/; max-age=900; SameSite=Lax`;
       rememberOAuthDestination(safeNext);
+
+      // ALWAYS keep redirectTo strictly as /auth/callback without query parameters
+      // to avoid triggering Supabase allowlist rejection and falling back to the Vercel site URL
+      const callbackUrl = `${window.location.origin}/auth/callback`;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: redirectUrl.toString(),
+          redirectTo: callbackUrl,
         },
       });
       if (error) {
         clearOAuthDestination();
+        document.cookie = "prolink_oauth_next=; path=/; max-age=0";
         setMessage(error.message);
       }
     } catch (err) {
       clearOAuthDestination();
+      document.cookie = "prolink_oauth_next=; path=/; max-age=0";
       setMessage(
         err instanceof Error
           ? err.message
@@ -84,7 +91,13 @@ export function SignInForm({
         if (error) {
           setMessage(error.message);
         } else {
-          window.location.replace(safeNext);
+          const check = await resolvePostLoginAction(safeNext);
+          if (check.status === "suspended") {
+            await supabase.auth.signOut();
+            setMessage(check.message);
+          } else {
+            window.location.replace(check.destination);
+          }
         }
       } else {
         // Sign up flow sends full_name only; no role is sent
@@ -102,8 +115,13 @@ export function SignInForm({
         if (error) {
           setMessage(error.message);
         } else if (data.session) {
-          // Immediately authenticated
-          window.location.replace(safeNext);
+          const check = await resolvePostLoginAction(safeNext);
+          if (check.status === "suspended") {
+            await supabase.auth.signOut();
+            setMessage(check.message);
+          } else {
+            window.location.replace(check.destination);
+          }
         } else if (data.user) {
           // Email confirmation is required by Supabase configuration
           setMessage(

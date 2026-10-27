@@ -6,12 +6,22 @@ import { getSignInDestination } from "@/utils/auth-destination";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const rawNext = searchParams.get("next");
+  const cookieStore = await cookies();
+  const cookieNext = cookieStore.get("prolink_oauth_next")?.value;
+  const rawNext = searchParams.get("next") || cookieNext || null;
 
   const next = getSignInDestination(rawNext, searchParams.get("role"));
 
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const isLocalEnv = process.env.NODE_ENV === "development";
+
+  function buildTarget(path: string): string {
+    if (isLocalEnv) return `${origin}${path}`;
+    if (forwardedHost) return `https://${forwardedHost}${path}`;
+    return `${origin}${path}`;
+  }
+
   if (code) {
-    const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     const { error: exchangeError } =
       await supabase.auth.exchangeCodeForSession(code);
@@ -23,30 +33,37 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (!userError && user) {
-        const forwardedHost = request.headers.get("x-forwarded-host");
-        const isLocalEnv = process.env.NODE_ENV === "development";
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role, is_suspended, suspended_reason")
+          .eq("id", user.id)
+          .maybeSingle();
 
-        if (isLocalEnv) {
-          return NextResponse.redirect(`${origin}${next}`);
-        } else if (forwardedHost) {
-          return NextResponse.redirect(`https://${forwardedHost}${next}`);
-        } else {
-          return NextResponse.redirect(`${origin}${next}`);
+        if (profile?.is_suspended) {
+          await supabase.auth.signOut();
+          const suspendedMsg = profile.suspended_reason
+            ? `Your account has been suspended: ${profile.suspended_reason}`
+            : "Your account has been suspended. Please contact support.";
+          const suspendedRes = NextResponse.redirect(
+            buildTarget(`/sign-in?error=${encodeURIComponent(suspendedMsg)}`)
+          );
+          suspendedRes.cookies.delete("prolink_oauth_next");
+          return suspendedRes;
         }
+
+        const destination =
+          profile?.role === "admin" ? "/admin" : next;
+
+        const res = NextResponse.redirect(buildTarget(destination));
+        res.cookies.delete("prolink_oauth_next");
+        return res;
       }
     }
   }
 
-  // Return the user to the sign-in page with a generic error message
-  const errorRedirect = "/sign-in?error=Could+not+authenticate+user";
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const isLocalEnv = process.env.NODE_ENV === "development";
-
-  if (isLocalEnv) {
-    return NextResponse.redirect(`${origin}${errorRedirect}`);
-  } else if (forwardedHost) {
-    return NextResponse.redirect(`https://${forwardedHost}${errorRedirect}`);
-  } else {
-    return NextResponse.redirect(`${origin}${errorRedirect}`);
-  }
+  const res = NextResponse.redirect(
+    buildTarget("/sign-in?error=Could+not+authenticate+user")
+  );
+  res.cookies.delete("prolink_oauth_next");
+  return res;
 }

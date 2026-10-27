@@ -82,12 +82,18 @@ export const marketplaceStore = {
   },
 
   navigate(path: string, query?: Record<string, string>) {
+    // If user is inside dashboard, prevent accidental navigation back to landing page
+    let targetPath = path;
+    if (state.currentUser && (targetPath === '/' || targetPath.startsWith('/#') || targetPath === '/services' || targetPath.startsWith('/services#') || targetPath === '/contact')) {
+      targetPath = state.currentRole === 'admin' ? '/admin/overview' : '/user/overview';
+    }
+
     state = {
       ...state,
-      currentPath: path,
+      currentPath: targetPath,
       queryParams: query || {}
     };
-    marketplaceStore.updateUrl(path, query);
+    marketplaceStore.updateUrl(targetPath, query);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     notify();
   },
@@ -186,9 +192,14 @@ export function useMarketplace() {
     listeners.add(listener);
 
     const onPopState = () => {
+      const pathname = window.location.pathname || '/';
+      if (state.currentUser && (pathname === '/' || pathname === '')) {
+        window.location.replace(state.currentRole === 'admin' ? '/admin/overview' : '/user/overview');
+        return;
+      }
       state = {
         ...state,
-        currentPath: window.location.pathname || '/',
+        currentPath: pathname,
         queryParams: Object.fromEntries(new URLSearchParams(window.location.search))
       };
       notify();

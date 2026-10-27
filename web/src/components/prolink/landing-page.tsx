@@ -28,7 +28,7 @@ const steps = [
 ];
 
 export function LandingPage() {
-  const { proState, reviewNote } = useNavigationAccount();
+  const { isAdmin, proState, reviewNote } = useNavigationAccount();
 
   return (
     <>
@@ -202,11 +202,13 @@ export function LandingPage() {
             Post a Job <Icon name="arrow" />
           </Link>
         </section>
-        <BecomeProfessionalCta
-          variant="landing-section"
-          state={proState}
-          reviewNote={reviewNote}
-        />
+        {!isAdmin && (
+          <BecomeProfessionalCta
+            variant="landing-section"
+            state={proState}
+            reviewNote={reviewNote}
+          />
+        )}
       </main>
       <footer className="site-footer">
         <div className="container">

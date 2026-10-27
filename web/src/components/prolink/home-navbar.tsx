@@ -1,7 +1,9 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Brand } from "./brand";
 import { BecomeProfessionalCta } from "./become-professional-cta";
 import { useNavigationAccount } from "./use-navigation-account";
@@ -15,12 +17,24 @@ export const services = [
   "Deep Cleaning",
   "Home Tutoring",
 ];
+
+const navigation = [
+  { href: "/services", label: "Services" },
+  { href: "/#services", label: "Find Professionals" },
+  { href: "/#how-it-works", label: "How It Works" },
+  { href: "/#trust", label: "Trust & Safety" },
+  { href: "/faqs", label: "FAQs" },
+  { href: "/contact", label: "Contact" },
+];
+
 export function HomeNavbar() {
-  const { isLoggedIn, proState, userName, handleSignOut } = useNavigationAccount();
+  const { isLoggedIn, isAdmin, proState, userName, handleSignOut } = useNavigationAccount();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Handle outside clicks and ESC key for user dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -46,180 +60,251 @@ export function HomeNavbar() {
   }, [userMenuOpen]);
 
   return (
-      <header className="site-header" onClickCapture={(event) => {
-        if ((event.target as HTMLElement).closest('a')) {
-          setMenuOpen(false);
-          setUserMenuOpen(false);
-        }
-      }}>
-        <div className="container nav-row">
-          <Brand />
-          <nav className="desktop-nav" aria-label="Main navigation">
-            <Link href="/services" aria-current={pathname === "/services" ? "page" : undefined}>Services</Link>
-            <Link href="/#services">Find Professionals</Link>
-            <Link href="/#how-it-works">How It Works</Link>
-            <Link href="/#trust">Trust & Safety</Link>
-            <Link href="/faqs" prefetch onNavigate={() => { setMenuOpen(false); setUserMenuOpen(false); }} aria-current={pathname === "/faqs" ? "page" : undefined}>FAQs</Link>
-            <Link href="/contact" prefetch onNavigate={() => { setMenuOpen(false); setUserMenuOpen(false); }} aria-current={pathname === "/contact" ? "page" : undefined}>Contact</Link>
-          </nav>
-          <div className="nav-actions">
-            {isLoggedIn ? (
-              <div className="user-menu-container" ref={userMenuRef}>
-                <button
-                  type="button"
-                  className="user-menu-button"
-                  aria-expanded={userMenuOpen}
-                  aria-haspopup="true"
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                >
-                  <span className="user-avatar-pill">
-                    {userName ? userName.charAt(0).toUpperCase() : "U"}
-                  </span>
-                  <span className="user-name-text">{userName}</span>
-                  <span style={{ fontSize: "9px", opacity: 0.7, marginLeft: "2px" }}>
-                    ▼
-                  </span>
-                </button>
-                {userMenuOpen && (
-                  <div className="user-dropdown-panel" role="menu">
-                    <div className="user-dropdown-header">
-                      <strong>{userName}</strong>
-                      <small>
-                        {proState === "approved"
-                          ? "Verified Professional"
-                          : proState === "pending"
-                            ? "Application Under Review"
-                            : proState === "rejected"
-                              ? "Application Needs Update"
-                              : proState === "suspended"
-                                ? "Account On Hold"
-                                : "Customer Account"}
-                      </small>
-                    </div>
-                    <Link href="/user" role="menuitem" onClick={() => setUserMenuOpen(false)}>My dashboard</Link>
+    <header className="site-header">
+      <div className="container flex h-[72px] items-center justify-between gap-6">
+        <Brand />
+
+        {/* Desktop Navigation Links */}
+        <nav
+          className="hidden items-center gap-1 lg:flex"
+          aria-label="Main navigation"
+        >
+          {navigation.map((item) => {
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : item.href.startsWith("/#")
+                ? false
+                : pathname === item.href || pathname.startsWith(item.href + "/");
+
+            return (
+              <Link
+                href={item.href}
+                key={item.href}
+                className={`relative inline-flex h-[72px] items-center px-3 text-sm font-semibold transition-[color,font-weight] duration-300 ease-out after:absolute after:bottom-[-1px] after:left-3 after:right-3 after:h-0.5 after:origin-left after:scale-x-0 after:bg-[var(--forest)] after:transition-transform after:duration-300 after:ease-out after:content-[''] ${
+                  active
+                    ? "font-bold text-[var(--ink)] after:scale-x-100"
+                    : "text-[var(--muted)] hover:text-[var(--ink)] hover:after:scale-x-100"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Desktop Action Area */}
+        <div className="hidden items-center gap-3 lg:flex">
+          {isLoggedIn ? (
+            <div className="user-menu-container" ref={userMenuRef}>
+              <button
+                type="button"
+                className="user-menu-button"
+                aria-expanded={userMenuOpen}
+                aria-haspopup="true"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+              >
+                <span className="user-avatar-pill">
+                  {userName ? userName.charAt(0).toUpperCase() : "U"}
+                </span>
+                <span className="user-name-text">{userName}</span>
+                <span style={{ fontSize: "9px", opacity: 0.7, marginLeft: "2px" }}>
+                  ▼
+                </span>
+              </button>
+              {userMenuOpen && (
+                <div className="user-dropdown-panel" role="menu">
+                  <div className="user-dropdown-header">
+                    <strong>{userName}</strong>
+                    <small>
+                      {isAdmin
+                        ? "Administrator"
+                        : proState === "approved"
+                        ? "Verified Professional"
+                        : proState === "pending"
+                        ? "Application Under Review"
+                        : proState === "rejected"
+                        ? "Application Needs Update"
+                        : proState === "suspended"
+                        ? "Account On Hold"
+                        : "Customer Account"}
+                    </small>
+                  </div>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      Admin
+                    </Link>
+                  )}
+                  <Link
+                    href="/user"
+                    role="menuitem"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    My dashboard
+                  </Link>
+                  {!isAdmin && (
                     <BecomeProfessionalCta
                       variant="menu-item"
                       state={proState}
                       onClick={() => setUserMenuOpen(false)}
                     />
-                    <button
-                      type="button"
-                      className="sign-out-btn"
-                      role="menuitem"
-                      onClick={async () => { await handleSignOut(); setUserMenuOpen(false); setMenuOpen(false); }}
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link href="/sign-in" className="text-link">
-                Sign In
-              </Link>
-            )}
-            <Link href={isLoggedIn ? "/user/post-job" : "/sign-in?next=/user"} className="button small">
-              Post a Job
-            </Link>
-            <button
-              className="menu-toggle"
-              aria-label="Toggle navigation"
-              aria-expanded={menuOpen}
-              aria-controls="mobile-nav"
-              onClick={() => setMenuOpen(!menuOpen)}
+                  )}
+                  <button
+                    type="button"
+                    className="sign-out-btn"
+                    role="menuitem"
+                    onClick={async () => {
+                      await handleSignOut();
+                      setUserMenuOpen(false);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="relative inline-flex items-center px-4 py-2.5 text-sm font-semibold text-[var(--ink)] transition-[color,font-weight] duration-300 ease-out hover:font-bold hover:text-[var(--forest)]"
             >
-              {menuOpen ? "×" : "☰"}
-            </button>
-          </div>
+              <span className="relative after:absolute after:bottom-[-3px] after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[var(--forest)] after:transition-transform after:duration-300 after:ease-out after:content-[''] hover:after:scale-x-100">
+                Sign in
+              </span>
+            </Link>
+          )}
+
+          {/* Become a Professional Button (hidden for admins) */}
+          {!isAdmin && (
+            <Link
+              href={
+                isLoggedIn
+                  ? proState === "approved"
+                    ? "/user"
+                    : "/become-professional"
+                  : "/sign-in?next=/become-professional"
+              }
+              style={{ borderRadius: "0px", color: "#ffffff" }}
+              className="inline-flex items-center gap-2 rounded-none bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold !text-white shadow-[0_10px_22px_rgba(15,107,62,0.22)] transition-all duration-200 hover:bg-[var(--forest-hover)] hover:!text-white hover:shadow-[0_12px_26px_rgba(15,107,62,0.3)] active:scale-[0.98]"
+            >
+              <span style={{ color: "#ffffff" }}>
+                {isLoggedIn && proState === "approved"
+                  ? "Pro Dashboard"
+                  : "Become a Professional"}
+              </span>
+              <ArrowUpRight className="h-4 w-4 text-white" aria-hidden="true" />
+            </Link>
+          )}
         </div>
-        {menuOpen && (
+
+        {/* Mobile Hamburger Toggle Button */}
+        <button
+          type="button"
+          className="rounded-xl border border-[var(--border)] p-2.5 text-[var(--ink)] transition hover:bg-[#f4faf6] lg:hidden"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+        >
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
+
+      {/* Mobile Drawer */}
+      {menuOpen && (
+        <div className="max-h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain border-t border-[var(--border)] bg-white/98 backdrop-blur-xl px-4 pb-5 pt-3 lg:hidden">
           <nav
-            id="mobile-nav"
-            className="mobile-nav"
+            className="mx-auto grid max-w-7xl gap-1"
             aria-label="Mobile navigation"
           >
             {isLoggedIn && (
-              <div className="mobile-user-banner">
+              <div className="mb-2 rounded-xl border border-[var(--border)] bg-[#f4faf6] p-3 text-xs">
                 <div>
                   Signed in as <strong>{userName}</strong>
                 </div>
                 {proState === "approved" && (
-                  <span
-                    style={{
-                      display: "block",
-                      color: "var(--forest)",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <span className="mt-1 block font-semibold text-[var(--forest)]">
                     ✓ Verified Professional
                   </span>
                 )}
                 {proState === "pending" && (
-                  <span
-                    style={{
-                      display: "block",
-                      color: "#1d4ed8",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <span className="mt-1 block font-semibold text-blue-600">
                     ⏳ Application Under Review
                   </span>
                 )}
               </div>
             )}
-            {[
-              ["Services", "/services"],
-              ["Find Professionals", "/#services"],
-              ["How It Works", "/#how-it-works"],
-              ["Trust & Safety", "/#trust"],
-              ["FAQs", "/faqs"],
-              ["Contact", "/contact"],
-            ].map(([text, href]) => (
-              <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined} onClick={() => setMenuOpen(false)}>
-                {text}
-              </Link>
-            ))}
-            {isLoggedIn ? (
-              <>
-                <BecomeProfessionalCta
-                  variant="mobile"
-                  state={proState}
-                  onClick={() => setMenuOpen(false)}
-                />
-                <button
-                  type="button"
-                  className="mobile-sign-out-btn"
-                  onClick={async () => { await handleSignOut(); setUserMenuOpen(false); setMenuOpen(false); }}
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
+            {navigation.map((item) => (
               <Link
-                href="/sign-in"
-                className="text-link"
-                style={{ padding: "8px 0" }}
+                key={item.href}
+                href={item.href}
+                className="rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted)] transition hover:bg-[#f4faf6] hover:text-[var(--ink)]"
                 onClick={() => setMenuOpen(false)}
               >
-                Sign In
-              </Link>
-            )}
-          </nav>
-        )}
-        <nav className="category-nav" aria-label="Service categories">
-          <div className="container">
-            {services.map((service) => (
-              <Link key={service} href={`/services#${service.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
-                {service}
+                {item.label}
               </Link>
             ))}
-            <Link href="/services" style={{ fontWeight: 700, color: "var(--forest)" }}>
-              All Services →
-            </Link>
-          </div>
-        </nav>
-      </header>
+
+            <div className="mt-2 grid grid-cols-2 gap-2 border-t border-[var(--border)] pt-4">
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    href="/user"
+                    className="rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--ink)] transition hover:bg-[#f4faf6]"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    type="button"
+                    className="rounded-xl bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-700 transition hover:bg-red-100"
+                    onClick={async () => {
+                      await handleSignOut();
+                      setUserMenuOpen(false);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/sign-in"
+                    className="rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--ink)] transition hover:bg-[#f4faf6]"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href={
+                      isLoggedIn
+                        ? proState === "approved"
+                          ? "/user"
+                          : "/become-professional"
+                        : "/sign-in?next=/become-professional"
+                    }
+                    style={{ borderRadius: "0px", color: "#ffffff" }}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-none bg-[var(--forest)] px-4 py-3 text-center text-sm font-semibold !text-white shadow-[0_10px_22px_rgba(15,107,62,0.22)] transition hover:bg-[var(--forest-hover)] hover:!text-white"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <span style={{ color: "#ffffff" }}>
+                      {isLoggedIn && proState === "approved"
+                        ? "Pro Dashboard"
+                        : "Become a Professional"}
+                    </span>
+                    <ArrowUpRight className="h-4 w-4 text-white" />
+                  </Link>
+                </>
+              )}
+            </div>
+          </nav>
+        </div>
+      )}
+    </header>
   );
 }

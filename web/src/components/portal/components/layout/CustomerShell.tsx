@@ -61,10 +61,10 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
         <div className="flex items-center gap-3 sm:gap-4">
           <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-[#34453B]">
             <button
-              onClick={() => marketplaceStore.navigate('/#services')}
+              onClick={() => marketplaceStore.navigate('/user/post-job')}
               className="hover:text-[#0F6B3E] transition-colors cursor-pointer"
             >
-              Find Professionals
+              Post a Job
             </button>
             <button
               onClick={() => marketplaceStore.navigate('/user/jobs')}
@@ -73,7 +73,7 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
               My Jobs
             </button>
             <button
-              onClick={() => marketplaceStore.navigate('/contact')}
+              onClick={() => marketplaceStore.addToast('Support & Help', 'Need help with your jobs or offers? Contact support@prolink.pk or call 051-111-776.', 'info')}
               className="hover:text-[#0F6B3E] transition-colors cursor-pointer"
             >
               Help
