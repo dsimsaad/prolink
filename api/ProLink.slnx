@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="ProLink.Api/ProLink.Api.csproj" />
+  <Project Path="ProLink.Api.Tests/ProLink.Api.Tests.csproj" />
   <Project Path="ProLink.Bench/ProLink.Bench.csproj" />
   <Project Path="ProLink.Engine.Tests/ProLink.Engine.Tests.csproj" />
   <Project Path="ProLink.Engine/ProLink.Engine.csproj" />

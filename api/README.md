@@ -1,7 +1,7 @@
 # ProLink Core Engine (`api/`)
 
 ## Purpose
-The Core Engine is a high-performance C# ASP.NET Core Web API containing a custom Data Structures and Algorithms (DSA) library (`ProLink.Engine`). It handles administrative and marketplace workflows including priority review queues, audit log indexing, full-text inverted index search, prefix autocomplete, job state transitions, sliding-window rate limiting, and Supabase JWT authentication.
+The Core Engine is a C# ASP.NET Core Web API on .NET 8 backed by a custom Data Structures and Algorithms (DSA) library (`ProLink.Engine`). It powers administrative portal operations, priority review queues, audit log indexing, full-text inverted index search, prefix autocomplete, job state machine validation, sliding-window rate limiting, and Supabase JWT authentication.
 
 ---
 
@@ -32,15 +32,81 @@ The Core Engine is a high-performance C# ASP.NET Core Web API containing a custo
 
 ---
 
-## How to Build & Run
+## Configuration & Environment Variables
+
+Set the following environment variables in Render or your local shell (never commit values):
+
+- `PORT`: HTTP port to bind (default `5080`).
+- `SUPABASE_URL`: Base URL of the Supabase project (used to derive the JWKS endpoint `${SUPABASE_URL}/auth/v1/.well-known/jwks.json`).
+- `DATABASE_URL`: Supabase session-pooler Postgres URI. Note that this connection runs as the database owner role (`postgres`) which bypasses RLS, so all `/admin` endpoints enforce the C# `"Admin"` authorization policy (`role = 'admin'` and `is_suspended = false`).
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins (default `http://localhost:3000`).
+- `RateLimiting__PermitLimit`: Maximum requests allowed per sliding window on `/admin` endpoints (default `60`).
+- `RateLimiting__WindowSeconds`: Sliding window duration in seconds (default `60`).
+
+---
+
+## How to Build, Test & Run
 
 ```bash
 # 1. Build the solution
 dotnet build api/ProLink.slnx
 
-# 2. Run test suite
+# 2. Run all unit and integration tests
 dotnet test api/ProLink.slnx
 
-# 3. Run API locally
+# 3. Run the API locally
 PORT=5080 dotnet run --project api/ProLink.Api --no-launch-profile
+```
+
+---
+
+## Example `curl` Requests
+
+Replace `<ACCESS_TOKEN>` with a valid administrator Supabase JWT:
+
+```bash
+# Public health check
+curl -i http://localhost:5080/health
+
+# Admin identity ping
+curl -i -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  http://localhost:5080/admin/ping
+
+# Fetch top 20 urgent review queue items
+curl -i -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  "http://localhost:5080/admin/review-queue?limit=20"
+
+# Prefix user suggestions (Trie)
+curl -i -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  "http://localhost:5080/admin/users/suggest?q=demo&limit=8"
+
+# Full-word user search (InvertedIndex + MergeSort)
+curl -i -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  "http://localhost:5080/admin/users/search?q=Demo%20Ahmed"
+
+# Analytics funnel and top categories (MinHeap.TopK + MergeSort)
+curl -i -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  http://localhost:5080/admin/analytics/funnel
+
+curl -i -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  "http://localhost:5080/admin/analytics/top-categories?n=5"
+
+# Force-cancel a job
+curl -i -X POST \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"reason":"Customer requested emergency cancellation due to duplicate post."}' \
+  http://localhost:5080/admin/jobs/3fa85f64-5717-4562-b3fc-2c963f66afa6/force-cancel
+
+# Resolve a disputed job
+curl -i -X POST \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"outcome":"completed","note":"Verified completion photos and customer confirmation."}' \
+  http://localhost:5080/admin/disputes/3fa85f64-5717-4562-b3fc-2c963f66afa6/resolve
+
+# Reload all in-memory indices and caches
+curl -i -X POST \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  http://localhost:5080/admin/engine/reload
 ```
