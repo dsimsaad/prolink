@@ -9,12 +9,22 @@ export type ProfessionalState =
   | "rejected"
   | "suspended";
 
+export interface ProfessionalApplicationMetadata {
+  father_name?: string;
+  cnic?: string;
+  phone_formatted?: string;
+  residential_address?: string;
+  skill_tags?: string[];
+  notification_preference?: "matching_only" | "all_jobs";
+}
+
 export interface ProfessionalStateResult {
   state: ProfessionalState;
   reviewNote: string | null;
   user: {
     id: string;
     email?: string;
+    applicationMeta?: ProfessionalApplicationMetadata;
   } | null;
   profile: {
     id: string;
@@ -24,6 +34,11 @@ export interface ProfessionalStateResult {
   professionalProfile: {
     bio: string | null;
     years_experience: number | null;
+    availability?: "available" | "busy" | "offline";
+    father_name?: string | null;
+    cnic?: string | null;
+    residential_address?: string | null;
+    notification_preference?: "matching_only" | "all_jobs" | null;
     status: "pending" | "approved" | "rejected" | "suspended";
     verified: boolean;
     applied_at: string;
@@ -55,6 +70,9 @@ export async function getProfessionalState(): Promise<ProfessionalStateResult> {
     };
   }
 
+  const applicationMeta = (user.user_metadata?.professional_application ??
+    undefined) as ProfessionalApplicationMetadata | undefined;
+
   // Fetch base user profile (role: user | admin)
   const { data: profile } = await supabase
     .from("profiles")
@@ -62,12 +80,10 @@ export async function getProfessionalState(): Promise<ProfessionalStateResult> {
     .eq("id", user.id)
     .single();
 
-  // Fetch current user's professional profile extension
+  // Fetch current user's professional profile extension (using * so it works both before and after migration 007)
   const { data: proProfile } = await supabase
     .from("professional_profiles")
-    .select(
-      "bio, years_experience, status, verified, applied_at, reviewed_at, review_note"
-    )
+    .select("*")
     .eq("profile_id", user.id)
     .maybeSingle();
 
@@ -75,7 +91,7 @@ export async function getProfessionalState(): Promise<ProfessionalStateResult> {
     return {
       state: "none",
       reviewNote: null,
-      user: { id: user.id, email: user.email },
+      user: { id: user.id, email: user.email, applicationMeta },
       profile: (profile as { id: string; role: "user" | "admin"; full_name: string }) ?? null,
       professionalProfile: null,
     };
@@ -90,7 +106,7 @@ export async function getProfessionalState(): Promise<ProfessionalStateResult> {
   return {
     state: status,
     reviewNote: proProfile.review_note ?? null,
-    user: { id: user.id, email: user.email },
+    user: { id: user.id, email: user.email, applicationMeta },
     profile: (profile as { id: string; role: "user" | "admin"; full_name: string }) ?? null,
     professionalProfile: proProfile,
   };

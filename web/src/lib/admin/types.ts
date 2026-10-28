@@ -116,6 +116,10 @@ export interface EngineReloadResponse {
 export interface AdminApplicationRow {
   profile_id: string;
   full_name: string;
+  father_name?: string | null;
+  cnic?: string | null;
+  residential_address?: string | null;
+  notification_preference?: "matching_only" | "all_jobs" | null;
   phone: string | null;
   bio: string | null;
   years_experience: number | null;
@@ -124,6 +128,7 @@ export interface AdminApplicationRow {
   reviewed_at: string | null;
   review_note: string | null;
   trades: string[];
+  skills?: string[];
   areas: string[];
 }
 

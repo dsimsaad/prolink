@@ -20,7 +20,7 @@ export function getCtaConfig(
   switch (state) {
     case "logged_out":
       return {
-        href: "/sign-up?next=/become-professional",
+        href: "/become-professional/sign-in",
         label: "Become a professional",
       };
     case "none":
@@ -38,7 +38,7 @@ export function getCtaConfig(
       };
     case "approved":
       return {
-        href: "/become-professional",
+        href: "/user",
         label:
           variant === "menu-item" || variant === "mobile"
             ? "Professional active"

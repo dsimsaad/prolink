@@ -119,7 +119,7 @@ export default function AboutPage() {
                 Post a Job <Icon name="arrow" />
               </Link>
               <Link
-                href="/sign-in?next=/become-professional"
+                href="/become-professional/sign-in"
                 className="button outline"
               >
                 Become a Professional

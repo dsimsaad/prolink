@@ -132,10 +132,7 @@ export async function fetchAdminApplications(
 
   const { data: proRows, count, error } = await supabase
     .from("professional_profiles")
-    .select(
-      "profile_id, bio, years_experience, status, applied_at, reviewed_at, review_note",
-      { count: "exact" }
-    )
+    .select("*", { count: "exact" })
     .eq("status", status)
     .order("applied_at", { ascending: false })
     .range(from, to);
@@ -146,6 +143,10 @@ export async function fetchAdminApplications(
 
   const list = (proRows ?? []) as {
     profile_id: string;
+    father_name?: string | null;
+    cnic?: string | null;
+    residential_address?: string | null;
+    notification_preference?: "matching_only" | "all_jobs" | null;
     bio: string | null;
     years_experience: number | null;
     status: ApplicationStatus;
@@ -163,7 +164,7 @@ export async function fetchAdminApplications(
   const [profilesRes, phonesRes, skillsRes, areasRes, categoriesRes, allAreasRes] = await Promise.all([
     supabase.from("profiles").select("id, full_name").in("id", ids),
     supabase.from("contact_details").select("profile_id, phone").in("profile_id", ids),
-    supabase.from("professional_skills").select("professional_id, category_id").in("professional_id", ids),
+    supabase.from("professional_skills").select("professional_id, category_id, skill_tags").in("professional_id", ids),
     supabase.from("professional_areas").select("professional_id, area_id").in("professional_id", ids),
     supabase.from("categories").select("id, name"),
     supabase.from("areas").select("id, name"),
@@ -190,11 +191,24 @@ export async function fetchAdminApplications(
   }
 
   const tradesByPro = new Map<string, string[]>();
-  for (const s of (skillsRes.data ?? []) as { professional_id: string; category_id: number }[]) {
+  const skillsByPro = new Map<string, string[]>();
+  for (const s of (skillsRes.data ?? []) as {
+    professional_id: string;
+    category_id: number;
+    skill_tags?: string[];
+  }[]) {
     const arr = tradesByPro.get(s.professional_id) ?? [];
     const catName = catNameById.get(Number(s.category_id));
     if (catName) arr.push(catName);
     tradesByPro.set(s.professional_id, arr);
+
+    if (Array.isArray(s.skill_tags) && s.skill_tags.length > 0) {
+      const existingTags = new Set(skillsByPro.get(s.professional_id) ?? []);
+      s.skill_tags.forEach((t) => {
+        if (typeof t === "string" && t.trim()) existingTags.add(t.trim());
+      });
+      skillsByPro.set(s.professional_id, Array.from(existingTags));
+    }
   }
 
   const areasByPro = new Map<string, string[]>();
@@ -208,6 +222,10 @@ export async function fetchAdminApplications(
   const rows: AdminApplicationRow[] = list.map((r) => ({
     profile_id: r.profile_id,
     full_name: nameById.get(r.profile_id) ?? "Applicant",
+    father_name: r.father_name ?? null,
+    cnic: r.cnic ?? null,
+    residential_address: r.residential_address ?? null,
+    notification_preference: r.notification_preference ?? null,
     phone: phoneById.get(r.profile_id) ?? null,
     bio: r.bio,
     years_experience: r.years_experience,
@@ -216,6 +234,7 @@ export async function fetchAdminApplications(
     reviewed_at: r.reviewed_at,
     review_note: r.review_note,
     trades: tradesByPro.get(r.profile_id) ?? [],
+    skills: skillsByPro.get(r.profile_id) ?? [],
     areas: areasByPro.get(r.profile_id) ?? [],
   }));
 

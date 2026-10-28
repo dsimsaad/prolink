@@ -1,13 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Brand, Icon } from "./brand";
 import { createClient } from "@/utils/supabase/client";
 import { getSignInDestination } from "@/utils/auth-destination";
-import { clearOAuthDestination, rememberOAuthDestination } from "@/utils/oauth-navigation";
+import {
+  clearOAuthDestination,
+  rememberOAuthDestination,
+} from "@/utils/oauth-navigation";
 import { resolvePostLoginAction } from "@/app/sign-in/actions";
 
 export function SignInForm({
@@ -32,19 +34,19 @@ export function SignInForm({
   const [loading, setLoading] = useState(false);
 
   const displayMessage = message || queryError;
-  const safeNext = getSignInDestination(searchParams.get("next"), searchParams.get("role"));
+  const safeNext = getSignInDestination(
+    searchParams.get("next"),
+    searchParams.get("role"),
+  );
 
   async function handleGoogleSignIn() {
     try {
       setMessage("");
       setLoading(true);
       const supabase = createClient();
-      // Store intended destination in cookie and sessionStorage so callback routes to /become-professional
       document.cookie = `prolink_oauth_next=${encodeURIComponent(safeNext)}; path=/; max-age=900; SameSite=Lax`;
       rememberOAuthDestination(safeNext);
 
-      // ALWAYS keep redirectTo strictly as /auth/callback without query parameters
-      // to avoid triggering Supabase allowlist rejection and falling back to the Vercel site URL
       const callbackUrl = `${window.location.origin}/auth/callback`;
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -100,7 +102,6 @@ export function SignInForm({
           }
         }
       } else {
-        // Sign up flow sends full_name only; no role is sent
         const fullName = (formData.get("fullName") as string)?.trim() || "";
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -123,7 +124,6 @@ export function SignInForm({
             window.location.replace(check.destination);
           }
         } else if (data.user) {
-          // Email confirmation is required by Supabase configuration
           setMessage(
             "Account created! Please check your email inbox to confirm your email address before signing in.",
           );
@@ -145,23 +145,42 @@ export function SignInForm({
       <main className="auth-column">
         <div className="auth-top">
           <Brand />
-          <Link href="/#how-it-works" className="text-link">
-            Explore ProLink <Icon name="arrow" />
+          <Link href="/" className="text-link">
+            Back to home <Icon name="arrow" />
           </Link>
         </div>
-        <div className="auth-content">
-          <h1>
-            {mode === "signin"
-              ? "Sign in to your account"
-              : "Create your account"}
-          </h1>
-          <p className="auth-intro">
-            {mode === "signin"
-              ? "Access your jobs, verify real-time offers, or manage your service business."
-              : "Join ProLink to connect with verified service professionals or offer your trade skills."}
-          </p>
 
-          <div className="social-buttons" style={{ gridTemplateColumns: "1fr" }}>
+        <div className="auth-content">
+          <div className="auth-heading-stage">
+            <div
+              className={`auth-heading-layer ${
+                mode === "signin" ? "is-active" : "is-inactive"
+              }`}
+              aria-hidden={mode !== "signin"}
+            >
+              <h1>Sign in to your account</h1>
+              <p className="auth-intro">
+                Access your jobs, review offers, and manage your ProLink
+                activity.
+              </p>
+            </div>
+            <div
+              className={`auth-heading-layer ${
+                mode === "signup" ? "is-active" : "is-inactive"
+              }`}
+              aria-hidden={mode !== "signup"}
+            >
+              <h1>Create your account</h1>
+              <p className="auth-intro">
+                Set up your ProLink profile in seconds to get started.
+              </p>
+            </div>
+          </div>
+
+          <div
+            className="social-buttons"
+            style={{ gridTemplateColumns: "1fr" }}
+          >
             <button
               type="button"
               className="social-button"
@@ -186,19 +205,28 @@ export function SignInForm({
           </div>
 
           <form onSubmit={submit}>
-            {mode === "signup" && (
-              <div className="field">
-                <label htmlFor="fullName">Full name</label>
-                <input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  autoComplete="name"
-                  placeholder="e.g. Ali Ahmed"
-                  required
-                />
+            <div
+              className={`auth-expandable-field ${
+                mode === "signup" ? "is-open" : ""
+              }`}
+              aria-hidden={mode !== "signup"}
+            >
+              <div className="auth-expandable-inner">
+                <div className="field" style={{ marginTop: 0 }}>
+                  <label htmlFor="fullName">Full name</label>
+                  <input
+                    id="fullName"
+                    name="fullName"
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Enter your full name"
+                    required={mode === "signup"}
+                    disabled={mode !== "signup"}
+                    tabIndex={mode === "signup" ? 0 : -1}
+                  />
+                </div>
               </div>
-            )}
+            </div>
 
             <div className="field">
               <label htmlFor="email">Email address</label>
@@ -343,59 +371,70 @@ export function SignInForm({
 
         <footer className="auth-footer">
           <Icon name="shield" />
-          <span>Verified Professionals &amp; Trusted Service</span>
+          <span>Secure Authentication · ProLink</span>
           <Link href="/">Back to home</Link>
         </footer>
       </main>
 
-      <aside className="auth-visual" aria-label="Customer testimonial">
-        <Image
-          src="/images/hero-technician.jpg"
-          alt=""
-          fill
-          sizes="50vw"
-          priority
-        />
-        <div className="auth-overlay" />
+      <aside
+        className="auth-visual"
+        data-mode={mode}
+        aria-label="Welcome to ProLink"
+        aria-live="polite"
+      >
+        <div className="auth-ambient-orb orb-primary" aria-hidden="true" />
+        <div className="auth-ambient-orb orb-secondary" aria-hidden="true" />
+
         <div className="auth-panel-top">
-          <span className="badge">Pakistan&apos;s #1 Service Marketplace</span>
-          <span className="panel-rating">
-            <Icon name="star" className="gold" />
-            4.92 / 5
+          <span className="badge">
+            <Icon name="shield" />
+            ProLink Platform
           </span>
         </div>
-        <div className="testimonial">
-          <div className="stars" aria-label="5 out of 5 stars">
-            ★★★★★
-          </div>
-          <blockquote>
-            “ProLink changed how our family handles home maintenance in
-            Islamabad. Instead of hunting through phone contacts, we posted an
-            inverter fault and received 3 verified quotes in 15 minutes.”
-          </blockquote>
-          <div className="testimonial-person">
-            <span className="avatar" aria-hidden="true">
-              MH
-            </span>
-            <div>
-              <strong>Mustafa Hashmi</strong>
-              <span>Homeowner · Sector F-7, Islamabad</span>
+
+        <div className="auth-welcome-stage">
+          <div
+            className={`auth-welcome-layer ${
+              mode === "signin" ? "is-active" : "is-inactive-up"
+            }`}
+            aria-hidden={mode !== "signin"}
+          >
+            <span className="auth-welcome-eyebrow">Member Access</span>
+            <h2 className="auth-welcome-heading">Welcome Back to ProLink!</h2>
+            <p className="auth-welcome-description">
+              Your next opportunity is just a step away. Sign in to connect with
+              trusted professionals, explore job opportunities, and continue
+              where you left off.
+            </p>
+            <div className="auth-welcome-accent-bar" aria-hidden="true">
+              <span className="auth-welcome-accent-dot is-active" />
+              <span className="auth-welcome-accent-dot is-inactive" />
             </div>
           </div>
-          <div className="auth-metrics">
-            <div>
-              <strong>2,400+</strong>
-              <span>Verified Pros</span>
-            </div>
-            <div>
-              <strong>14 mins</strong>
-              <span>Avg First Offer</span>
-            </div>
-            <div>
-              <strong>PKR 0</strong>
-              <span>Inspection Scams</span>
+
+          <div
+            className={`auth-welcome-layer ${
+              mode === "signup" ? "is-active" : "is-inactive-down"
+            }`}
+            aria-hidden={mode !== "signup"}
+          >
+            <span className="auth-welcome-eyebrow">Get Started</span>
+            <h2 className="auth-welcome-heading">Welcome to ProLink!</h2>
+            <p className="auth-welcome-description">
+              Join a growing community that connects people with the right
+              professionals. Create your account to discover opportunities,
+              showcase your skills, and build meaningful connections.
+            </p>
+            <div className="auth-welcome-accent-bar" aria-hidden="true">
+              <span className="auth-welcome-accent-dot is-inactive" />
+              <span className="auth-welcome-accent-dot is-active" />
             </div>
           </div>
+        </div>
+
+        <div className="auth-welcome-bottom">
+          <span>Trusted connections across Pakistan</span>
+          <span>ProLink</span>
         </div>
       </aside>
     </div>

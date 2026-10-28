@@ -5,17 +5,19 @@ export function Brand({
   className = "",
   variant = "default",
   priority = true,
+  href = "/",
 }: {
   className?: string;
   variant?: "default" | "footer";
   priority?: boolean;
+  href?: string;
 }) {
   if (variant === "footer") {
     return (
       <Link
-        href="/"
+        href={href}
         className={`brand ${className}`.trim()}
-        aria-label="ProLink home"
+        aria-label="ProLink"
         style={{ textDecoration: "none" }}
       >
         <Image
@@ -37,9 +39,9 @@ export function Brand({
 
   return (
     <Link
-      href="/"
+      href={href}
       className={`brand ${className}`.trim()}
-      aria-label="ProLink home"
+      aria-label="ProLink"
       style={{ textDecoration: "none" }}
     >
       <Image

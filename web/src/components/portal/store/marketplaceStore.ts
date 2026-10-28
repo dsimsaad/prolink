@@ -47,8 +47,8 @@ interface MarketplaceState {
 let state: MarketplaceState = {
   currentRole: 'guest',
   currentUser: null,
-  currentPath: window.location.pathname || '/',
-  queryParams: Object.fromEntries(new URLSearchParams(window.location.search)),
+  currentPath: typeof window !== 'undefined' ? (window.location.pathname || '/') : '/',
+  queryParams: typeof window !== 'undefined' ? Object.fromEntries(new URLSearchParams(window.location.search)) : {},
   postJobDraft: null,
   compareOfferIds: [],
   compareDrawerOpen: false,
@@ -86,6 +86,10 @@ export const marketplaceStore = {
     let targetPath = path;
     if (state.currentUser && (targetPath === '/' || targetPath.startsWith('/#') || targetPath === '/services' || targetPath.startsWith('/services#') || targetPath === '/contact')) {
       targetPath = state.currentRole === 'admin' ? '/admin/overview' : '/user/overview';
+    }
+
+    if (typeof window !== 'undefined' && targetPath !== state.currentPath) {
+      window.dispatchEvent(new Event('prolink:navigation-start'));
     }
 
     state = {

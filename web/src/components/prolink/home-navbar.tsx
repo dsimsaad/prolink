@@ -186,7 +186,7 @@ export function HomeNavbar() {
                   ? proState === "approved"
                     ? "/user"
                     : "/become-professional"
-                  : "/sign-in?next=/become-professional"
+                  : "/become-professional/sign-in"
               }
               style={{ borderRadius: "0px", color: "#ffffff" }}
               className="inline-flex items-center gap-2 rounded-none bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold !text-white shadow-[0_10px_22px_rgba(15,107,62,0.22)] transition-all duration-200 hover:bg-[var(--forest-hover)] hover:!text-white hover:shadow-[0_12px_26px_rgba(15,107,62,0.3)] active:scale-[0.98]"
@@ -285,7 +285,7 @@ export function HomeNavbar() {
                         ? proState === "approved"
                           ? "/user"
                           : "/become-professional"
-                        : "/sign-in?next=/become-professional"
+                        : "/become-professional/sign-in"
                     }
                     style={{ borderRadius: "0px", color: "#ffffff" }}
                     className="inline-flex items-center justify-center gap-1.5 rounded-none bg-[var(--forest)] px-4 py-3 text-center text-sm font-semibold !text-white shadow-[0_10px_22px_rgba(15,107,62,0.22)] transition hover:bg-[var(--forest-hover)] hover:!text-white"

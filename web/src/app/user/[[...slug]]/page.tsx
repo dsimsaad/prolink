@@ -8,7 +8,7 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
  
  const { slug = [] } = await params;
  if (slug.length > 2 || (slug.length === 2 && slug[0] !== 'jobs')) notFound();
- if (slug[0] && !["overview","jobs","post-job"].includes(slug[0])) notFound();
+ if (slug[0] && !["overview","jobs","post-job","profile"].includes(slug[0])) notFound();
  const pro = await getProfessionalState();
  return <PortalLoader role="customer" user={{ id: user.id, name: profile?.full_name || user.email?.split('@')[0] || 'User', email: user.email || '' }} professionalState={pro.state} />;
 }

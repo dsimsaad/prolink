@@ -7,32 +7,102 @@ LayoutDashboard,
 LogOut,
 Menu,
 PlusCircle,
+User,
 X
 } from 'lucide-react';
 import Image from 'next/image';
-import React,{ useState } from 'react';
+import React,{ useEffect,useRef,useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
 import { MOCK_NOTIFICATIONS } from '../../data/mockData';
 import { marketplaceStore,useMarketplace } from '../../store/marketplaceStore';
-import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 
 interface CustomerShellProps {
   children: React.ReactNode;
 }
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'U';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
 export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
   const { currentUser, currentPath, unreadNotifsCount } = useMarketplace();
   const [notifsOpen, setNotifsOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  const customer = currentUser || {
-    name: 'Mustafa Hashmi',
-    email: 'mustafa.hashmi@gmail.com',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    city: 'Islamabad',
-    area: 'F-7/2'
-  };
+  const customerId = currentUser?.id || '';
+  const defaultName = currentUser?.name || 'Customer';
+  const customerEmail = currentUser?.email || '';
+
+  const [displayName, setDisplayName] = useState(defaultName);
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    function handleProfileUpdated() {
+      setRefreshTick((v) => v + 1);
+    }
+    window.addEventListener('prolink:customer-profile-updated', handleProfileUpdated);
+    return () => {
+      window.removeEventListener('prolink:customer-profile-updated', handleProfileUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!customerId) return;
+    let active = true;
+    const timer = setTimeout(() => {
+      const supabase = createClient();
+      void supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('id', customerId)
+        .maybeSingle()
+        .then((profRes) => {
+          if (!active || !profRes.data) return;
+          setDisplayName(profRes.data.full_name || defaultName);
+          setAvatarUrl(profRes.data.avatar_url || '');
+        });
+    }, 0);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [customerId, defaultName, refreshTick]);
+
+  // Close profile dropdown on outside click or Escape key
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setProfileMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setProfileMenuOpen(false);
+      }
+    }
+
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [profileMenuOpen]);
+
+  const initials = getInitials(displayName);
 
   const navItems = [
     { label: 'Overview', path: '/user/overview', icon: LayoutDashboard },
@@ -150,57 +220,95 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
             Post a Job
           </Button>
 
-          {/* Customer Avatar & Menu */}
-          <div className="relative">
+          {/* Round Profile Avatar & Dropdown Menu (Matching Admin Dashboard) */}
+          <div className="relative" ref={profileMenuRef}>
             <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 p-1 hover:bg-[#F4FAF6] rounded-full cursor-pointer focus:outline-none"
+              type="button"
+              onClick={() => setProfileMenuOpen((v) => !v)}
+              aria-expanded={profileMenuOpen}
+              aria-haspopup="menu"
+              aria-label="Customer profile menu"
+              className="flex cursor-pointer items-center gap-2 rounded-full border border-[#DCE8E0] bg-white p-1 pr-2.5 transition hover:border-[#0F6B3E] hover:bg-[#F4FAF6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
             >
-              <Avatar
-                src={customer.avatar}
-                name={customer.name}
-                size="sm"
-                isOnline={true}
-              />
-              <span className="hidden xl:inline text-xs font-semibold text-[#0C2A1B]">
-                {customer.name.split(' ')[0]}
+              <span className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0F6B3E] text-xs font-bold text-white">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#2FAE60] ring-2 ring-white" />
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#6A7B70] hidden xl:inline" />
+              <span className="hidden max-w-[140px] truncate text-xs font-semibold text-[#0C2A1B] sm:inline">
+                {displayName.split(' ')[0]}
+              </span>
+              <ChevronDown
+                className={`h-3.5 w-3.5 text-[#6A7B70] transition-transform ${
+                  profileMenuOpen ? 'rotate-180' : ''
+                }`}
+                aria-hidden="true"
+              />
             </button>
 
-            {userMenuOpen && (
+            {profileMenuOpen && (
               <div
-                onMouseLeave={() => setUserMenuOpen(false)}
-                className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[10px] border border-[#DCE8E0] shadow-xl p-2 z-50 animate-in fade-in"
+                role="menu"
+                aria-label="Customer profile options"
+                className="absolute right-0 top-full z-50 mt-2 w-60 rounded-xl border border-[#DCE8E0] bg-white p-2 shadow-xl"
               >
-                <div className="px-3 py-2 border-b border-[#DCE8E0]">
-                  <p className="text-xs font-bold text-[#0C2A1B]">{customer.name}</p>
-                  <p className="text-[11px] text-[#6A7B70] truncate">{customer.email}</p>
-                  <span className="text-[10px] text-[#0F6B3E] font-medium mt-1 block">
-                    📍 {customer.area}, {customer.city}
+                <div className="flex items-center gap-3 border-b border-[#DCE8E0] px-3 py-2.5">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0F6B3E] text-xs font-bold text-white">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarUrl}
+                        alt={displayName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      initials
+                    )}
                   </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-bold text-[#0C2A1B]">
+                      {displayName}
+                    </p>
+                    <p className="truncate text-[11px] text-[#6A7B70]">
+                      {customerEmail || 'Customer'}
+                    </p>
+                  </div>
                 </div>
+
                 <div className="py-1">
                   <button
+                    type="button"
+                    role="menuitem"
                     onClick={() => {
-                      setUserMenuOpen(false);
-                      marketplaceStore.navigate('/user/overview');
+                      setProfileMenuOpen(false);
+                      marketplaceStore.navigate('/user/profile');
                     }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-[#0C2A1B] hover:bg-[#F4FAF6] rounded flex items-center gap-2 cursor-pointer"
+                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-[#0C2A1B] transition hover:bg-[#F4FAF6]"
                   >
-                    <LayoutDashboard className="w-3.5 h-3.5 text-[#6A7B70]" />
-                    <span>Portal Overview</span>
+                    <User className="h-4 w-4 text-[#0F6B3E]" aria-hidden="true" />
+                    <span>Profile</span>
                   </button>
                 </div>
-                <div className="pt-1 border-t border-[#DCE8E0]">
+
+                <div className="border-t border-[#DCE8E0] pt-1">
                   <button
+                    type="button"
+                    role="menuitem"
                     onClick={() => {
-                      setUserMenuOpen(false);
+                      setProfileMenuOpen(false);
                       marketplaceStore.setRole('guest');
                     }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-[#B42318] hover:bg-[#FEF2F2] rounded flex items-center gap-2 cursor-pointer font-medium"
+                    className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-semibold text-[#B42318] transition hover:bg-red-50"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
                     <span>Sign Out</span>
                   </button>
                 </div>

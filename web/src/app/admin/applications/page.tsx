@@ -189,10 +189,40 @@ export default function AdminApplicationsPage() {
                     <span className="text-xs text-[#6A7B70]">
                       Phone: <strong>{row.phone || "Not provided"}</strong>
                     </span>
+                    {row.cnic && (
+                      <span className="text-xs text-[#6A7B70]">
+                        CNIC: <strong>{row.cnic}</strong>
+                      </span>
+                    )}
                     <span className="text-xs text-[#6A7B70]">
                       Applied: {new Date(row.applied_at).toLocaleDateString()}
                     </span>
                   </div>
+
+                  {(row.father_name || row.residential_address || row.notification_preference) && (
+                    <div className="flex flex-wrap gap-4 text-xs text-[#6A7B70]">
+                      {row.father_name && (
+                        <span>
+                          Father&apos;s Name: <strong className="text-[#34453B]">{row.father_name}</strong>
+                        </span>
+                      )}
+                      {row.residential_address && (
+                        <span>
+                          Address: <strong className="text-[#34453B]">{row.residential_address}</strong>
+                        </span>
+                      )}
+                      {row.notification_preference && (
+                        <span>
+                          Notifications:{" "}
+                          <strong className="text-[#34453B]">
+                            {row.notification_preference === "all_jobs"
+                              ? "All Available Jobs"
+                              : "Matching Jobs Only"}
+                          </strong>
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <p className="text-xs leading-relaxed text-[#34453B]">
                     {row.bio || "No biography submitted."}
@@ -207,6 +237,12 @@ export default function AdminApplicationsPage() {
                         <span className="text-[#6A7B70]">None listed</span>
                       )}
                     </div>
+                    {row.skills && row.skills.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-[#0C2A1B]">Skills: </span>
+                        <span className="text-[#34453B]">{row.skills.join(", ")}</span>
+                      </div>
+                    )}
                     <div>
                       <span className="font-semibold text-[#0C2A1B]">Areas: </span>
                       {row.areas.length > 0 ? (

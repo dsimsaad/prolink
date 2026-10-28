@@ -161,7 +161,7 @@ export function AdminShell({
     setProfileMenuOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.replace("/sign-in");
+    window.location.replace("/");
   }
 
   function renderNavList(onSelect?: () => void) {
