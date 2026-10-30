@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { FileText, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { Brand, Icon } from "./brand";
+import { siteConfig } from "@/config/site";
 import { createClient } from "@/utils/supabase/client";
 import { getSignInDestination } from "@/utils/auth-destination";
 import {
@@ -370,8 +373,8 @@ export function SignInForm({
         </div>
 
         <footer className="auth-footer">
-          <Icon name="shield" />
-          <span>Secure Authentication · ProLink</span>
+          <ShieldCheck className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
+          <span>{siteConfig.name} · {siteConfig.city} Pilot</span>
           <Link href="/">Back to home</Link>
         </footer>
       </main>
@@ -387,54 +390,77 @@ export function SignInForm({
 
         <div className="auth-panel-top">
           <span className="badge">
-            <Icon name="shield" />
-            ProLink Platform
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            {siteConfig.name} {siteConfig.city}
           </span>
         </div>
 
         <div className="auth-welcome-stage">
-          <div
-            className={`auth-welcome-layer ${
-              mode === "signin" ? "is-active" : "is-inactive-up"
-            }`}
-            aria-hidden={mode !== "signin"}
-          >
-            <span className="auth-welcome-eyebrow">Member Access</span>
-            <h2 className="auth-welcome-heading">Welcome Back to ProLink!</h2>
-            <p className="auth-welcome-description">
-              Your next opportunity is just a step away. Sign in to connect with
-              trusted professionals, explore job opportunities, and continue
-              where you left off.
-            </p>
-            <div className="auth-welcome-accent-bar" aria-hidden="true">
-              <span className="auth-welcome-accent-dot is-active" />
-              <span className="auth-welcome-accent-dot is-inactive" />
+          <div className="auth-welcome-layers">
+            <div
+              className={`auth-welcome-layer ${
+                mode === "signin" ? "is-active" : "is-inactive-up"
+              }`}
+              aria-hidden={mode !== "signin"}
+            >
+              <span className="auth-welcome-eyebrow">Household &amp; Pro Access</span>
+              <h2 className="auth-welcome-heading">Welcome Back to {siteConfig.name}!</h2>
+              <p className="auth-welcome-description">
+                Sign in to manage your household repair requests, compare itemised
+                offers, and message local trades in {siteConfig.city}.
+              </p>
+            </div>
+
+            <div
+              className={`auth-welcome-layer ${
+                mode === "signup" ? "is-active" : "is-inactive-down"
+              }`}
+              aria-hidden={mode !== "signup"}
+            >
+              <span className="auth-welcome-eyebrow">Get Started</span>
+              <h2 className="auth-welcome-heading">Welcome to {siteConfig.name}!</h2>
+              <p className="auth-welcome-description">
+                Post repair jobs, receive itemised offers from local trades, and keep
+                your phone number private until you choose to hire.
+              </p>
             </div>
           </div>
 
-          <div
-            className={`auth-welcome-layer ${
-              mode === "signup" ? "is-active" : "is-inactive-down"
-            }`}
-            aria-hidden={mode !== "signup"}
-          >
-            <span className="auth-welcome-eyebrow">Get Started</span>
-            <h2 className="auth-welcome-heading">Welcome to ProLink!</h2>
-            <p className="auth-welcome-description">
-              Join a growing community that connects people with the right
-              professionals. Create your account to discover opportunities,
-              showcase your skills, and build meaningful connections.
-            </p>
-            <div className="auth-welcome-accent-bar" aria-hidden="true">
-              <span className="auth-welcome-accent-dot is-inactive" />
-              <span className="auth-welcome-accent-dot is-active" />
-            </div>
+          <div className="auth-photo-card">
+            <Image
+              src="/images/auth-craft.webp"
+              alt="Hands-on trade repair work in progress"
+              fill
+              sizes="(min-width: 1024px) 420px, 320px"
+              style={{ objectFit: "cover" }}
+            />
           </div>
+
+          <ul className="auth-benefits-list">
+            <li className="auth-benefit-item">
+              <span className="auth-benefit-icon">
+                <FileText className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Compare itemised offers before you hire</span>
+            </li>
+            <li className="auth-benefit-item">
+              <span className="auth-benefit-icon">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Your phone number stays private until you accept</span>
+            </li>
+            <li className="auth-benefit-item">
+              <span className="auth-benefit-icon">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Local tradespeople in {siteConfig.city}</span>
+            </li>
+          </ul>
         </div>
 
         <div className="auth-welcome-bottom">
-          <span>Trusted connections across Pakistan</span>
-          <span>ProLink</span>
+          <span>{siteConfig.city} pilot · University semester project</span>
+          <span>{siteConfig.name}</span>
         </div>
       </aside>
     </div>

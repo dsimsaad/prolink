@@ -4,8 +4,22 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { SignInForm } from "@/components/prolink/sign-in-form";
+import { siteConfig } from "@/config/site";
 
-export const metadata: Metadata = { title: "Sign In | ProLink" };
+const pageTitle = `Sign In | ${siteConfig.name}`;
+const pageDescription = `Sign in to your ${siteConfig.name} account to manage household repair jobs and offers in ${siteConfig.city}.`;
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    siteName: siteConfig.name,
+    locale: "en_PK",
+    type: "website",
+  },
+};
 
 export default async function SignInPage() {
   const cookieStore = await cookies();

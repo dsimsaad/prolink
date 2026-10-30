@@ -63,7 +63,7 @@ export const MyJobsPage: React.FC = () => {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
                 activeTab === t.id
                   ? 'bg-[#0F6B3E] text-white shadow-2xs'
                   : 'text-[#6A7B70] hover:text-[#0C2A1B] hover:bg-[#F4FAF6]'
@@ -85,7 +85,7 @@ export const MyJobsPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by title or category..."
-            className="w-full sm:w-64 h-9 pl-8 pr-3 text-xs bg-[#F4FAF6] border border-[#DCE8E0] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-[#0F6B3E]"
+            className="w-full sm:w-64 h-9 pl-8 pr-3 text-xs bg-[#F4FAF6] border border-[#DCE8E0] rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0F6B3E]"
           />
           <Search className="w-3.5 h-3.5 text-[#6A7B70] absolute left-2.5 top-3 pointer-events-none" />
         </div>
@@ -93,7 +93,7 @@ export const MyJobsPage: React.FC = () => {
 
       {/* Jobs List */}
       {filteredJobs.length === 0 ? (
-        <div className="text-center py-12 bg-white border border-[#DCE8E0] rounded-[10px] space-y-3">
+        <div className="text-center py-12 bg-white border border-[#DCE8E0] rounded-2xl shadow-xs space-y-3">
           <div className="w-12 h-12 rounded-full bg-[#E6F4EA] text-[#0F6B3E] flex items-center justify-center mx-auto">
             <Inbox className="w-6 h-6" />
           </div>
@@ -115,7 +115,7 @@ export const MyJobsPage: React.FC = () => {
             <div
               key={job.id}
               onClick={() => marketplaceStore.navigate(`/user/jobs/${job.id}`)}
-              className="bg-white border border-[#DCE8E0] rounded-[10px] p-5 hover:border-[#0F6B3E] hover:shadow-xs transition-all cursor-pointer space-y-3 group"
+              className="bg-white border border-[#DCE8E0] rounded-2xl p-5 hover:border-[#0F6B3E] shadow-xs hover:shadow-md transition-all cursor-pointer space-y-3 group"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-1">

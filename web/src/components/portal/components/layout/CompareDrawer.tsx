@@ -26,7 +26,7 @@ export const CompareDrawer: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 bg-white border-t-2 border-[#0F6B3E] shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed inset-x-0 bottom-0 z-50 bg-white border-t-2 border-[#0F6B3E] shadow-2xl rounded-t-3xl animate-in slide-in-from-bottom-4 duration-300">
       <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-4">
         {/* Drawer Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#DCE8E0]">
@@ -57,7 +57,7 @@ export const CompareDrawer: React.FC = () => {
           {offers.map((off) => (
             <div
               key={off.id}
-              className={`p-4 rounded-[10px] border flex flex-col justify-between space-y-4 ${
+              className={`p-4 rounded-2xl border flex flex-col justify-between space-y-4 ${
                 off.isBestMatch
                   ? 'border-[#0F6B3E] bg-[#F4FAF6]'
                   : 'border-[#DCE8E0] bg-white'

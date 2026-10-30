@@ -105,7 +105,7 @@ export const PostJobPage: React.FC = () => {
       )}
 
       {/* Main Wizard Container */}
-      <div className="bg-white border border-[#DCE8E0] rounded-[12px] p-6 sm:p-8 shadow-xs">
+      <div className="bg-white border border-[#DCE8E0] rounded-2xl p-6 sm:p-8 shadow-xs">
         {submittedJobId ? (
           /* Success Screen */
           <div className="text-center py-8 space-y-5 max-w-md mx-auto">
@@ -118,17 +118,17 @@ export const PostJobPage: React.FC = () => {
                 Your Job is Live! 🎉
               </h2>
               <p className="text-xs text-[#6A7B70]">
-                Job #{submittedJobId} is now broadcasting to verified professionals in {area}, {city}.
+                Job #{submittedJobId} is now broadcasting to local professionals in {area}, {city}.
               </p>
             </div>
 
-            <div className="p-4 bg-[#F4FAF6] border border-[#DCE8E0] rounded-[10px] space-y-2 text-xs text-left">
+            <div className="p-4 bg-[#F4FAF6] border border-[#DCE8E0] rounded-xl space-y-2 text-xs text-left">
               <div className="flex items-center gap-2 text-[#0F6B3E] font-semibold">
                 <span className="w-2 h-2 rounded-full bg-[#2FAE60] animate-ping" />
                 <span>Smart Matching Engine active</span>
               </div>
               <p className="text-[#34453B] leading-relaxed">
-                We&apos;ve alerted <strong>8 top-rated pros</strong> within your travel radius. You will receive notifications as custom quotes arrive.
+                We&apos;ve alerted <strong>8 local pros</strong> within your travel radius. You will receive notifications as custom quotes arrive.
               </p>
             </div>
 
@@ -179,14 +179,14 @@ export const PostJobPage: React.FC = () => {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe symptoms, equipment models, ceiling stains, or specific requirements..."
-                    className="w-full p-3 text-xs bg-white border border-[#DCE8E0] rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0F6B3E] text-[#0C2A1B]"
+                    className="w-full p-3 text-xs bg-white border border-[#DCE8E0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F6B3E] text-[#0C2A1B]"
                     required
                   />
                 </div>
 
                 {/* Intelligent Category Suggestion Hint */}
                 {suggestedCat && (
-                  <div className="p-3 bg-[#E6F4EA] border border-[#CDE9D6] rounded-[8px] flex items-center justify-between">
+                  <div className="p-3 bg-[#E6F4EA] border border-[#CDE9D6] rounded-xl flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-[#0F6B3E] shrink-0" />
                       <span className="text-xs text-[#0B5632]">
@@ -212,7 +212,7 @@ export const PostJobPage: React.FC = () => {
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full h-10 px-3 text-sm bg-white border border-[#DCE8E0] rounded-[8px] text-[#0C2A1B] focus:outline-none focus:ring-2 focus:ring-[#0F6B3E]"
+                    className="w-full h-10 px-3 text-sm bg-white border border-[#DCE8E0] rounded-xl text-[#0C2A1B] focus:outline-none focus:ring-2 focus:ring-[#0F6B3E]"
                   >
                     {CATEGORIES.map(c => (
                       <option key={c.id} value={c.name}>{c.name}</option>

@@ -112,9 +112,9 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
    ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-[#34453B]">
+    <div className="min-h-screen flex flex-col bg-[#f8fbf9] text-[#2d3f35]">
       {/* Top Navbar */}
-      <div role="region" aria-label="Dashboard tools" className="bg-white border-b border-[#DCE8E0] h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div role="region" aria-label="Dashboard tools" className="bg-white/95 backdrop-blur-md border-b border-[#DCE8E0] h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-2xs">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
@@ -321,7 +321,7 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
       {/* Main Layout: Left Sidebar + Workspace Content */}
       <div className="flex-1 flex w-full">
         {/* Left Sidebar (Desktop) */}
-        <aside className="hidden lg:block w-64 border-r border-[#DCE8E0] py-6 px-4 space-y-1 shrink-0">
+        <aside className="hidden lg:block w-64 bg-white border-r border-[#DCE8E0] py-6 px-4 space-y-1.5 shrink-0 shadow-2xs">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPath === item.path;
@@ -330,9 +330,9 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
               <button
                 key={item.label}
                 onClick={() => marketplaceStore.navigate(item.path)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-xs font-medium transition-colors cursor-pointer text-left ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-colors cursor-pointer text-left ${
                   isActive
-                    ? 'bg-[#E6F4EA] text-[#0F6B3E] font-semibold'
+                    ? 'bg-[#E6F4EA] text-[#0F6B3E] font-semibold shadow-2xs'
                     : 'text-[#34453B] hover:bg-[#F4FAF6] hover:text-[#0C2A1B]'
                 }`}
               >

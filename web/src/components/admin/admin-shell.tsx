@@ -201,9 +201,9 @@ export function AdminShell({
               href={item.href}
               onClick={onSelect}
               aria-current={isActive ? "page" : undefined}
-              className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E] ${
+              className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E] ${
                 isActive
-                  ? "bg-[#E6F4EA] font-semibold text-[#0F6B3E]"
+                  ? "bg-[#E6F4EA] font-semibold text-[#0F6B3E] shadow-2xs"
                   : "text-[#34453B] hover:bg-[#F4FAF6] hover:text-[#0C2A1B]"
               }`}
             >
@@ -228,7 +228,7 @@ export function AdminShell({
       value={{ adminId, adminName: displayName, adminEmail, refreshProfile }}
     >
       <div className="min-h-screen flex flex-col bg-[#F8FBF9] text-[#0C2A1B]">
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[#DCE8E0] bg-white px-4 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[#DCE8E0] bg-white/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 shadow-2xs">
           <div className="flex items-center gap-3">
             <button
               type="button"

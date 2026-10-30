@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { MapPin, ShieldCheck, Sparkles, Wrench } from "lucide-react";
 import { Brand, Icon } from "./brand";
+import { siteConfig } from "@/config/site";
 import { createClient } from "@/utils/supabase/client";
 import {
   clearOAuthDestination,
@@ -214,8 +217,8 @@ export function ProfessionalSignInForm() {
           </h1>
           <p className="auth-intro">
             {mode === "signin"
-              ? "Sign in to your ProLink account to start or continue your verified professional application."
-              : "Create your ProLink account first, then complete the 3-step professional application."}
+              ? `Sign in to your ${siteConfig.name} account to start or continue your professional application.`
+              : `Create your ${siteConfig.name} account first, then complete the 3-step professional application.`}
           </p>
 
           {/* Step preview strip */}
@@ -238,7 +241,7 @@ export function ProfessionalSignInForm() {
             <span style={{ color: "var(--muted)" }}>→</span>
             <span>2. Complete 3-Step Application</span>
             <span style={{ color: "var(--muted)" }}>→</span>
-            <span>3. Verification Review</span>
+            <span>3. Application Review</span>
           </div>
 
           <div
@@ -274,11 +277,11 @@ export function ProfessionalSignInForm() {
               role="alert"
               aria-live="polite"
               style={{
-                background: isSuccessMessage ? "var(--mint)" : "#fef2f2",
+                background: isSuccessMessage ? "var(--mint)" : "var(--danger-soft)",
                 border: isSuccessMessage
-                  ? "1px solid #86efac"
-                  : "1px solid #fecaca",
-                color: isSuccessMessage ? "var(--forest)" : "#991b1b",
+                  ? "1px solid var(--success-border)"
+                  : "1px solid var(--danger-border)",
+                color: isSuccessMessage ? "var(--forest)" : "var(--danger-fg-hover)",
                 borderRadius: "8px",
                 padding: "12px 14px",
                 marginBottom: "16px",
@@ -312,7 +315,7 @@ export function ProfessionalSignInForm() {
                   aria-invalid={Boolean(fieldErrors.fullName)}
                   style={
                     fieldErrors.fullName
-                      ? { borderColor: "#dc2626" }
+                      ? { borderColor: "var(--danger-border-strong)" }
                       : undefined
                   }
                 />
@@ -320,7 +323,7 @@ export function ProfessionalSignInForm() {
                   <p
                     role="alert"
                     style={{
-                      color: "#dc2626",
+                      color: "var(--danger-border-strong)",
                       fontSize: "12px",
                       marginTop: "6px",
                       fontWeight: 500,
@@ -350,14 +353,14 @@ export function ProfessionalSignInForm() {
                 disabled={loading}
                 aria-invalid={Boolean(fieldErrors.email)}
                 style={
-                  fieldErrors.email ? { borderColor: "#dc2626" } : undefined
+                  fieldErrors.email ? { borderColor: "var(--danger-border-strong)" } : undefined
                 }
               />
               {fieldErrors.email && (
                 <p
                   role="alert"
                   style={{
-                    color: "#dc2626",
+                    color: "var(--danger-border-strong)",
                     fontSize: "12px",
                     marginTop: "6px",
                     fontWeight: 500,
@@ -397,7 +400,7 @@ export function ProfessionalSignInForm() {
                   aria-invalid={Boolean(fieldErrors.password)}
                   style={
                     fieldErrors.password
-                      ? { borderColor: "#dc2626" }
+                      ? { borderColor: "var(--danger-border-strong)" }
                       : undefined
                   }
                 />
@@ -414,7 +417,7 @@ export function ProfessionalSignInForm() {
                 <p
                   role="alert"
                   style={{
-                    color: "#dc2626",
+                    color: "var(--danger-border-strong)",
                     fontSize: "12px",
                     marginTop: "6px",
                     fontWeight: 500,
@@ -501,8 +504,8 @@ export function ProfessionalSignInForm() {
         </div>
 
         <footer className="auth-footer">
-          <Icon name="shield" />
-          <span>Secure Authentication · ProLink</span>
+          <ShieldCheck className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
+          <span>{siteConfig.name} · Professional Network</span>
           <Link href="/">Back to home</Link>
         </footer>
       </main>
@@ -510,7 +513,7 @@ export function ProfessionalSignInForm() {
       <aside
         className="auth-visual"
         data-mode={mode}
-        aria-label="Welcome to ProLink"
+        aria-label="Welcome to ProLink Professionals"
         aria-live="polite"
       >
         <div className="auth-ambient-orb orb-primary" aria-hidden="true" />
@@ -518,54 +521,77 @@ export function ProfessionalSignInForm() {
 
         <div className="auth-panel-top">
           <span className="badge">
-            <Icon name="shield" />
-            ProLink Platform
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Professional Hub · {siteConfig.city}
           </span>
         </div>
 
         <div className="auth-welcome-stage">
-          <div
-            className={`auth-welcome-layer ${
-              mode === "signin" ? "is-active" : "is-inactive-up"
-            }`}
-            aria-hidden={mode !== "signin"}
-          >
-            <span className="auth-welcome-eyebrow">Member Access</span>
-            <h2 className="auth-welcome-heading">Welcome Back to ProLink!</h2>
-            <p className="auth-welcome-description">
-              Your next opportunity is just a step away. Sign in to connect with
-              trusted professionals, explore job opportunities, and continue
-              where you left off.
-            </p>
-            <div className="auth-welcome-accent-bar" aria-hidden="true">
-              <span className="auth-welcome-accent-dot is-active" />
-              <span className="auth-welcome-accent-dot is-inactive" />
+          <div className="auth-welcome-layers">
+            <div
+              className={`auth-welcome-layer ${
+                mode === "signin" ? "is-active" : "is-inactive-up"
+              }`}
+              aria-hidden={mode !== "signin"}
+            >
+              <span className="auth-welcome-eyebrow">Professional Sign In</span>
+              <h2 className="auth-welcome-heading">Welcome Back, Trade Partner!</h2>
+              <p className="auth-welcome-description">
+                Sign in to track your trade application, view local service requests,
+                and manage your professional profile in {siteConfig.city}.
+              </p>
+            </div>
+
+            <div
+              className={`auth-welcome-layer ${
+                mode === "signup" ? "is-active" : "is-inactive-down"
+              }`}
+              aria-hidden={mode !== "signup"}
+            >
+              <span className="auth-welcome-eyebrow">Trade Partner Access</span>
+              <h2 className="auth-welcome-heading">Grow Your Trade in {siteConfig.city}</h2>
+              <p className="auth-welcome-description">
+                Create your account to start your 3-step application, send itemised
+                offers directly to households, and grow your local client base.
+              </p>
             </div>
           </div>
 
-          <div
-            className={`auth-welcome-layer ${
-              mode === "signup" ? "is-active" : "is-inactive-down"
-            }`}
-            aria-hidden={mode !== "signup"}
-          >
-            <span className="auth-welcome-eyebrow">Get Started</span>
-            <h2 className="auth-welcome-heading">Welcome to ProLink!</h2>
-            <p className="auth-welcome-description">
-              Join a growing community that connects people with the right
-              professionals. Create your account to discover opportunities,
-              showcase your skills, and build meaningful connections.
-            </p>
-            <div className="auth-welcome-accent-bar" aria-hidden="true">
-              <span className="auth-welcome-accent-dot is-inactive" />
-              <span className="auth-welcome-accent-dot is-active" />
-            </div>
+          <div className="auth-photo-card">
+            <Image
+              src="/images/auth-craft.webp"
+              alt="Professional skilled artisan at work"
+              fill
+              sizes="(min-width: 1024px) 420px, 320px"
+              style={{ objectFit: "cover" }}
+            />
           </div>
+
+          <ul className="auth-benefits-list">
+            <li className="auth-benefit-item">
+              <span className="auth-benefit-icon">
+                <Wrench className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Send itemised quotes to local households</span>
+            </li>
+            <li className="auth-benefit-item">
+              <span className="auth-benefit-icon">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Reviewed application process</span>
+            </li>
+            <li className="auth-benefit-item">
+              <span className="auth-benefit-icon">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Direct matching in {siteConfig.city}</span>
+            </li>
+          </ul>
         </div>
 
         <div className="auth-welcome-bottom">
-          <span>Trusted connections across Pakistan</span>
-          <span>ProLink</span>
+          <span>{siteConfig.city} pilot · University semester project</span>
+          <span>{siteConfig.name}</span>
         </div>
       </aside>
     </div>

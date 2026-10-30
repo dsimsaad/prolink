@@ -104,7 +104,7 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
       </div>
 
       {/* Header Banner */}
-      <div className="bg-white border border-[#DCE8E0] rounded-[10px] p-6 space-y-4">
+      <div className="bg-white border border-[#DCE8E0] rounded-2xl shadow-xs p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
         {/* Left Column: Job Info, Attachments, Map, Payment */}
         <div className="lg:col-span-5 space-y-6">
           {/* Job Details Card */}
-          <div className="bg-white border border-[#DCE8E0] rounded-[10px] p-5 space-y-4">
+          <div className="bg-white border border-[#DCE8E0] rounded-2xl shadow-xs p-5 space-y-4">
             <h3 className="text-sm font-bold text-[#0C2A1B]">Job Scope & Budget</h3>
             <p className="text-xs text-[#34453B] leading-relaxed">
               {job.description}
@@ -203,7 +203,7 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
           </div>
 
           {/* Location on StylizedMap */}
-          <div className="bg-white border border-[#DCE8E0] rounded-[10px] p-5 space-y-3">
+          <div className="bg-white border border-[#DCE8E0] rounded-2xl shadow-xs p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-[#0C2A1B]">Service Location</h3>
               <span className="text-xs text-[#0F6B3E] font-medium">{job.city}</span>
@@ -217,12 +217,12 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
           </div>
 
           {/* Payment Status Box */}
-          <div className="bg-white border border-[#DCE8E0] rounded-[10px] p-5 space-y-3">
+          <div className="bg-white border border-[#DCE8E0] rounded-2xl shadow-xs p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-[#0C2A1B]">Booking &amp; Pricing</h3>
               <CreditCard className="w-4 h-4 text-[#0F6B3E]" />
             </div>
-            <div className="p-3 bg-[#F4FAF6] border border-[#DCE8E0] rounded-[8px] space-y-1.5 text-xs">
+            <div className="p-3 bg-[#F4FAF6] border border-[#DCE8E0] rounded-xl space-y-1.5 text-xs">
               <div className="flex justify-between items-center font-semibold">
                 <span className="text-[#34453B]">Booking Status:</span>
                 <span className={job.status === 'completed' ? 'text-[#2FAE60]' : 'text-[#0F6B3E]'}>
@@ -237,7 +237,7 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
 
           {/* Client Review (if already reviewed) */}
           {job.clientReview && (
-            <div className="bg-[#E6F4EA] border border-[#CDE9D6] rounded-[10px] p-5 space-y-2 text-xs">
+            <div className="bg-[#E6F4EA] border border-[#CDE9D6] rounded-2xl shadow-xs p-5 space-y-2 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[#0F6B3E]">Your Review for this Job</span>
                 <RatingStars rating={job.clientReview.rating} size="sm" showNumber={false} />
@@ -258,14 +258,14 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
 
         {/* Right Column: Offers List & Comparison */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="bg-white border border-[#DCE8E0] rounded-[10px] p-5 space-y-4">
+          <div className="bg-white border border-[#DCE8E0] rounded-2xl shadow-xs p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#DCE8E0]">
               <div>
                 <h3 className="text-base font-bold text-[#0C2A1B]">
                   Incoming Offers ({offers.length})
                 </h3>
                 <p className="text-xs text-[#6A7B70]">
-                  Itemized proposals from verified artisans matching this request
+                  Itemized proposals from local artisans matching this request
                 </p>
               </div>
 
@@ -275,7 +275,7 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
                 <select
                   value={offersSort}
                   onChange={(e) => setOffersSort(e.target.value as 'best' | 'price' | 'time' | 'rating')}
-                  className="h-8 px-2 bg-[#F4FAF6] border border-[#DCE8E0] rounded-[6px] text-xs font-semibold text-[#0C2A1B] cursor-pointer"
+                  className="h-8 px-2.5 bg-[#F4FAF6] border border-[#DCE8E0] rounded-xl text-xs font-semibold text-[#0C2A1B] cursor-pointer"
                 >
                   <option value="best">Best Match Score</option>
                   <option value="price">Lowest Price</option>
@@ -301,7 +301,7 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
                   return (
                     <div
                       key={off.id}
-                      className={`p-4 rounded-[10px] border transition-all space-y-3 ${
+                      className={`p-4 rounded-xl border transition-all space-y-3 ${
                         isAccepted
                           ? 'border-[#0F6B3E] bg-[#E6F4EA]/40'
                           : off.isBestMatch

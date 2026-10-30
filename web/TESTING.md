@@ -170,3 +170,54 @@ Verify the CTA appearance across professional lifecycle states:
 - [ ] **Analytics accuracy**: Funnel counts, top categories, top areas (`MinHeap.TopK` + `MergeSort`), and daily job counts on `/admin/analytics` match the database records.
 - [ ] **Engine reload**: Clicking **Reload engine data** on `/admin` calls `POST /admin/engine/reload`, rebuilds the in-memory indices and caches, and increments the displayed engine state version.
 
+---
+
+## 8. Public Site Redesign & Honest Copy Manual Verification Checklist
+
+### A. Responsive Viewports & Layout Rhythm
+- [ ] **Mobile (375px)**:
+  - Header displays logo, hamburger button (minimum 44×44px touch target), and clean drawer.
+  - Hero headline wraps naturally; eyebrow, subtext, CTA buttons, and badge pills stack neatly without horizontal overflow.
+  - Hero image (`/images/home-hero.webp`) scales with rounded corners and the "Example" offer card docks cleanly below the image without obscuring the subject.
+  - Popular Services collapses to a single column (1 col); trade cards show distinct icons on soft-tinted tiles with full readability.
+  - How It Works connects vertically with numbered brand circles and dotted line connector.
+  - Auth pages (`/sign-in`, `/sign-up`, `/become-professional/sign-in`, `/onboarding`) collapse `.auth-visual` gracefully, presenting the form at full usable width.
+- [ ] **Tablet (768px)**:
+  - Hero adapts to a balanced two-column or stacked layout without awkward whitespace.
+  - Popular Services displays a clean 2-column grid.
+  - How It Works shows balanced 3-step cards with sample dispatch and quote snippets.
+- [ ] **Desktop (1280px+)**:
+  - Header displays full navigation with subtle backdrop blur and elevation on scroll (`.is-scrolled`).
+  - Desktop "Become a Professional" button maintains exact original brand green (`--forest: #0f6b3e`) and styling.
+  - Hero features mint-to-cream gradient, subtle organic SVG accents, and offset background frame.
+  - Popular Services grid displays in 3 columns × 2 rows; cards lift subtly on hover (`translateY(-4px)`).
+  - Auth visual side panel (`.auth-visual`) renders rich gradient, `/images/auth-craft.webp`, and honest benefit points.
+
+### B. Accessibility, Focus & Motion
+- [ ] **Keyboard-only Navigation**: Tab order flows logically across all interactive elements (skip link, header links, hero actions, service cards, footer, forms); visible focus rings appear on all active elements (`:focus-visible`).
+- [ ] **Prefers-Reduced-Motion**: When `prefers-reduced-motion: reduce` is enabled in system settings, all animations (floating card, pulse, scroll reveals) immediately disable (`animation: none`, `transition-duration: 0.01ms`).
+- [ ] **Color Contrast (WCAG AA)**:
+  - Dark forest text (`--ink: #073820`, `--forest-deep: #0a4f30`) on white and mint backgrounds exceeds `10:1` contrast.
+  - Secondary teal and amber accent highlights exceed minimum contrast ratios for graphical controls and emphasis.
+  - Gradient CTA banners use high-contrast white text (`--on-dark: #ffffff`) and white action buttons with dark forest text (`6.58:1` contrast).
+
+### C. Header States & Navigation
+- [ ] **Logged-Out Visitor**: Header displays "Services", "Features", "About", "FAQs", "Contact", "Sign In", and the untouched "Become a Professional" button.
+- [ ] **Logged-In Customer**: Header displays user avatar / dropdown with role "Customer", link to Dashboard (`/user`), and Sign Out action.
+- [ ] **Logged-In Professional**:
+  - `state === "approved"`: Displays "Approved Professional" badge (no "verified" badge).
+  - `state === "pending"`: Displays "Application Under Review".
+- [ ] **Logged-In Administrator**: Displays "Administrator" badge and direct link to `/admin`.
+
+### D. Honest Copy & Claim Verification
+- [ ] **No Unsupported Claims on Public Surfaces**:
+  - Hero eyebrow: "Local skilled professionals, in one place" (no "Pakistan's Verified Skilled Artisans Network").
+  - Hero badges: "Compare offers before you hire", "Your phone number stays private until you accept an offer", "Mark a job urgent to be matched first" (no CNIC/biometric/4.9 claims).
+  - Single hero example card: Labelled "Example" with sample PKR pricing, inspection fee, arrival time; zero ratings, zero job counts.
+  - Services: Exactly 8 categories strictly matching `db/seed/001_categories_areas.sql` in order (`Plumbing`, `Electrical`, `Painting`, `Carpentry`, `AC repair and installation`, `Masonry`, `Home cleaning`, `Appliance repair`).
+  - Trust section: "Reviewed before they offer services", "Private by default", "Transparent Pricing" (no police/NADRA/escrow/guarantee wording).
+  - About page: Honest facts card ("Pilot city: Lahore", "Offers you can compare", "Phone numbers stay private until you accept") replacing fake stats.
+  - Footer: Displays project disclosure: *"ProLink is a university semester project. Some features are still in development. Sample content is for demonstration only."*
+  - Auth & Onboarding: Free of fake testimonials ("Khurram Abbas"), fake ratings ("4.92 / 5"), and unused lab technician image (`hero-technician.jpg`).
+
+

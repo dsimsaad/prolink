@@ -4,7 +4,7 @@ import Image from "next/image";
 export function Brand({
   className = "",
   variant = "default",
-  priority = true,
+  priority = false,
   href = "/",
 }: {
   className?: string;
@@ -17,12 +17,12 @@ export function Brand({
       <Link
         href={href}
         className={`brand ${className}`.trim()}
-        aria-label="ProLink"
+        aria-label="ProLink home"
         style={{ textDecoration: "none" }}
       >
         <Image
           src="/images/logo-white.png"
-          alt="ProLink"
+          alt="ProLink white wordmark logo"
           width={150}
           height={42}
           className="h-8 md:h-9 w-auto object-contain"
@@ -41,15 +41,15 @@ export function Brand({
     <Link
       href={href}
       className={`brand ${className}`.trim()}
-      aria-label="ProLink"
+      aria-label="ProLink home"
       style={{ textDecoration: "none" }}
     >
       <Image
         src="/images/logo.png"
-        alt="ProLink"
+        alt="ProLink wordmark logo"
         width={144}
         height={40}
-        priority={priority}
+        preload={priority}
         className="h-8 md:h-9 w-auto object-contain"
         style={{ height: "auto", width: "auto", maxHeight: "38px" }}
       />

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Icon } from "./brand";
+import { ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
+import { siteConfig } from "@/config/site";
 
 interface FaqItem {
   id: string;
@@ -17,70 +18,75 @@ const faqs: FaqItem[] = [
     category: "payments",
     question: "How does pricing work on ProLink?",
     answer:
-      "Every job on ProLink uses transparent, upfront itemized quotes. Professionals submit their estimated price, arrival time, and diagnostic fee before you hire them, so you can compare options and agree on pricing before any work begins.",
+      "Professionals submit upfront itemised quotes showing their estimated price, arrival window, and any inspection fee before you hire them, so you can compare offers side by side before work begins.",
   },
   {
-    id: "verification",
+    id: "review-process",
     category: "trust",
-    question: "How are professionals verified on ProLink?",
+    question: "How are professionals reviewed before they offer services?",
     answer:
-      "Every professional undergoes multi-step verification including NADRA CNIC validation, biometric checks, and trade skill audits. We ensure all active professionals have verified identities and proven track records before they can submit offers.",
+      "Applicants submit their trade categories, service areas, years of experience, and profile details. Our team reviews each application before enabling professional tools on the account. Because ProLink is a university semester project, government ID, biometric, or police checks are not performed.",
+  },
+  {
+    id: "privacy",
+    category: "trust",
+    question: "Who can see my phone number when I post a job?",
+    answer:
+      "Your phone number stays private by default while professionals view your job request and send offers. It is shared only after you accept an offer from the professional you choose.",
   },
   {
     id: "job-free",
     category: "customers",
     question: "Is posting a job request free?",
+    answer: `Yes, posting a job request is free for customers. Choose a category, describe what needs attention in ${siteConfig.city}, and compare itemised offers with no obligation to accept.`,
+  },
+  {
+    id: "urgent-jobs",
+    category: "customers",
+    question: "What does marking a job urgent do?",
     answer:
-      "Yes, posting a job request is 100% free for customers. You can post your job in under 60 seconds, upload photos of the issue, and receive itemized offers from certified local artisans with zero obligation.",
+      "When you mark a job urgent while posting, it is prioritised in matching so nearby professionals who cover your area see it first.",
   },
   {
     id: "apply-pro",
     category: "pros",
-    question: "How do I become a verified professional on ProLink?",
+    question: "How do I apply to offer services as a professional?",
     answer:
-      "Any registered ProLink user can apply to offer professional services by navigating to 'Become a professional' from their user menu. You will select your trade categories (1 to 5), coverage areas (1 to 12), years of experience, and bio. Our team reviews applications within 24 to 48 hours.",
+      "Any signed-in ProLink user can open 'Become a Professional' to submit an application with their trade categories (1 to 5), coverage areas, years of experience, and short bio for team review.",
   },
   {
     id: "dual-role",
     category: "pros",
     question: "Can one ProLink account be both a customer and a professional?",
     answer:
-      "Yes! ProLink utilizes a unified dual-role account architecture. Every user has a standard account capable of posting jobs to hire help. Once your professional application is approved, you gain access to professional tools to receive job leads, send offers, and build your business.",
-  },
-  {
-    id: "disputes",
-    category: "customers",
-    question: "What should I do if I am not satisfied with the completed work?",
-    answer:
-      "If an issue arises with a job, you can request adjustments directly from the professional or submit a report to ProLink support. Our moderation team reviews the job history and chat transcript to help mediate a fair resolution.",
+      "Yes. ProLink uses a unified dual-role account model. Every account can post household jobs, and approved applicants also get access to professional tools to view matching requests and send offers.",
   },
   {
     id: "quotes",
     category: "customers",
-    question: "How do inspection fees and transparent quotes work?",
+    question: "How do inspection fees work?",
     answer:
-      "Artisans provide transparent, itemized quotes before starting work. If an on-site diagnostic inspection is required, the inspection fee is clearly stated in the professional's offer upfront. There are no hidden fees or surprise surcharges.",
+      "If an on-site diagnostic check is needed before quoting a complex repair, the professional lists their inspection fee upfront inside the offer so you know the cost before accepting.",
   },
   {
     id: "coverage",
     category: "trust",
-    question: "Which cities and areas does ProLink currently cover?",
-    answer:
-      "ProLink currently operates across major metropolitan hubs in Pakistan, including Islamabad, Rawalpindi, Lahore, and Karachi. Coverage areas are mapped by sector and neighborhood, allowing professionals to select exact service radiuses.",
+    question: "Which city does ProLink currently cover?",
+    answer: `ProLink's active pilot city is ${siteConfig.city}, organised into neighbourhood areas so professionals can select the specific sectors they serve.`,
   },
   {
     id: "payment-methods",
     category: "payments",
-    question: "What payment methods are supported?",
+    question: "Does ProLink process online payments?",
     answer:
-      "We support direct bank transfers (1Link, Raast), debit/credit cards (Visa, Mastercard, PayPak), and mobile wallets (Easypaisa, JazzCash). All transactions are encrypted and processed through certified PCI-DSS compliant gateways.",
+      "Not yet. ProLink is a university semester project and does not process online payments or hold funds on the platform. You review and accept an itemised offer on ProLink and settle payment directly with your hired professional.",
   },
   {
     id: "reapply",
     category: "pros",
     question: "What happens if my professional application needs updates?",
     answer:
-      "If an application requires adjustments, our team provides specific feedback in a review note. You can immediately review the feedback on the application page, update your skills or coverage areas, and reapply without starting over.",
+      "If an application needs changes, our team leaves feedback in a review note. You can read the note on your application page, update your details, and resubmit.",
   },
 ];
 
@@ -89,12 +95,12 @@ const categories = [
   { id: "customers", label: "For Customers" },
   { id: "pros", label: "For Professionals" },
   { id: "payments", label: "Pricing & Payments" },
-  { id: "trust", label: "Trust & Safety" },
+  { id: "trust", label: "Privacy & Review" },
 ];
 
 export function FaqsClient() {
   const [activeCategory, setActiveCategory] = useState("all");
-  const [openIds, setOpenIds] = useState<string[]>(["pricing", "verification"]);
+  const [openIds, setOpenIds] = useState<string[]>(["pricing", "review-process"]);
 
   const toggleItem = (id: string) => {
     setOpenIds((prev) =>
@@ -111,21 +117,20 @@ export function FaqsClient() {
     <>
       <section className="faqs-hero">
         <div className="container">
-          <span className="faqs-hero-badge">
-            <Icon name="shield" />
-            Help &amp; Knowledge Base
+          <span className="eyebrow-pill">
+            <HelpCircle className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
+            Help &amp; Questions
           </span>
           <h1>Frequently Asked Questions</h1>
           <p>
-            Everything you need to know about hiring verified artisans, joining as
-            a tradesperson, and transparent pricing.
+            Straightforward answers about posting jobs in {siteConfig.city},
+            comparing itemised offers, privacy, and applying as a professional.
           </p>
         </div>
       </section>
 
       <section className="faqs-main-container">
-        {/* Category Pill Filters */}
-        <div className="faqs-category-filter" role="tablist">
+        <div className="faqs-category-filter" role="tablist" aria-label="Filter FAQs">
           {categories.map((cat) => (
             <button
               key={cat.id}
@@ -140,7 +145,6 @@ export function FaqsClient() {
           ))}
         </div>
 
-        {/* Dropdown Accordion List */}
         <div className="faqs-accordion-group">
           {filteredFaqs.map((faq) => {
             const isOpen = openIds.includes(faq.id);
@@ -157,7 +161,7 @@ export function FaqsClient() {
                   aria-controls={`faq-answer-${faq.id}`}
                 >
                   <span>{faq.question}</span>
-                  <Icon name="chevron-down" className="faqs-chevron-icon" />
+                  <ChevronDown className="faqs-chevron-icon" aria-hidden="true" />
                 </button>
                 {isOpen && (
                   <div id={`faq-answer-${faq.id}`} className="faqs-answer-content">
@@ -169,16 +173,15 @@ export function FaqsClient() {
           })}
         </div>
 
-        {/* Support Help Box */}
         <div className="faqs-support-cta-box">
           <h2>Still have questions?</h2>
           <p>
-            Our support team in Islamabad is available 6 days a week to help with your
-            account, jobs, or professional verification.
+            Send a message to our team in {siteConfig.city} for help with your
+            account, job requests, or professional application.
           </p>
           <div className="faqs-cta-actions">
             <Link href="/contact" className="button">
-              Contact Support <Icon name="arrow" />
+              Contact Us <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
             <Link href="/sign-in" className="button outline">
               Post a Job

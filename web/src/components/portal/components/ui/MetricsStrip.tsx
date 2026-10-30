@@ -49,14 +49,14 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
           <div className="text-xs font-semibold uppercase tracking-wider text-[#6A7B70]">
             Performance Metrics
           </div>
-          <div className="inline-flex items-center gap-1 p-0.5 bg-[#F4FAF6] border border-[#DCE8E0] rounded-[8px]">
+          <div className="inline-flex items-center gap-1 p-0.5 bg-[#F4FAF6] border border-[#DCE8E0] rounded-xl">
             {periods.map((p) => {
               const isActive = currentPeriod === p;
               return (
                 <button
                   key={p}
                   onClick={() => handlePeriodChange(p)}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-[6px] transition-colors cursor-pointer select-none ${
+                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors cursor-pointer select-none ${
                     isActive
                       ? 'bg-white text-[#0C2A1B] shadow-2xs font-semibold'
                       : 'text-[#6A7B70] hover:text-[#0C2A1B]'
@@ -71,7 +71,7 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
       )}
 
       {/* Main KPI metrics strip container */}
-      <div className="w-full bg-white border border-[#DCE8E0] rounded-[10px] grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 divide-y md:divide-y-0 md:divide-x divide-[#DCE8E0] overflow-hidden">
+      <div className="w-full bg-white border border-[#DCE8E0] rounded-2xl shadow-xs grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 divide-y md:divide-y-0 md:divide-x divide-[#DCE8E0] overflow-hidden">
         {metrics.map((m) => {
           return (
             <div

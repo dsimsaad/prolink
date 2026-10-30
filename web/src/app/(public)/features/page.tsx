@@ -1,56 +1,80 @@
 import "./features.css";
+import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  ArrowRight,
+  Compass,
+  FileText,
+  Layers,
+  Lock,
+  MapPin,
+  ReceiptText,
+  UserCheck,
+} from "lucide-react";
 import { SiteFooter } from "@/components/prolink/site-footer";
-import { Icon } from "@/components/prolink/brand";
+import { siteConfig } from "@/config/site";
 
-export const metadata = {
-  title: "Platform Features | ProLink",
-  description:
-    "Explore the core features that make ProLink the fastest and safest way to hire verified local service professionals.",
+const pageTitle = `Platform Features | ${siteConfig.name} ${siteConfig.city}`;
+const pageDescription = `Explore how ${siteConfig.name} helps households in ${siteConfig.city} post repair jobs, compare itemised quotes, and keep phone numbers private until an offer is accepted.`;
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    siteName: siteConfig.name,
+    locale: "en_PK",
+    type: "website",
+  },
 };
 
 const platformFeatures = [
   {
-    icon: "clock" as const,
-    tag: "Speed",
-    title: "60-Second Job Posting",
-    description:
-      "Describe your maintenance or repair task, select your neighborhood area, and set your preferred timing in under a minute.",
+    tag: "Simple Posting",
+    title: "Structured Job Requests",
+    description: `Select a trade category, describe what needs fixing, mark urgent repairs when needed, and pick your area in ${siteConfig.city}.`,
+    tileHue: "tile-hue-emerald",
+    IconComponent: FileText,
   },
   {
-    icon: "shield" as const,
-    tag: "Trust & Safety",
-    title: "Identity & Skill Verification",
+    tag: "Team Review",
+    title: "Reviewed Applications",
     description:
-      "Every professional on ProLink undergoes identity verification and trade skill screening before being approved to send offers.",
+      "Professionals apply with their trade categories, coverage areas, and experience and are reviewed by our team before offering services.",
+    tileHue: "tile-hue-teal",
+    IconComponent: UserCheck,
   },
   {
-    icon: "card" as const,
     tag: "Clarity",
-    title: "Transparent Itemized Quotes",
+    title: "Transparent Itemised Quotes",
     description:
-      "Compare clear, upfront quotes with stated arrival times and diagnostic fees so there are never surprise charges.",
+      "Compare upfront quotes showing estimated service cost, arrival window, and any inspection fee before work begins.",
+    tileHue: "tile-hue-amber",
+    IconComponent: ReceiptText,
   },
   {
-    icon: "pin" as const,
-    tag: "Hyper-Local",
-    title: "Neighborhood Area Matching",
-    description:
-      "Your job request is matched directly with verified artisans who actively cover your specific sector and neighborhood.",
+    tag: "Local Dispatch",
+    title: "Neighbourhood Area Matching",
+    description: `Requests are routed to professionals who cover your sector in ${siteConfig.city}, with priority matching when you mark a job urgent.`,
+    tileHue: "tile-hue-sky",
+    IconComponent: MapPin,
   },
   {
-    icon: "check" as const,
+    tag: "Privacy",
+    title: "Private Contact Sharing",
+    description:
+      "Your phone number stays hidden while you review offers and is shared only with the professional whose offer you accept.",
+    tileHue: "tile-hue-rose",
+    IconComponent: Lock,
+  },
+  {
     tag: "Unified Account",
     title: "Dual-Role Account Model",
     description:
-      "Use a single ProLink account to post jobs as a homeowner or apply to offer your own trade services as a professional.",
-  },
-  {
-    icon: "star" as const,
-    tag: "Quality",
-    title: "Verified Customer Reviews",
-    description:
-      "Only customers who have completed a booked job can rate and review a professional, ensuring authentic feedback.",
+      "Use a single ProLink account to post household jobs as a customer or apply to offer your own trade services locally.",
+    tileHue: "tile-hue-violet",
+    IconComponent: Layers,
   },
 ];
 
@@ -60,55 +84,61 @@ export default function FeaturesPage() {
       <main id="main">
         <section className="features-hero">
           <div className="container">
-            <span className="features-hero-badge">
-              <Icon name="shield" />
-              Built for Homeowners &amp; Skilled Professionals
+            <span className="eyebrow-pill">
+              <Compass className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
+              Built for Households &amp; Local Tradespeople
             </span>
             <h1>Platform Features</h1>
             <p>
-              Discover how ProLink connects households and businesses with verified
-              local artisans through transparent quotes, area-based matching, and
-              rigorous quality standards.
+              See how {siteConfig.name} connects households in {siteConfig.city}{" "}
+              with local electricians, plumbers, painters, carpenters, and
+              technicians through clear quotes and private contact controls.
             </p>
           </div>
         </section>
 
-        <section className="features-main-container">
-          <div className="features-section-header">
-            <span className="eyebrow">Why Choose ProLink</span>
-            <h2>Everything you need to hire with confidence</h2>
-            <p>
-              Designed from the ground up for reliability, speed, and complete pricing transparency.
-            </p>
-          </div>
+        <section className="features-body-section">
+          <div className="features-main-container">
+            <div className="features-section-header">
+              <span className="eyebrow">How It Fits Together</span>
+              <h2>Practical tools for hiring with clarity</h2>
+              <p>
+                Designed around upfront quotes, area-aware matching, and
+                privacy by default.
+              </p>
+            </div>
 
-          <div className="features-cards-grid">
-            {platformFeatures.map((feat) => (
-              <article key={feat.title} className="feature-item-card">
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span className="feature-item-icon">
-                    <Icon name={feat.icon} />
-                  </span>
-                  <span className="feature-item-tag">{feat.tag}</span>
-                </div>
-                <h3>{feat.title}</h3>
-                <p>{feat.description}</p>
-              </article>
-            ))}
-          </div>
+            <div className="features-cards-grid">
+              {platformFeatures.map((feat) => (
+                <article key={feat.title} className="feature-item-card">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className={`icon-tile ${feat.tileHue}`}>
+                      <feat.IconComponent className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <span className="feature-item-tag">{feat.tag}</span>
+                  </div>
+                  <h3>{feat.title}</h3>
+                  <p>{feat.description}</p>
+                </article>
+              ))}
+            </div>
 
-          <div className="features-cta-banner">
-            <h2>Ready to get started with ProLink?</h2>
-            <p>
-              Post your job in 60 seconds or explore our full directory of verified professional services.
-            </p>
-            <div className="features-cta-buttons">
-              <Link href="/sign-in" className="button">
-                Post a Job <Icon name="arrow" />
-              </Link>
-              <Link href="/services" className="button outline">
-                Explore Services
-              </Link>
+            <div className="features-cta-banner">
+              <div>
+                <h2>Connect with local professionals near you.</h2>
+                <p>
+                  Post a household repair in {siteConfig.city} or browse our{" "}
+                  {siteConfig.categories.length} trade categories.
+                </p>
+              </div>
+              <div className="features-cta-buttons">
+                <Link href="/sign-in" className="button">
+                  Post a Job <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+                <Link href="/services" className="button outline">
+                  Explore Services
+                </Link>
+              </div>
             </div>
           </div>
         </section>

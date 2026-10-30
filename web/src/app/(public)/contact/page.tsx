@@ -1,12 +1,24 @@
 import "./contact.css";
+import type { Metadata } from "next";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { SiteFooter } from "@/components/prolink/site-footer";
 import { ContactForm } from "@/components/prolink/contact-form";
-import { Icon } from "@/components/prolink/brand";
+import { siteConfig } from "@/config/site";
+import { sampleSupportHelpline } from "@/data/sample";
 
-export const metadata = {
-  title: "Contact Us | ProLink",
-  description:
-    "Get in touch with the ProLink support team in Islamabad. Reach us by email, phone, or send us a direct message.",
+const pageTitle = `Contact Us | ${siteConfig.name} ${siteConfig.city}`;
+const pageDescription = `Get in touch with the ${siteConfig.name} team in ${siteConfig.city} for questions about job requests, accounts, or professional applications.`;
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    siteName: siteConfig.name,
+    locale: "en_PK",
+    type: "website",
+  },
 };
 
 export default function ContactPage() {
@@ -15,81 +27,82 @@ export default function ContactPage() {
       <main id="main">
         <section className="contact-hero">
           <div className="container">
-            <span className="contact-hero-badge">
-              <Icon name="mail" />
+            <span className="eyebrow-pill">
+              <Mail className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
               We&apos;re here to help
             </span>
-            <h1>Contact ProLink Support</h1>
+            <h1>Contact {siteConfig.name} Support</h1>
             <p>
-              Have a question about a job, your professional application, or need
-              assistance? Our dedicated team in Islamabad is ready to assist.
+              Have a question about posting a job, your professional
+              application, or your account? Reach out to our team in{" "}
+              {siteConfig.city}.
             </p>
           </div>
         </section>
 
         <section className="contact-main-container">
           <div className="contact-layout-grid">
-            {/* Left Column: Contact Details Stack */}
             <div className="contact-info-stack">
               <div className="contact-card">
-                <span className="contact-card-icon">
-                  <Icon name="phone" />
+                <span className="icon-tile tile-hue-emerald">
+                  <Phone className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="contact-card-content">
-                  <h3>Direct Phone Helpline</h3>
-                  <p>Speak directly with our customer support center in Pakistan.</p>
-                  <span className="contact-highlight-text">+92 (51) 111-776-546</span>
-                  <div className="contact-sub-text">WhatsApp: +92 (300) 123-4567</div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3>Phone Helpline</h3>
+                    <span className="sample-pill">{sampleSupportHelpline.badgeLabel}</span>
+                  </div>
+                  <p>{sampleSupportHelpline.note}</p>
+                  <span className="contact-highlight-text">{sampleSupportHelpline.phone}</span>
+                  <div className="contact-sub-text">WhatsApp: {sampleSupportHelpline.whatsapp}</div>
                 </div>
               </div>
 
               <div className="contact-card">
-                <span className="contact-card-icon">
-                  <Icon name="mail" />
+                <span className="icon-tile tile-hue-amber">
+                  <Mail className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="contact-card-content">
                   <h3>Email Inquiries</h3>
-                  <p>Send job details, document verification, or partnership inquiries.</p>
+                  <p>Send questions about jobs, professional applications, or feedback.</p>
                   <a
-                    href="mailto:support@prolink.pk"
+                    href={`mailto:${siteConfig.supportEmail}`}
                     className="contact-highlight-text"
-                    style={{ textDecoration: "none" }}
                   >
-                    support@prolink.pk
+                    {siteConfig.supportEmail}
                   </a>
-                  <div className="contact-sub-text">Disputes &amp; Support: disputes@prolink.pk</div>
+                  <div className="contact-sub-text">Support &amp; Issue Reports: disputes@prolink.pk</div>
                 </div>
               </div>
 
               <div className="contact-card">
-                <span className="contact-card-icon">
-                  <Icon name="pin" />
+                <span className="icon-tile tile-hue-teal">
+                  <MapPin className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="contact-card-content">
-                  <h3>Head Office</h3>
+                  <h3>Pilot City</h3>
                   <p>
-                    ProLink Head Office
+                    {siteConfig.name} Project Hub
                     <br />
-                    Lahore, Pakistan
+                    {siteConfig.city}, Pakistan
                   </p>
                 </div>
               </div>
 
               <div className="contact-card">
-                <span className="contact-card-icon">
-                  <Icon name="clock" />
+                <span className="icon-tile tile-hue-sky">
+                  <Clock className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="contact-card-content">
-                  <h3>Operating Hours</h3>
+                  <h3>Response Hours</h3>
                   <p>Monday through Saturday: 9:00 AM – 8:00 PM PKT</p>
-                  <div style={{ fontSize: "12px", color: "#0f6b3e", fontWeight: 700 }}>
-                    Priority escalation available 24/7 for active service jobs
+                  <div className="contact-note-accent">
+                    Messages submitted outside these hours are answered the next working day
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Direct Email / Message Form */}
             <ContactForm />
           </div>
         </section>

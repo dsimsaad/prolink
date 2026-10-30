@@ -1,32 +1,76 @@
 import "./about.css";
+import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  ArrowRight,
+  Compass,
+  Lock,
+  MapPin,
+  ReceiptText,
+  SlidersHorizontal,
+  UserCheck,
+  Wrench,
+} from "lucide-react";
 import { SiteFooter } from "@/components/prolink/site-footer";
-import { Icon } from "@/components/prolink/brand";
+import { siteConfig } from "@/config/site";
 
-export const metadata = {
-  title: "About Us | ProLink",
-  description:
-    "Learn about ProLink's mission to connect households and businesses in Lahore with verified, trusted local service professionals.",
+const pageTitle = `About Us | ${siteConfig.name} ${siteConfig.city}`;
+const pageDescription = `Learn how ${siteConfig.name} connects households in ${siteConfig.city} with local tradespeople through itemised offers and private contact sharing.`;
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    siteName: siteConfig.name,
+    locale: "en_PK",
+    type: "website",
+  },
 };
+
+const honestFacts = [
+  {
+    label: `Pilot city: ${siteConfig.city}`,
+    detail: "Focused on neighbourhood-to-neighbourhood home maintenance in our active pilot hub.",
+    tileHue: "tile-hue-emerald",
+    IconComponent: MapPin,
+  },
+  {
+    label: "Offers you can compare",
+    detail: "Review itemised quotes, inspection fees, and estimated arrival times before choosing.",
+    tileHue: "tile-hue-amber",
+    IconComponent: SlidersHorizontal,
+  },
+  {
+    label: "Phone numbers stay private until you accept",
+    detail: "Your contact number is revealed only to the professional whose offer you accept.",
+    tileHue: "tile-hue-teal",
+    IconComponent: Lock,
+  },
+];
 
 const coreValues = [
   {
-    icon: "shield" as const,
-    title: "Verified Trust",
+    title: "Reviewed before they work",
     description:
-      "Every professional on ProLink goes through identity and trade skill verification before offering services to homeowners.",
+      "Professionals submit an application and are reviewed by our team before they can send offers to homeowners on ProLink.",
+    tileHue: "tile-hue-emerald",
+    IconComponent: UserCheck,
   },
   {
-    icon: "card" as const,
     title: "Complete Transparency",
     description:
-      "Clear, upfront itemized quotes and diagnostic fees remove the guesswork from hiring local technicians and artisans.",
+      "Clear, upfront itemised quotes and inspection fees help remove guesswork from hiring local technicians and tradespeople.",
+    tileHue: "tile-hue-amber",
+    IconComponent: ReceiptText,
   },
   {
-    icon: "star" as const,
-    title: "Empowering Artisans",
+    title: "Supporting Local Trades",
     description:
-      "We help skilled electricians, plumbers, HVAC specialists, and technicians build sustainable businesses through verified reviews.",
+      "We give electricians, plumbers, painters, carpenters, and technicians a direct way to connect with nearby households.",
+    tileHue: "tile-hue-sky",
+    IconComponent: Wrench,
   },
 ];
 
@@ -36,94 +80,98 @@ export default function AboutPage() {
       <main id="main">
         <section className="about-hero">
           <div className="container">
-            <span className="about-hero-badge">
-              <Icon name="shield" />
+            <span className="eyebrow-pill">
+              <Compass className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
               Our Mission &amp; Story
             </span>
-            <h1>About ProLink</h1>
+            <h1>About {siteConfig.name}</h1>
             <p>
-              Connecting households and businesses with verified, dependable local
-              service professionals through speed, transparency, and trust.
+              Connecting households in {siteConfig.city} with local skilled
+              professionals through clear offers, private contact sharing, and
+              straightforward coordination.
             </p>
           </div>
         </section>
 
-        <section className="about-main-container">
-          <div className="about-story-grid">
-            <div className="about-story-copy">
-              <span className="eyebrow">Why We Built ProLink</span>
-              <h2>A better way to find and hire skilled professionals</h2>
-              <p>
-                Finding a reliable electrician, plumber, or HVAC technician used to
-                mean calling through outdated phone contacts, waiting hours without
-                updates, and dealing with unclear pricing at the door.
-              </p>
-              <p>
-                ProLink was built to modernize home and commercial maintenance.
-                Homeowners can post a job request in 60 seconds and receive
-                transparent, itemized offers from verified professionals in their
-                neighborhood, while skilled tradespeople gain direct access to
-                local customers without middlemen.
-              </p>
-            </div>
+        <section className="about-story-section">
+          <div className="about-main-container">
+            <div className="about-story-grid">
+              <div className="about-story-copy">
+                <span className="eyebrow">Why We Built ProLink</span>
+                <h2>A clearer way to find and hire local tradespeople</h2>
+                <p>
+                  Finding an electrician, plumber, painter, or AC technician often
+                  means calling through old phone numbers, waiting without updates,
+                  and negotiating unclear prices at the door.
+                </p>
+                <p>
+                  {siteConfig.name} is a university semester project built to make
+                  everyday home maintenance more structured in {siteConfig.city}.
+                  Customers describe their repair and compare itemised offers from
+                  local professionals, while tradespeople reach nearby jobs
+                  without middlemen.
+                </p>
+              </div>
 
-            <div className="about-stats-panel" aria-label="Platform highlights">
-              <div className="about-stat-item">
-                <strong>Lahore</strong>
-                <span>Active Service Hub</span>
-              </div>
-              <div className="about-stat-item">
-                <strong>60 sec</strong>
-                <span>Fast Job Posting</span>
-              </div>
-              <div className="about-stat-item">
-                <strong>100%</strong>
-                <span>Verified Professionals</span>
-              </div>
-              <div className="about-stat-item">
-                <strong>4.9 / 5</strong>
-                <span>Average Client Rating</span>
+              <div className="about-facts-panel" aria-label="How ProLink works today">
+                {honestFacts.map((fact) => (
+                  <div key={fact.label} className="about-fact-item">
+                    <span className={`icon-tile ${fact.tileHue}`}>
+                      <fact.IconComponent className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <strong>{fact.label}</strong>
+                      <span>{fact.detail}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
+        </section>
 
-          <div className="about-values-header">
-            <span className="eyebrow">Our Principles</span>
-            <h2>What sets ProLink apart</h2>
-            <p>
-              Every decision we make is guided by reliability for customers and fair
-              opportunity for professionals.
-            </p>
-          </div>
+        <section className="about-values-section">
+          <div className="about-main-container">
+            <div className="about-values-header">
+              <span className="eyebrow-pill eyebrow-pill-warm">Our Principles</span>
+              <h2>What guides {siteConfig.name}</h2>
+              <p>
+                Practical design choices focused on clear expectations for
+                households and fair opportunity for local tradespeople.
+              </p>
+            </div>
 
-          <div className="about-values-grid">
-            {coreValues.map((val) => (
-              <article key={val.title} className="about-value-card">
-                <span className="about-value-icon">
-                  <Icon name={val.icon} />
-                </span>
-                <h3>{val.title}</h3>
-                <p>{val.description}</p>
-              </article>
-            ))}
-          </div>
+            <div className="about-values-grid">
+              {coreValues.map((val) => (
+                <article key={val.title} className="about-value-card">
+                  <span className={`icon-tile ${val.tileHue}`}>
+                    <val.IconComponent className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <h3>{val.title}</h3>
+                  <p>{val.description}</p>
+                </article>
+              ))}
+            </div>
 
-          <div className="about-cta-banner">
-            <h2>Join the ProLink community</h2>
-            <p>
-              Whether you need a trusted professional for a home repair or want to
-              grow your trade business, ProLink is built for you.
-            </p>
-            <div className="about-cta-buttons">
-              <Link href="/sign-in" className="button">
-                Post a Job <Icon name="arrow" />
-              </Link>
-              <Link
-                href="/become-professional/sign-in"
-                className="button outline"
-              >
-                Become a Professional
-              </Link>
+            <div className="about-cta-banner">
+              <div>
+                <h2>Connect with local professionals near you.</h2>
+                <p>
+                  Post a household repair in {siteConfig.city} or apply to offer
+                  your trade skills to nearby customers.
+                </p>
+              </div>
+              <div className="about-cta-buttons">
+                <Link href="/sign-in" className="button">
+                  Post a Job <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+                <Link
+                  href="/become-professional/sign-in"
+                  className="button outline"
+                >
+                  Apply as a Professional
+                </Link>
+              </div>
             </div>
           </div>
         </section>

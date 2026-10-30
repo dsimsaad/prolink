@@ -15,21 +15,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   disabled,
   ...props
 }, ref) => {
-  const base = "inline-flex items-center justify-center font-medium transition-colors duration-150 select-none whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6B3E] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+  const base = "inline-flex items-center justify-center font-medium transition-all duration-200 select-none whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--forest)] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
 
   const sizeClasses = {
-    sm: "h-8 px-3 text-xs rounded-[8px] gap-1.5",
-    md: "h-10 px-4 text-sm rounded-[8px] gap-2",
-    lg: "h-12 px-6 text-base rounded-[8px] gap-2.5 font-semibold",
-    icon: "h-9 w-9 rounded-[8px] p-0"
+    sm: "h-8 px-3.5 text-xs rounded-xl gap-1.5",
+    md: "h-10 px-4 text-sm rounded-xl gap-2 font-semibold",
+    lg: "h-12 px-6 text-base rounded-2xl gap-2.5 font-semibold",
+    icon: "h-9 w-9 rounded-xl p-0"
   }[size];
 
   const variantClasses = {
-    primary: "bg-[#0F6B3E] text-white hover:bg-[#0B5632] active:bg-[#084626] shadow-xs",
-    outline: "bg-white text-[#0C2A1B] border border-[#DCE8E0] hover:bg-[#F4FAF6] active:bg-[#E6F4EA]",
-    ghost: "bg-transparent text-[#0C2A1B] hover:bg-[#F4FAF6] active:bg-[#E6F4EA]",
-    secondary: "bg-[#E6F4EA] text-[#0F6B3E] hover:bg-[#CDE9D6] active:bg-[#A9D3B5]",
-    danger: "bg-[#FEF2F2] text-[#B42318] border border-[#FECACA] hover:bg-[#FEE2E2]"
+    primary: "bg-[var(--forest)] text-white hover:bg-[var(--forest-hover)] active:bg-[var(--forest-active)] shadow-xs hover:shadow-sm",
+    outline: "bg-white text-[var(--ink)] border border-[var(--border)] hover:bg-[var(--surface-mint)] hover:border-[var(--forest)] active:bg-[var(--mint)]",
+    ghost: "bg-transparent text-[var(--ink)] hover:bg-[var(--surface-mint)] active:bg-[var(--mint)]",
+    secondary: "bg-[var(--mint)] text-[var(--forest)] hover:bg-[#cde9d6] active:bg-[#a9d3b5]",
+    danger: "bg-[var(--danger-soft)] text-[var(--danger-fg)] border border-[var(--danger-border)] hover:bg-[var(--danger-bg)]"
   }[variant];
 
   return (

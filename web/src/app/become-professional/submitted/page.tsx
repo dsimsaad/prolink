@@ -131,7 +131,7 @@ export default async function ApplicationSubmittedPage() {
             style={{
               background: "var(--mint)",
               color: "var(--forest)",
-              border: "2px solid #86efac",
+              border: "2px solid var(--success-border)",
               boxShadow: "0 8px 20px rgba(15, 107, 62, 0.14)",
             }}
           >
@@ -175,7 +175,7 @@ export default async function ApplicationSubmittedPage() {
               alignItems: "center",
               gap: "10px",
               background: "var(--tint)",
-              border: "1px solid #cde9d6",
+              border: "1px solid var(--forest-border)",
               color: "var(--forest)",
               borderRadius: "10px",
               padding: "12px 18px",
@@ -230,8 +230,8 @@ export default async function ApplicationSubmittedPage() {
                   fontWeight: 700,
                   padding: "3px 10px",
                   borderRadius: "999px",
-                  background: "#eff6ff",
-                  color: "#1d4ed8",
+                  background: "var(--tile-sky-bg)",
+                  color: "var(--tile-sky-fg)",
                 }}
               >
                 Pending Review

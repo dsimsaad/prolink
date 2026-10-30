@@ -19,7 +19,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
   const [period, setPeriod] = useState('30D');
 
   return (
-    <div className={`bg-white border border-[#DCE8E0] rounded-[10px] p-5 flex flex-col justify-between ${className}`}>
+    <div className={`bg-white border border-[#DCE8E0] rounded-2xl shadow-xs p-5 flex flex-col justify-between ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-semibold text-[#0C2A1B]">{title}</h3>
@@ -27,7 +27,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {periodSelector && (
-            <div className="flex items-center gap-0.5 bg-[#F4FAF6] border border-[#DCE8E0] rounded-[6px] p-0.5 text-[11px] font-medium">
+            <div className="flex items-center gap-0.5 bg-[#F4FAF6] border border-[#DCE8E0] rounded-lg p-0.5 text-[11px] font-medium">
               {['7D', '30D', '1Y'].map((p) => (
                 <button
                   key={p}

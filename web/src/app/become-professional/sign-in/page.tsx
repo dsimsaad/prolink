@@ -5,11 +5,20 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { getProfessionalState } from "@/utils/professional";
 import { ProfessionalSignInForm } from "@/components/prolink/professional-sign-in-form";
+import { siteConfig } from "@/config/site";
+
+const pageTitle = `Professional Sign In | ${siteConfig.name}`;
+const pageDescription = `Sign in to your ${siteConfig.name} account to start or continue your application to offer trade services in ${siteConfig.city}.`;
 
 export const metadata: Metadata = {
-  title: "Professional Sign In | ProLink",
-  description:
-    "Sign in to your ProLink account to apply as a verified service professional.",
+  title: pageTitle,
+  description: pageDescription,
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    siteName: siteConfig.name,
+    locale: "en_PK",
+  },
 };
 
 export default async function ProfessionalSignInPage() {

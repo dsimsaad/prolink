@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { FileText, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { Icon } from "./brand";
+import { siteConfig } from "@/config/site";
 import { createClient } from "@/utils/supabase/client";
 
 type AllowedRole = "customer" | "professional";
@@ -117,8 +119,8 @@ export function OnboardingForm({
                         lineHeight: 1.5,
                       }}
                     >
-                      Post home repair and maintenance jobs, receive verified quotes,
-                      and chat directly with local technicians.
+                      Post home repair and maintenance jobs, receive itemised quotes,
+                      and message local professionals directly.
                     </span>
                   </div>
                 </div>
@@ -170,8 +172,8 @@ export function OnboardingForm({
                         lineHeight: 1.5,
                       }}
                     >
-                      Browse local service requests, submit custom bids, build your
-                      reputation, and get hired across Pakistan.
+                      Browse local service requests, submit custom offers, and
+                      connect with households in {siteConfig.city}.
                     </span>
                   </div>
                 </div>
@@ -199,59 +201,68 @@ export function OnboardingForm({
           </div>
         </div>
         <footer className="auth-footer">
-          <Icon name="shield" />
-          <span>Verified Professionals &amp; Trusted Service</span>
+          <ShieldCheck className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
+          <span>{siteConfig.name} · {siteConfig.city} Pilot</span>
           <Link href="/">Back to home</Link>
         </footer>
       </main>
 
-      <aside className="auth-visual" aria-label="Customer testimonial">
-        <Image
-          src="/images/hero-technician.jpg"
-          alt=""
-          fill
-          sizes="50vw"
-          priority
-        />
-        <div className="auth-overlay" />
+      <aside className="auth-visual" aria-label="Account setup benefits">
+        <div className="auth-ambient-orb orb-primary" aria-hidden="true" />
+        <div className="auth-ambient-orb orb-secondary" aria-hidden="true" />
+
         <div className="auth-panel-top">
-          <span className="badge">Pakistan&apos;s #1 Service Marketplace</span>
-          <span className="panel-rating">
-            <Icon name="star" className="gold" />
-            4.92 / 5
+          <span className="badge">
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            {siteConfig.name} {siteConfig.city}
           </span>
         </div>
-        <div className="testimonial">
-          <div className="stars" aria-label="5 out of 5 stars">
-            ★★★★★
+
+        <div className="auth-welcome-stage">
+          <div className="auth-welcome-layer is-active">
+            <span className="auth-welcome-eyebrow">Account Setup</span>
+            <h2 className="auth-welcome-heading">Choose Your Role on {siteConfig.name}</h2>
+            <p className="auth-welcome-description">
+              Select whether you want to post household repair requests or offer
+              your skilled trade services to local residents in {siteConfig.city}.
+            </p>
           </div>
-          <blockquote>
-            “Joining ProLink as a certified electrician gave me verified leads
-            and direct customer bookings without middlemen cuts.”
-          </blockquote>
-          <div className="testimonial-person">
-            <span className="avatar" aria-hidden="true">
-              KA
-            </span>
-            <div>
-              <strong>Khurram Abbas</strong>
-              <span>Verified Electrician · Rawalpindi</span>
-            </div>
+
+          <div className="auth-photo-card">
+            <Image
+              src="/images/auth-craft.webp"
+              alt="Hands-on trade repair work in progress"
+              fill
+              sizes="(min-width: 1024px) 420px, 320px"
+              style={{ objectFit: "cover" }}
+            />
           </div>
-          <div className="auth-metrics">
-            <div>
-              <strong>2,400+</strong>
-              <span>Verified Pros</span>
-            </div>
-            <div>
-              <strong>14 mins</strong>
-              <span>Avg First Offer</span>
-            </div>
-            <div>
-              <strong>PKR 0</strong>
-              <span>Inspection Scams</span>
-            </div>
-          </div>
+
+          <ul className="auth-benefits-list">
+            <li className="auth-benefit-item">
+              <span className="auth-benefit-icon">
+                <FileText className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Compare itemised offers before hiring</span>
+            </li>
+            <li className="auth-benefit-item">
+              <span className="auth-benefit-icon">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Phone numbers stay private until acceptance</span>
+            </li>
+            <li className="auth-benefit-item">
+              <span className="auth-benefit-icon">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Local service matching in {siteConfig.city}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="auth-welcome-bottom">
+          <span>{siteConfig.city} pilot · University semester project</span>
+          <span>{siteConfig.name}</span>
         </div>
       </aside>
     </div>

@@ -11,21 +11,28 @@ import {
   type AreaOption,
 } from "@/components/prolink/professional-application-wizard";
 
+import { siteConfig } from "@/config/site";
+
 export const metadata = {
-  title: "Become a Professional — Application | ProLink",
-  description:
-    "Complete your multi-step registration and application to become a verified professional on ProLink.",
+  title: `Become a Professional — Application | ${siteConfig.name}`,
+  description: `Complete your multi-step registration and application to offer skilled trade services on ${siteConfig.name} in ${siteConfig.city}.`,
+  openGraph: {
+    title: `Become a Professional — Application | ${siteConfig.name}`,
+    description: `Complete your multi-step registration and application to offer skilled trade services on ${siteConfig.name} in ${siteConfig.city}.`,
+    siteName: siteConfig.name,
+    locale: "en_PK",
+  },
 };
 
 const FALLBACK_CATEGORIES: CategoryOption[] = [
   { id: 1, name: "Plumbing" },
   { id: 2, name: "Electrical" },
-  { id: 3, name: "AC Repair & HVAC" },
+  { id: 3, name: "Painting" },
   { id: 4, name: "Carpentry" },
-  { id: 5, name: "Appliance Repair" },
-  { id: 6, name: "Deep Cleaning" },
-  { id: 7, name: "Painting" },
-  { id: 8, name: "Masonry" },
+  { id: 5, name: "AC repair and installation" },
+  { id: 6, name: "Masonry" },
+  { id: 7, name: "Home cleaning" },
+  { id: 8, name: "Appliance repair" },
 ];
 
 const FALLBACK_AREAS: AreaOption[] = [

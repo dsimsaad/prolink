@@ -1,11 +1,36 @@
 import type { Metadata } from "next";
+import { Figtree, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteShell } from "@/components/prolink/site-shell";
+import { siteConfig } from "@/config/site";
+
+const figtree = Figtree({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-figtree",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
+
+const defaultTitle = `${siteConfig.name} | Hire local professionals in ${siteConfig.city}`;
+const defaultDescription = `Post a household job in ${siteConfig.city}, compare itemised offers from local electricians, plumbers, AC technicians, and painters, and keep your phone number private until you accept an offer.`;
 
 export const metadata: Metadata = {
-  title: "ProLink — Hire Trusted Professionals, Fast",
-  description:
-    "Post your job, compare verified local offers, and hire trusted professionals across Pakistan.",
+  title: defaultTitle,
+  description: defaultDescription,
+  openGraph: {
+    title: defaultTitle,
+    description: defaultDescription,
+    siteName: siteConfig.name,
+    locale: "en_PK",
+    type: "website",
+  },
   icons: {
     icon: [
       { url: "/green-circular-logo.png?v=4", type: "image/png" },
@@ -22,7 +47,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${figtree.variable} ${jetbrainsMono.variable}`}>
       <head>
         <link rel="icon" href="/green-circular-logo.png?v=4" type="image/png" sizes="any" />
         <link rel="icon" href="/Green%20Circular%20P%20Logo-2.png?v=4" type="image/png" sizes="any" />
@@ -30,7 +55,9 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/green-circular-logo.png?v=4" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-icon.png?v=4" />
       </head>
-      <body><SiteShell>{children}</SiteShell></body>
+      <body>
+        <SiteShell>{children}</SiteShell>
+      </body>
     </html>
   );
 }

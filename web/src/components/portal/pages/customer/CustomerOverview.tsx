@@ -185,22 +185,22 @@ export const CustomerOverview: React.FC = () => {
 
       {/* 2. Action-Needed Banner */}
       {waitingJob && (
-        <div className="p-4 bg-[#FFFBEB] border border-[#FDE68A] rounded-[10px] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 bg-[#fef9ee] border border-[#fde68a] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
           <div className="flex items-start sm:items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#FEF3C7] flex items-center justify-center text-[#B45309] shrink-0 mt-0.5 sm:mt-0">
+            <div className="w-9 h-9 rounded-full bg-[#fef3c7] flex items-center justify-center text-[#b45309] shrink-0 mt-0.5 sm:mt-0">
               <AlertCircle className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#92400E]">
+                <span className="text-xs font-bold text-[#92400e]">
                   Action Needed: Offers Awaiting Selection
                 </span>
-                <span className="text-[10px] bg-[#FDE68A] text-[#78350F] px-1.5 py-0.2 rounded font-mono">
+                <span className="text-[10px] bg-[#fde68a] text-[#78350f] px-1.5 py-0.2 rounded font-mono">
                   Job #{waitingJob.id}
                 </span>
               </div>
-              <p className="text-xs text-[#78350F] mt-0.5">
-                &quot;{waitingJob.title}&quot; has 3 verified proposals starting from PKR 3,600. Inspect offers before pro availability expires.
+              <p className="text-xs text-[#78350f] mt-0.5">
+                &quot;{waitingJob.title}&quot; has 3 local proposals starting from PKR 3,600. Inspect offers before pro availability expires.
               </p>
             </div>
           </div>
@@ -209,7 +209,7 @@ export const CustomerOverview: React.FC = () => {
             variant="primary"
             size="sm"
             onClick={() => marketplaceStore.navigate(`/user/jobs/${waitingJob.id}`)}
-            className="bg-[#B45309] hover:bg-[#92400E] text-white shrink-0 font-bold self-start sm:self-auto text-xs"
+            className="bg-[#b45309] hover:bg-[#92400e] text-white shrink-0 font-bold self-start sm:self-auto text-xs"
           >
             Review & Accept Offers →
           </Button>
@@ -224,7 +224,7 @@ export const CustomerOverview: React.FC = () => {
       />
 
       {/* 4. Active Job Tracker (Live GPS route & ETA) */}
-      <div className="bg-white border border-[#DCE8E0] rounded-[10px] p-5 sm:p-6 space-y-5">
+      <div className="bg-white border border-[#DCE8E0] rounded-2xl shadow-xs p-5 sm:p-6 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#DCE8E0]">
           <div>
             <div className="flex items-center gap-2">
@@ -274,7 +274,7 @@ export const CustomerOverview: React.FC = () => {
 
           <div className="lg:col-span-5 space-y-4">
             {/* Pro Card */}
-            <div className="p-4 bg-[#F4FAF6] border border-[#DCE8E0] rounded-[10px] space-y-3">
+            <div className="p-4 bg-[#F4FAF6] border border-[#DCE8E0] rounded-xl space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar
@@ -299,7 +299,7 @@ export const CustomerOverview: React.FC = () => {
               </div>
 
               {/* Status Note */}
-              <div className="p-2.5 bg-white border border-[#DCE8E0] rounded-[6px] text-xs text-[#34453B] space-y-1">
+              <div className="p-2.5 bg-white border border-[#DCE8E0] rounded-lg text-xs text-[#34453B] space-y-1">
                 <div className="flex items-center gap-1.5 font-semibold text-[#0C2A1B]">
                   <Clock className="w-3.5 h-3.5 text-[#0F6B3E]" />
                   <span>En Route · ETA 18 minutes</span>
@@ -326,7 +326,7 @@ export const CustomerOverview: React.FC = () => {
               </div>
               <div className="flex items-center gap-2 text-[#6A7B70]">
                 <span className="w-4 h-4 rounded-full border border-[#DCE8E0] flex items-center justify-center text-[10px]">4</span>
-                <span>Client satisfaction sign-off & funds release</span>
+                <span>Client review & direct payment</span>
               </div>
             </div>
           </div>
@@ -334,7 +334,7 @@ export const CustomerOverview: React.FC = () => {
       </div>
 
       {/* 5. Offers Inbox (Latest offers with compare action) */}
-      <div className="bg-white border border-[#DCE8E0] rounded-[10px] p-5 sm:p-6 space-y-4">
+      <div className="bg-white border border-[#DCE8E0] rounded-2xl shadow-xs p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-[#0C2A1B]">
@@ -406,9 +406,9 @@ export const CustomerOverview: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => marketplaceStore.toggleCompareOffer(off.id)}
-                    className={`h-9 px-3 text-xs font-medium rounded-[8px] border transition-colors cursor-pointer ${
+                    className={`h-9 px-3.5 text-xs font-semibold rounded-xl border transition-colors cursor-pointer ${
                       isComparing
-                        ? 'bg-[#0F6B3E] text-white border-[#0F6B3E]'
+                        ? 'bg-[#0F6B3E] text-white border-[#0F6B3E] shadow-2xs'
                         : 'bg-white text-[#0C2A1B] border-[#DCE8E0] hover:bg-[#F4FAF6]'
                     }`}
                   >
@@ -450,7 +450,7 @@ export const CustomerOverview: React.FC = () => {
       </div>
 
       {/* 7. Job History Table with Search, Filter & CSV Export */}
-      <div className="bg-white border border-[#DCE8E0] rounded-[10px] overflow-hidden space-y-4 p-5">
+      <div className="bg-white border border-[#DCE8E0] rounded-2xl shadow-xs overflow-hidden space-y-4 p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-base font-bold text-[#0C2A1B]">Job Activity Ledger</h3>
@@ -464,7 +464,7 @@ export const CustomerOverview: React.FC = () => {
                 value={tableSearch}
                 onChange={(e) => setTableSearch(e.target.value)}
                 placeholder="Search jobs..."
-                className="h-9 pl-8 pr-3 text-xs bg-[#F4FAF6] border border-[#DCE8E0] rounded-[8px] w-44 focus:outline-none"
+                className="h-9 pl-8 pr-3 text-xs bg-[#F4FAF6] border border-[#DCE8E0] rounded-xl w-44 focus:outline-none focus:ring-1 focus:ring-[#0F6B3E]"
               />
               <Search className="w-3.5 h-3.5 text-[#6A7B70] absolute left-2.5 top-3 pointer-events-none" />
             </div>
@@ -472,7 +472,7 @@ export const CustomerOverview: React.FC = () => {
             <select
               value={tableFilter}
               onChange={(e) => setTableFilter(e.target.value)}
-              className="h-9 px-2 text-xs bg-[#F4FAF6] border border-[#DCE8E0] rounded-[8px] text-[#0C2A1B] cursor-pointer"
+              className="h-9 px-3 text-xs bg-[#F4FAF6] border border-[#DCE8E0] rounded-xl text-[#0C2A1B] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0F6B3E]"
             >
               <option value="all">All Statuses</option>
               <option value="open">Open</option>

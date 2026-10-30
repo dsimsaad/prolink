@@ -387,16 +387,16 @@ export function ProfessionalApplicationWizard({
         >
           You have already submitted an application to become a ProLink
           professional. Your application is currently awaiting review by our
-          verification team.
+          team.
         </p>
         <div
           style={{
             display: "inline-flex",
             alignItems: "center",
             gap: "8px",
-            background: "#eff6ff",
-            border: "1px solid #bfdbfe",
-            color: "#1e40af",
+            background: "var(--tile-sky-bg)",
+            border: "1px solid var(--border)",
+            color: "var(--tile-sky-fg)",
             borderRadius: "10px",
             padding: "10px 16px",
             fontSize: "13px",
@@ -1003,8 +1003,8 @@ export function ProfessionalApplicationWizard({
             Professional Registration &amp; Application
           </h1>
           <p style={{ color: "var(--muted)", fontSize: "14px" }}>
-            Complete the 3-step application below to join Pakistan&apos;s
-            verified network of skilled professionals.
+            Complete the 3-step application below to offer your trade skills
+            to local households on ProLink.
           </p>
         </div>
       )}
@@ -2004,8 +2004,8 @@ export function ProfessionalApplicationWizard({
                   marginBottom: "8px",
                 }}
               >
-                Summarize your practical experience, certifications, tools, and
-                workmanship guarantee.
+                Summarize your practical experience, tools, specialties, and
+                typical project turnaround.
               </p>
               <textarea
                 id="pro-bio-textarea"
@@ -2017,7 +2017,7 @@ export function ProfessionalApplicationWizard({
                     setStep2Errors((prev) => ({ ...prev, bio: "" }));
                   }
                 }}
-                placeholder="E.g., Certified master technician with 6+ years of residential and commercial experience. Equipped with modern diagnostic tools and committed to clean, reliable work..."
+                placeholder="E.g., Skilled technician with 6+ years of residential experience. Equipped with proper diagnostic tools and committed to clean, transparent work..."
                 aria-invalid={Boolean(step2Errors.bio)}
                 style={{
                   width: "100%",

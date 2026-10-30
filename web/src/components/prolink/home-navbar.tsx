@@ -7,16 +7,9 @@ import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Brand } from "./brand";
 import { BecomeProfessionalCta } from "./become-professional-cta";
 import { useNavigationAccount } from "./use-navigation-account";
+import { siteConfig } from "@/config/site";
 
-export const services = [
-  "Plumbing",
-  "Electrical",
-  "AC Repair & HVAC",
-  "Carpentry",
-  "Appliance Repair",
-  "Deep Cleaning",
-  "Home Tutoring",
-];
+export const services = siteConfig.categories.map((category) => category.name);
 
 const navigation = [
   { href: "/services", label: "Services" },
@@ -31,7 +24,17 @@ export function HomeNavbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleScroll() {
+      setScrolled(window.scrollY > 10);
+    }
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Handle outside clicks and ESC key for user dropdown
   useEffect(() => {
@@ -59,7 +62,7 @@ export function HomeNavbar() {
   }, [userMenuOpen]);
 
   return (
-    <header className="site-header">
+    <header className={`site-header ${scrolled ? "is-scrolled" : ""}`.trim()}>
       <div className="container flex h-[72px] items-center justify-between gap-6">
         <Brand />
 
@@ -119,7 +122,7 @@ export function HomeNavbar() {
                       {isAdmin
                         ? "Administrator"
                         : proState === "approved"
-                        ? "Verified Professional"
+                        ? "Approved Professional"
                         : proState === "pending"
                         ? "Application Under Review"
                         : proState === "rejected"
@@ -204,7 +207,7 @@ export function HomeNavbar() {
         {/* Mobile Hamburger Toggle Button */}
         <button
           type="button"
-          className="rounded-xl border border-[var(--border)] p-2.5 text-[var(--ink)] transition hover:bg-[#f4faf6] lg:hidden"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-[var(--border)] p-2.5 text-[var(--ink)] transition hover:bg-[var(--surface-mint)] lg:hidden"
           onClick={() => setMenuOpen((v) => !v)}
           aria-expanded={menuOpen}
           aria-label={menuOpen ? "Close navigation" : "Open navigation"}
@@ -221,13 +224,13 @@ export function HomeNavbar() {
             aria-label="Mobile navigation"
           >
             {isLoggedIn && (
-              <div className="mb-2 rounded-xl border border-[var(--border)] bg-[#f4faf6] p-3 text-xs">
+              <div className="mb-2 rounded-xl border border-[var(--border)] bg-[var(--surface-mint)] p-3 text-xs">
                 <div>
                   Signed in as <strong>{userName}</strong>
                 </div>
                 {proState === "approved" && (
                   <span className="mt-1 block font-semibold text-[var(--forest)]">
-                    ✓ Verified Professional
+                    ✓ Approved Professional
                   </span>
                 )}
                 {proState === "pending" && (
@@ -241,7 +244,7 @@ export function HomeNavbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted)] transition hover:bg-[#f4faf6] hover:text-[var(--ink)]"
+                className="inline-flex min-h-[44px] items-center rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted)] transition hover:bg-[var(--surface-mint)] hover:text-[var(--ink)]"
                 onClick={() => setMenuOpen(false)}
               >
                 {item.label}
@@ -253,14 +256,14 @@ export function HomeNavbar() {
                 <>
                   <Link
                     href="/user"
-                    className="rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--ink)] transition hover:bg-[#f4faf6]"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-mint)]"
                     onClick={() => setMenuOpen(false)}
                   >
                     Dashboard
                   </Link>
                   <button
                     type="button"
-                    className="rounded-xl bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-700 transition hover:bg-red-100"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-700 transition hover:bg-red-100"
                     onClick={async () => {
                       await handleSignOut();
                       setUserMenuOpen(false);
@@ -274,7 +277,7 @@ export function HomeNavbar() {
                 <>
                   <Link
                     href="/sign-in"
-                    className="rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--ink)] transition hover:bg-[#f4faf6]"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-mint)]"
                     onClick={() => setMenuOpen(false)}
                   >
                     Sign in

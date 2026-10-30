@@ -31,7 +31,7 @@ export function ContactForm() {
     <div className="contact-form-panel">
       <h2>Send us a message</h2>
       <p className="panel-intro">
-        Fill out the form below and our support team in Islamabad will get back to you via email or phone.
+        Fill out the form below and our team in Lahore will get back to you via email or phone.
       </p>
 
       {submitted && (
@@ -92,7 +92,7 @@ export function ContactForm() {
           >
             <option value="general">General Inquiry</option>
             <option value="support">Customer Support &amp; Job Requests</option>
-            <option value="professional">Professional Application &amp; Verification</option>
+            <option value="professional">Professional Application</option>
             <option value="billing">Billing &amp; Payment Support</option>
             <option value="dispute">Report an Issue / Workmanship</option>
           </select>
