@@ -115,13 +115,12 @@ export function AdminShell({
       const supabase = createClient();
       void supabase
         .from("profiles")
-        .select("full_name, avatar_url")
+        .select("full_name")
         .eq("id", adminId)
         .maybeSingle()
         .then((profRes) => {
           if (!active || !profRes.data) return;
           setDisplayName(profRes.data.full_name || adminName);
-          setAvatarUrl(profRes.data.avatar_url || "");
         });
     }, 0);
 

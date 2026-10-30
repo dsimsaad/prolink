@@ -51,7 +51,7 @@ export function AdminDialog({
     <dialog
       ref={dialogRef}
       aria-labelledby="admin-dialog-title"
-      className="w-full max-w-lg rounded-xl border border-[#DCE8E0] bg-white p-0 text-[#0C2A1B] shadow-2xl backdrop:bg-black/50"
+      className="fixed inset-0 m-auto max-h-[min(85vh,48rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-xl border border-[#DCE8E0] bg-white p-0 text-[#0C2A1B] shadow-2xl backdrop:bg-black/50"
     >
       <div className="flex items-start justify-between border-b border-[#DCE8E0] px-6 py-4">
         <div>

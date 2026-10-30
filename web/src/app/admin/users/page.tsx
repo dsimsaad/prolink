@@ -135,11 +135,6 @@ export default function AdminUsersPage() {
     if (!dialogTarget) return;
     const trimmedReason = reason.trim();
 
-    if (dialogTarget.suspend && trimmedReason.length < 3) {
-      setDialogError("A reason is required when suspending an account.");
-      return;
-    }
-
     setSubmitting(true);
     setDialogError(null);
     try {
@@ -148,7 +143,9 @@ export default function AdminUsersPage() {
         supabase,
         dialogTarget.user.id,
         dialogTarget.suspend,
-        trimmedReason || "Account unsuspended by administrator"
+        trimmedReason || (dialogTarget.suspend
+          ? "Account suspended by administrator."
+          : "Account unsuspended by administrator.")
       );
       setFeedback(
         dialogTarget.suspend
@@ -399,7 +396,7 @@ export default function AdminUsersPage() {
         }
         description={
           dialogTarget?.suspend
-            ? "Suspending immediately blocks sign-in and hides approved professional privileges."
+            ? "Suspending immediately blocks sign-in and hides approved professional privileges. A note is optional."
             : "Restore this user's normal access to the platform."
         }
         onClose={() => setDialogTarget(null)}
@@ -410,10 +407,7 @@ export default function AdminUsersPage() {
               htmlFor="suspension-reason-input"
               className="block text-xs font-bold text-[#0C2A1B]"
             >
-              Reason{" "}
-              {dialogTarget?.suspend && (
-                <span className="text-red-700">(required)</span>
-              )}
+              Reason <span className="font-normal text-[#6A7B70]">(optional)</span>
             </label>
             <textarea
               id="suspension-reason-input"
@@ -422,7 +416,7 @@ export default function AdminUsersPage() {
               onChange={(e) => setReason(e.target.value)}
               placeholder={
                 dialogTarget?.suspend
-                  ? "Explain why this user is being suspended..."
+                  ? "Add an optional suspension note..."
                   : "Optional note for unsuspending..."
               }
               className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"

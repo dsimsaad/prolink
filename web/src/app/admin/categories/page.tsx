@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import {
   createCategoryRpc,
@@ -16,6 +16,8 @@ export default function AdminCategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const [newName, setNewName] = useState("");
   const [newParentId, setNewParentId] = useState<string>("");
@@ -67,6 +69,7 @@ export default function AdminCategoriesPage() {
       setNewName("");
       setNewParentId("");
       setFeedback(`Created category "${trimmed}".`);
+      setCreateOpen(false);
       await loadCategories();
     } catch (err) {
       setError(
@@ -129,6 +132,9 @@ export default function AdminCategoriesPage() {
   for (const c of categories) {
     parentNameMap.set(c.id, c.name);
   }
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -141,61 +147,28 @@ export default function AdminCategoriesPage() {
         </p>
       </div>
 
-      <form
-        onSubmit={handleCreateCategory}
-        className="flex flex-wrap items-end gap-3 rounded-xl border border-[#DCE8E0] bg-white p-4 shadow-2xs"
-      >
-        <div className="min-w-[220px] flex-1">
-          <label
-            htmlFor="new-category-name"
-            className="block text-xs font-bold text-[#0C2A1B]"
-          >
-            New Category Name
-          </label>
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#DCE8E0] bg-white p-4 shadow-2xs">
+        <label className="relative min-w-[220px] flex-1" htmlFor="category-search">
+          <span className="sr-only">Search categories</span>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6A7B70]" aria-hidden="true" />
           <input
-            id="new-category-name"
-            type="text"
-            minLength={2}
-            maxLength={60}
-            required
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="e.g. Solar Panel Maintenance"
-            className="mt-1 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
+            id="category-search"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search categories..."
+            className="w-full rounded-lg border border-[#DCE8E0] py-2 pl-9 pr-3 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
           />
-        </div>
-
-        <div className="min-w-[180px]">
-          <label
-            htmlFor="new-category-parent"
-            className="block text-xs font-bold text-[#0C2A1B]"
-          >
-            Parent Category (optional)
-          </label>
-          <select
-            id="new-category-parent"
-            value={newParentId}
-            onChange={(e) => setNewParentId(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-[#DCE8E0] bg-white px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
-          >
-            <option value="">None (Top-level)</option>
-            {categories.map((c) => (
-              <option key={c.id} value={String(c.id)}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
+        </label>
         <button
-          type="submit"
-          disabled={creating}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430] disabled:opacity-50"
+          type="button"
+          onClick={() => { setError(null); setNewName(""); setNewParentId(""); setCreateOpen(true); }}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430]"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{creating ? "Creating..." : "Create Category"}</span>
+          <span>Create Category</span>
         </button>
-      </form>
+      </div>
 
       {feedback && (
         <div
@@ -235,14 +208,14 @@ export default function AdminCategoriesPage() {
                     Loading categories...
                   </td>
                 </tr>
-              ) : categories.length === 0 ? (
+              ) : filteredCategories.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-[#6A7B70]">
-                    No categories found.
+                    {search ? "No categories match your search." : "No categories found."}
                   </td>
                 </tr>
               ) : (
-                categories.map((cat) => (
+                filteredCategories.map((cat) => (
                   <tr key={cat.id} className="hover:bg-[#F8FBF9]">
                     <td className="px-4 py-3 font-mono text-[#6A7B70]">#{cat.id}</td>
                     <td className="px-4 py-3 font-bold text-[#0C2A1B]">{cat.name}</td>
@@ -298,6 +271,48 @@ export default function AdminCategoriesPage() {
           </table>
         </div>
       </div>
+
+      <AdminDialog
+        open={createOpen}
+        title="Create Category"
+        description="Add a category to the marketplace. Category names must be 2 to 60 characters."
+        onClose={() => setCreateOpen(false)}
+      >
+        <form onSubmit={handleCreateCategory} className="space-y-4">
+          <div>
+            <label htmlFor="new-category-name" className="block text-xs font-bold text-[#0C2A1B]">Category Name</label>
+            <input
+              id="new-category-name"
+              type="text"
+              minLength={2}
+              maxLength={60}
+              required
+              autoFocus
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="e.g. Solar Panel Maintenance"
+              className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
+            />
+          </div>
+          <div>
+            <label htmlFor="new-category-parent" className="block text-xs font-bold text-[#0C2A1B]">Parent Category (optional)</label>
+            <select
+              id="new-category-parent"
+              value={newParentId}
+              onChange={(e) => setNewParentId(e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] bg-white px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
+            >
+              <option value="">None (Top-level)</option>
+              {categories.map((category) => <option key={category.id} value={String(category.id)}>{category.name}</option>)}
+            </select>
+          </div>
+          {error && <p role="alert" className="text-xs font-semibold text-red-700">{error}</p>}
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={() => setCreateOpen(false)} className="rounded-lg border border-[#DCE8E0] bg-white px-4 py-2 text-xs font-semibold text-[#34453B] hover:bg-[#F4FAF6]">Cancel</button>
+            <button type="submit" disabled={creating} className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430] disabled:opacity-50">{creating ? "Creating..." : "Create Category"}</button>
+          </div>
+        </form>
+      </AdminDialog>
 
       <AdminDialog
         open={Boolean(renameTarget)}

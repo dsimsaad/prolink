@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Mail, Phone, Shield, UserPen } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useAdminViewer } from "@/components/admin/admin-shell";
+import { normalizePakistaniMobilePhone } from "@/utils/phone";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -17,14 +18,12 @@ export default function AdminProfilePage() {
 
   const [fullName, setFullName] = useState(adminName);
   const [phone, setPhone] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
   const [joinedAt, setJoinedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [isEditing, setIsEditing] = useState(false);
   const [formName, setFormName] = useState(adminName);
   const [formPhone, setFormPhone] = useState("");
-  const [formAvatarUrl, setFormAvatarUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -35,10 +34,10 @@ export default function AdminProfilePage() {
     setError(null);
     try {
       const supabase = createClient();
-      const [profRes, contactRes] = await Promise.all([
+      const [profRes, contactRes, authRes] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, avatar_url, created_at")
+          .select("full_name, created_at")
           .eq("id", adminId)
           .maybeSingle(),
         supabase
@@ -46,19 +45,17 @@ export default function AdminProfilePage() {
           .select("phone")
           .eq("profile_id", adminId)
           .maybeSingle(),
+        supabase.auth.getUser(),
       ]);
 
       const loadedName = profRes.data?.full_name || adminName;
-      const loadedAvatar = profRes.data?.avatar_url || "";
       const loadedPhone = contactRes.data?.phone || "";
 
       setFullName(loadedName);
-      setAvatarUrl(loadedAvatar);
       setPhone(loadedPhone);
-      setJoinedAt(profRes.data?.created_at ?? null);
+      setJoinedAt(profRes.data?.created_at ?? authRes.data.user?.created_at ?? null);
 
       setFormName(loadedName);
-      setFormAvatarUrl(loadedAvatar);
       setFormPhone(loadedPhone);
     } catch (err) {
       setError(
@@ -78,9 +75,9 @@ export default function AdminProfilePage() {
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
-    const trimmedName = formName.trim();
-    if (trimmedName.length < 2) {
-      setError("Full name must be at least 2 characters.");
+    const normalizedPhone = normalizePakistaniMobilePhone(formPhone);
+    if (!normalizedPhone) {
+      setError("Enter a valid Pakistani mobile number, e.g. 0300-1234567 or +92 300 1234567.");
       return;
     }
 
@@ -90,38 +87,17 @@ export default function AdminProfilePage() {
 
     try {
       const supabase = createClient();
-      const { error: updateProfErr } = await supabase
-        .from("profiles")
-        .update({
-          full_name: trimmedName,
-          avatar_url: formAvatarUrl.trim() || null,
-        })
-        .eq("id", adminId);
-
-      if (updateProfErr) {
-        throw new Error(updateProfErr.message);
+      const { error: upsertPhoneErr } = await supabase
+        .from("contact_details")
+        .upsert(
+          { profile_id: adminId, phone: normalizedPhone },
+          { onConflict: "profile_id" }
+        );
+      if (upsertPhoneErr) {
+        throw new Error(upsertPhoneErr.message);
       }
 
-      const trimmedPhone = formPhone.trim();
-      if (trimmedPhone) {
-        const { error: upsertPhoneErr } = await supabase
-          .from("contact_details")
-          .upsert(
-            {
-              profile_id: adminId,
-              phone: trimmedPhone,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "profile_id" }
-          );
-        if (upsertPhoneErr) {
-          throw new Error(upsertPhoneErr.message);
-        }
-      }
-
-      setFullName(trimmedName);
-      setAvatarUrl(formAvatarUrl.trim());
-      setPhone(trimmedPhone);
+      setPhone(normalizedPhone);
       setIsEditing(false);
       setFeedback("Your profile has been updated.");
       refreshProfile?.();
@@ -154,7 +130,6 @@ export default function AdminProfilePage() {
             onClick={() => {
               setFormName(fullName);
               setFormPhone(phone);
-              setFormAvatarUrl(avatarUrl);
               setFeedback(null);
               setError(null);
               setIsEditing(true);
@@ -190,16 +165,7 @@ export default function AdminProfilePage() {
         <div className="border-b border-[#DCE8E0] bg-[#F4FAF6] p-6">
           <div className="flex flex-wrap items-center gap-5">
             <span className="inline-flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[#0F6B3E] text-xl font-extrabold text-white shadow-sm">
-              {avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={avatarUrl}
-                  alt={fullName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                initials
-              )}
+              {initials}
             </span>
 
             <div className="space-y-1">
@@ -234,13 +200,12 @@ export default function AdminProfilePage() {
                 <input
                   id="profile-full-name"
                   type="text"
-                  required
-                  minLength={2}
+                  readOnly
                   value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Enter your full name"
-                  className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
+                  aria-describedby="profile-name-help"
+                  className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] bg-gray-50 px-3 py-2 text-xs text-[#6A7B70]"
                 />
+                <p id="profile-name-help" className="mt-1 text-[11px] text-[#6A7B70]">Names cannot be changed from profile settings.</p>
               </div>
 
               <div>
@@ -253,29 +218,16 @@ export default function AdminProfilePage() {
                 <input
                   id="profile-phone"
                   type="tel"
+                  required
+                  autoComplete="tel"
+                  pattern="(?:\\+?92\\s?3\\d{2}|03\\d{2})[\\s-]?\\d{3}[\\s-]?\\d{4}"
                   value={formPhone}
                   onChange={(e) => setFormPhone(e.target.value)}
-                  placeholder="+92 300 1234567"
+                  placeholder="0300-1234567 or +92 300 1234567"
                   className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
                 />
               </div>
 
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="profile-avatar-url"
-                  className="block text-xs font-bold text-[#0C2A1B]"
-                >
-                  Profile Photo URL (Optional)
-                </label>
-                <input
-                  id="profile-avatar-url"
-                  type="url"
-                  value={formAvatarUrl}
-                  onChange={(e) => setFormAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/photo.jpg"
-                  className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
-                />
-              </div>
             </div>
 
             <div className="flex justify-end gap-2 border-t border-[#DCE8E0] pt-4">
@@ -336,7 +288,7 @@ export default function AdminProfilePage() {
                 <dd className="mt-1 text-sm font-bold text-[#0C2A1B]">
                   {joinedAt
                     ? new Date(joinedAt).toLocaleDateString()
-                    : "Active"}
+                    : "Date unavailable"}
                 </dd>
               </div>
 

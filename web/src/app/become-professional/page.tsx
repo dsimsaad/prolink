@@ -24,17 +24,6 @@ export const metadata = {
   },
 };
 
-const FALLBACK_CATEGORIES: CategoryOption[] = [
-  { id: 1, name: "Plumbing" },
-  { id: 2, name: "Electrical" },
-  { id: 3, name: "Painting" },
-  { id: 4, name: "Carpentry" },
-  { id: 5, name: "AC repair and installation" },
-  { id: 6, name: "Masonry" },
-  { id: 7, name: "Home cleaning" },
-  { id: 8, name: "Appliance repair" },
-];
-
 const FALLBACK_AREAS: AreaOption[] = [
   { id: 1, name: "F-6, Islamabad" },
   { id: 2, name: "F-7, Islamabad" },
@@ -79,10 +68,10 @@ export default async function BecomeProfessionalPage() {
       .maybeSingle(),
   ]);
 
-  const categories: CategoryOption[] =
-    dbCategoriesRes.data && dbCategoriesRes.data.length > 0
-      ? dbCategoriesRes.data.map((c) => ({ id: Number(c.id), name: c.name }))
-      : FALLBACK_CATEGORIES;
+  const categories: CategoryOption[] = (dbCategoriesRes.data ?? []).map((c) => ({
+    id: Number(c.id),
+    name: c.name,
+  }));
 
   const areas: AreaOption[] =
     dbAreasRes.data && dbAreasRes.data.length > 0
