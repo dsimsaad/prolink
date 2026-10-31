@@ -56,7 +56,7 @@ export default function AdminProfilePage() {
       setJoinedAt(profRes.data?.created_at ?? authRes.data.user?.created_at ?? null);
 
       setFormName(loadedName);
-      setFormPhone(loadedPhone);
+      setFormPhone(loadedPhone.replace(/\D/g, "").slice(0, 11));
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load profile details."
@@ -220,10 +220,12 @@ export default function AdminProfilePage() {
                   type="tel"
                   required
                   autoComplete="tel"
-                  pattern="(?:\\+?92\\s?3\\d{2}|03\\d{2})[\\s-]?\\d{3}[\\s-]?\\d{4}"
+                  inputMode="numeric"
+                  maxLength={11}
+                  pattern="03[0-9]{9}"
                   value={formPhone}
-                  onChange={(e) => setFormPhone(e.target.value)}
-                  placeholder="0300-1234567 or +92 300 1234567"
+                  onChange={(e) => setFormPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
+                  placeholder="03001234567"
                   className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
                 />
               </div>

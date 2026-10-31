@@ -317,8 +317,24 @@ export async function fetchAdminUsers(
     return { rows: fallbackRows, totalCount: fallbackRes.count ?? fallbackRows.length };
   }
 
-  const rows = ((data ?? []) as AdminUserRow[]).map((u) => ({
+  const profileRows = (data ?? []) as Omit<AdminUserRow, "email">[];
+  const profileIds = profileRows.map((user) => user.id);
+  const { data: authUsers, error: authUsersError } = profileIds.length
+    ? await supabase.rpc("admin_get_user_emails", { p_user_ids: profileIds })
+    : { data: [], error: null };
+
+  if (authUsersError) {
+    throw new Error(authUsersError.message);
+  }
+
+  const emailById = new Map(
+    ((authUsers ?? []) as { user_id: string; email: string | null }[]).map(
+      (user) => [user.user_id, user.email]
+    )
+  );
+  const rows = profileRows.map((u) => ({
     ...u,
+    email: emailById.get(u.id) ?? null,
     is_suspended: Boolean(u.is_suspended),
   }));
 

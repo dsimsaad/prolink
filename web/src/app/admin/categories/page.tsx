@@ -295,7 +295,7 @@ export default function AdminCategoriesPage() {
             />
           </div>
           <div>
-            <label htmlFor="new-category-parent" className="block text-xs font-bold text-[#0C2A1B]">Parent Category (optional)</label>
+            <label htmlFor="new-category-parent" className="block text-xs font-bold text-[#0C2A1B]">Parent Category</label>
             <select
               id="new-category-parent"
               value={newParentId}

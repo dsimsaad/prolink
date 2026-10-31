@@ -309,8 +309,8 @@ export default function AdminApplicationsPage() {
         }
         description={
           dialogTarget?.decision === "approved"
-            ? "Confirm approval so this professional can send offers on customer jobs. A review note is optional."
-            : "Confirm this decision. You may add an optional note for the applicant."
+            ? "Confirm approval so this professional can send offers on customer jobs."
+            : "Confirm this decision. You may add a note for the applicant."
         }
         onClose={() => setDialogTarget(null)}
       >
@@ -320,7 +320,7 @@ export default function AdminApplicationsPage() {
               htmlFor="application-review-note"
               className="block text-xs font-bold text-[#0C2A1B]"
             >
-              Review Note <span className="font-normal text-[#6A7B70]">(optional)</span>
+              Review Note
             </label>
             <textarea
               id="application-review-note"
@@ -329,8 +329,8 @@ export default function AdminApplicationsPage() {
               onChange={(e) => setReviewNote(e.target.value)}
               placeholder={
                 dialogTarget?.decision === "approved"
-                  ? "Optional verification note..."
-                  : "Add an optional note for the applicant..."
+                  ? "Add a verification note..."
+                  : "Add a note for the applicant..."
               }
               className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
             />

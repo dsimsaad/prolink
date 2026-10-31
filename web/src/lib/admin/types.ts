@@ -134,6 +134,7 @@ export interface AdminApplicationRow {
 
 export interface AdminUserRow {
   id: string;
+  email: string | null;
   full_name: string;
   role: "user" | "admin";
   is_suspended: boolean;

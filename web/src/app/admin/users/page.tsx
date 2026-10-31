@@ -299,8 +299,8 @@ export default function AdminUsersPage() {
                     <tr key={user.id} className="hover:bg-[#F8FBF9]">
                       <td className="px-4 py-3 font-semibold text-[#0C2A1B]">
                         <div>{user.full_name}</div>
-                        <div className="font-mono text-[10px] font-normal text-[#6A7B70]">
-                          {user.id}
+                        <div className="text-[10px] font-normal text-[#6A7B70]">
+                          {user.email ?? "Email unavailable"}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -396,7 +396,7 @@ export default function AdminUsersPage() {
         }
         description={
           dialogTarget?.suspend
-            ? "Suspending immediately blocks sign-in and hides approved professional privileges. A note is optional."
+            ? "Suspending immediately blocks sign-in and hides approved professional privileges."
             : "Restore this user's normal access to the platform."
         }
         onClose={() => setDialogTarget(null)}
@@ -407,7 +407,7 @@ export default function AdminUsersPage() {
               htmlFor="suspension-reason-input"
               className="block text-xs font-bold text-[#0C2A1B]"
             >
-              Reason <span className="font-normal text-[#6A7B70]">(optional)</span>
+              Reason
             </label>
             <textarea
               id="suspension-reason-input"
@@ -416,8 +416,8 @@ export default function AdminUsersPage() {
               onChange={(e) => setReason(e.target.value)}
               placeholder={
                 dialogTarget?.suspend
-                  ? "Add an optional suspension note..."
-                  : "Optional note for unsuspending..."
+                  ? "Add a suspension note..."
+                  : "Add a note for unsuspending..."
               }
               className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
             />
