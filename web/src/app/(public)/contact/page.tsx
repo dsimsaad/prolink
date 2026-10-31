@@ -4,7 +4,6 @@ import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { SiteFooter } from "@/components/prolink/site-footer";
 import { ContactForm } from "@/components/prolink/contact-form";
 import { siteConfig } from "@/config/site";
-import { sampleSupportHelpline } from "@/data/sample";
 
 const pageTitle = `Contact Us | ${siteConfig.name} ${siteConfig.city}`;
 const pageDescription = `Get in touch with the ${siteConfig.name} team in ${siteConfig.city} for questions about job requests, accounts, or professional applications.`;
@@ -27,10 +26,6 @@ export default function ContactPage() {
       <main id="main">
         <section className="contact-hero">
           <div className="container">
-            <span className="eyebrow-pill">
-              <Mail className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
-              We&apos;re here to help
-            </span>
             <h1>Contact {siteConfig.name} Support</h1>
             <p>
               Have a question about posting a job, your professional
@@ -48,13 +43,10 @@ export default function ContactPage() {
                   <Phone className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="contact-card-content">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3>Phone Helpline</h3>
-                    <span className="sample-pill">{sampleSupportHelpline.badgeLabel}</span>
-                  </div>
-                  <p>{sampleSupportHelpline.note}</p>
-                  <span className="contact-highlight-text">{sampleSupportHelpline.phone}</span>
-                  <div className="contact-sub-text">WhatsApp: {sampleSupportHelpline.whatsapp}</div>
+                  <h3>Phone Helpline</h3>
+                  <p>Customer service assistance for general inquiries and support.</p>
+                  <span className="contact-highlight-text">+92 (42) 111-776-546</span>
+                  <div className="contact-sub-text">WhatsApp: +92 (300) 123-4567</div>
                 </div>
               </div>
 

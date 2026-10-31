@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
-  Compass,
   Lock,
   MapPin,
   ReceiptText,
@@ -80,10 +79,6 @@ export default function AboutPage() {
       <main id="main">
         <section className="about-hero">
           <div className="container">
-            <span className="eyebrow-pill">
-              <Compass className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
-              Our Mission &amp; Story
-            </span>
             <h1>About {siteConfig.name}</h1>
             <p>
               Connecting households in {siteConfig.city} with local skilled
@@ -121,7 +116,7 @@ export default function AboutPage() {
                     </span>
                     <div>
                       <strong>{fact.label}</strong>
-                      <span>{fact.detail}</span>
+                      <span className="about-fact-detail">{fact.detail}</span>
                     </div>
                   </div>
                 ))}
@@ -133,7 +128,6 @@ export default function AboutPage() {
         <section className="about-values-section">
           <div className="about-main-container">
             <div className="about-values-header">
-              <span className="eyebrow-pill eyebrow-pill-warm">Our Principles</span>
               <h2>What guides {siteConfig.name}</h2>
               <p>
                 Practical design choices focused on clear expectations for

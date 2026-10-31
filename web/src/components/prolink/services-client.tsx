@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, Compass, Search } from "lucide-react";
+import { ArrowRight, Check, Search } from "lucide-react";
 import { CategoryIcon } from "./category-icon";
 import { siteConfig, type TradeCategory } from "@/config/site";
 
@@ -37,10 +37,6 @@ export function ServicesClient() {
     <div className="services-content-wrapper">
       <section className="services-hero">
         <div className="container">
-          <span className="eyebrow-pill">
-            <Compass className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
-            Trade categories in {siteConfig.city}
-          </span>
           <h1>Household Services Directory</h1>
           <p>
             Browse the {siteConfig.categories.length} trade categories available

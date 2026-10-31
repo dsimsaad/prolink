@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
-  Compass,
   FileText,
   Layers,
   Lock,
@@ -84,10 +83,6 @@ export default function FeaturesPage() {
       <main id="main">
         <section className="features-hero">
           <div className="container">
-            <span className="eyebrow-pill">
-              <Compass className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
-              Built for Households &amp; Local Tradespeople
-            </span>
             <h1>Platform Features</h1>
             <p>
               See how {siteConfig.name} connects households in {siteConfig.city}{" "}

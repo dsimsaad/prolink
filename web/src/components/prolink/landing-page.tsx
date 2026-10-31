@@ -4,10 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  Clock,
-  Compass,
   Flame,
+  Hammer,
   Lock,
+  PaintRoller,
   ReceiptText,
   SlidersHorizontal,
   UserCheck,
@@ -21,11 +21,6 @@ import { SiteFooter } from "./site-footer";
 import { useNavigationAccount } from "./use-navigation-account";
 import { ScrollToTop } from "./scroll-to-top";
 import { siteConfig } from "@/config/site";
-import {
-  heroSampleOffer,
-  howItWorksSampleDispatch,
-  howItWorksSampleQuotes,
-} from "@/data/sample";
 
 const steps = [
   {
@@ -113,10 +108,6 @@ export function LandingPage() {
 
           <div className="container hero-grid">
             <div className="hero-copy">
-              <span className="eyebrow-pill">
-                <Compass className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
-                Local skilled professionals, in one place
-              </span>
 
               <h1>
                 Find the{" "}
@@ -192,22 +183,36 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Right Column: Home-Service Photo Frame + Floating Trade Chips + Single Labelled Example Offer Card */}
+            {/* Right Column: Home-Service Photo Frame + Floating Trade Chips */}
             <div className="hero-stage">
               <div className="hero-offset-shape" aria-hidden="true" />
 
-              <div className="hero-trade-chip hero-trade-chip-top">
+              <div className="hero-trade-chip hero-trade-chip-1">
                 <span className="inline-grid h-6 w-6 place-items-center rounded-full tile-hue-sky">
                   <Wrench className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
                 <span>Plumbing</span>
               </div>
 
-              <div className="hero-trade-chip hero-trade-chip-right">
+              <div className="hero-trade-chip hero-trade-chip-2">
                 <span className="inline-grid h-6 w-6 place-items-center rounded-full tile-hue-amber">
                   <Zap className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
                 <span>Electrical</span>
+              </div>
+
+              <div className="hero-trade-chip hero-trade-chip-3">
+                <span className="inline-grid h-6 w-6 place-items-center rounded-full tile-hue-emerald">
+                  <Hammer className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
+                <span>Carpentry</span>
+              </div>
+
+              <div className="hero-trade-chip hero-trade-chip-4">
+                <span className="inline-grid h-6 w-6 place-items-center rounded-full tile-hue-rose">
+                  <PaintRoller className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
+                <span>Painting</span>
               </div>
 
               <div className="hero-visual">
@@ -219,40 +224,6 @@ export function LandingPage() {
                   sizes="(max-width: 960px) 92vw, 42vw"
                 />
               </div>
-
-              <aside
-                className="hero-example-card"
-                aria-label="Example offer card preview"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="sample-pill">{heroSampleOffer.badgeLabel}</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--muted)]">
-                    <Clock className="h-3.5 w-3.5 text-[var(--forest)]" aria-hidden="true" />
-                    {heroSampleOffer.arrivalTime}
-                  </span>
-                </div>
-                <p className="mt-2.5 text-sm font-bold text-[var(--ink)]">
-                  {heroSampleOffer.jobTitle}
-                </p>
-                <div className="mt-2.5 flex items-baseline justify-between gap-3 border-t border-[var(--border)] pt-2.5">
-                  <div>
-                    <span className="block text-[11px] font-medium text-[var(--muted)]">
-                      Sample quote
-                    </span>
-                    <strong className="text-base font-extrabold text-[var(--forest)]">
-                      {heroSampleOffer.pricePkr}
-                    </strong>
-                  </div>
-                  <div className="text-right">
-                    <span className="block text-[11px] font-medium text-[var(--muted)]">
-                      Inspection fee
-                    </span>
-                    <span className="text-xs font-bold text-[var(--ink)]">
-                      {heroSampleOffer.inspectionFeePkr}
-                    </span>
-                  </div>
-                </div>
-              </aside>
             </div>
           </div>
         </section>
@@ -312,9 +283,6 @@ export function LandingPage() {
         <section id="how-it-works" className="section section-cream">
           <div className="container">
             <Reveal>
-              <span className="eyebrow-pill eyebrow-pill-warm">
-                Clear &amp; Straightforward
-              </span>
               <h2>How ProLink works</h2>
               <p className="section-intro">
                 From posting a household repair to choosing an offer, in four
@@ -333,60 +301,6 @@ export function LandingPage() {
                     </span>
                     <h3>{step.title}</h3>
                     <p>{step.description}</p>
-
-                    {i === 1 && (
-                      <div className="step-mock-box">
-                        <div className="step-mock-inner">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="sample-pill">
-                              {howItWorksSampleDispatch.badgeLabel}
-                            </span>
-                            <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-[var(--forest)]">
-                              {howItWorksSampleDispatch.priorityTag}
-                            </span>
-                          </div>
-                          <p className="!mt-2 !text-xs font-bold !text-[var(--ink)]">
-                            {howItWorksSampleDispatch.requestSummary}
-                          </p>
-                          <span className="mt-1 block text-[11px] text-[var(--muted)]">
-                            {howItWorksSampleDispatch.category} ·{" "}
-                            {howItWorksSampleDispatch.areaLabel}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {i === 2 && (
-                      <div className="step-mock-box">
-                        <div className="step-mock-inner space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="sample-pill">
-                              {howItWorksSampleQuotes.badgeLabel}
-                            </span>
-                            <span className="text-[11px] font-semibold text-[var(--muted)]">
-                              Itemised quotes
-                            </span>
-                          </div>
-                          {howItWorksSampleQuotes.rows.map((row) => (
-                            <div
-                              key={row.optionLabel}
-                              className={`flex items-center justify-between rounded-xl px-2.5 py-1.5 text-[11px] ${
-                                row.highlighted
-                                  ? "bg-white font-bold text-[var(--ink)]"
-                                  : "text-[var(--body)]"
-                              }`}
-                            >
-                              <span>
-                                {row.optionLabel} · {row.etaLabel}
-                              </span>
-                              <span className="font-bold text-[var(--forest)]">
-                                {row.quotePkr}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </article>
                 </Reveal>
               ))}
@@ -408,9 +322,6 @@ export function LandingPage() {
         <section id="trust" className="section section-mint">
           <div className="container">
             <Reveal>
-              <span className="eyebrow-pill eyebrow-pill-cool">
-                Built for Clarity
-              </span>
               <h2>What to expect when you hire</h2>
             </Reveal>
 

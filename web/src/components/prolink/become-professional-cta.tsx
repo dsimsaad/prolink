@@ -130,9 +130,7 @@ export function BecomeProfessionalCta({
     return (
       <section className={`container pro-cta ${className}`.trim()}>
         <div>
-          <span className="eyebrow">
-            {isRejected ? "Action Required" : "For Skilled Professionals"}
-          </span>
+          {isRejected && <span className="eyebrow">Action Required</span>}
           <h2>
             {isRejected
               ? "Update your professional application"

@@ -39,7 +39,7 @@ export const siteConfig = {
   city: "Lahore",
   supportEmail: "support@prolink.pk",
   disclosure:
-    "ProLink is a university semester project. Some features are still in development. Sample content is for demonstration only.",
+    "ProLink is a university semester project. Some features are still in development.",
   categories: [
     {
       name: "Plumbing",

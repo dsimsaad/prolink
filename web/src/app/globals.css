@@ -688,38 +688,80 @@ h3:where(:not(.portal-root *)) {
   font-size: 12px;
   font-weight: 700;
   box-shadow: var(--shadow-float);
+  border: 1px solid rgba(16, 42, 34, 0.05);
+  pointer-events: auto;
+  user-select: none;
+  will-change: transform;
 }
 
+/* Individual chip placements & smooth out-of-phase floating animations */
+.hero-trade-chip-1,
 .hero-trade-chip-top {
-  top: 2px;
-  left: 0;
+  top: 14px;
+  left: -8px;
+  --chip-dur: 5.6s;
+  animation: hero-chip-float-1 5.6s ease-in-out infinite;
 }
 
+.hero-trade-chip-2,
 .hero-trade-chip-right {
-  top: 38px;
-  right: -4px;
+  top: 64px;
+  right: -8px;
+  --chip-dur: 6.4s;
+  animation: hero-chip-float-2 6.4s ease-in-out infinite -2.1s;
 }
 
-.hero-example-card {
-  position: absolute;
-  z-index: 3;
-  left: 0;
-  bottom: 0;
-  width: min(300px, calc(100% - 24px));
-  padding: 16px 18px;
-  border-radius: var(--radius-card);
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow: var(--shadow-float);
-  animation: hero-card-float 6s ease-in-out infinite;
+.hero-trade-chip-3 {
+  bottom: 84px;
+  left: -10px;
+  --chip-dur: 5.2s;
+  animation: hero-chip-float-3 5.2s ease-in-out infinite -3.8s;
 }
 
-@keyframes hero-card-float {
+.hero-trade-chip-4 {
+  bottom: 24px;
+  right: -6px;
+  --chip-dur: 6.8s;
+  animation: hero-chip-float-4 6.8s ease-in-out infinite -1.5s;
+}
+
+@keyframes hero-chip-float-1 {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
   50% {
-    transform: translateY(-6px);
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@keyframes hero-chip-float-2 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -7px, 0);
+  }
+}
+
+@keyframes hero-chip-float-3 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -5px, 0);
+  }
+}
+
+@keyframes hero-chip-float-4 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -7px, 0);
   }
 }
 
@@ -2184,9 +2226,23 @@ h3:where(:not(.portal-root *)) {
     border-left: 2px dashed var(--mint-border);
     z-index: 0;
   }
+  .hero-trade-chip-1,
+  .hero-trade-chip-top {
+    top: 8px;
+    left: 4px;
+  }
+  .hero-trade-chip-2,
   .hero-trade-chip-right {
-    right: 6px;
-    top: 24px;
+    top: 48px;
+    right: 4px;
+  }
+  .hero-trade-chip-3 {
+    bottom: 72px;
+    left: 4px;
+  }
+  .hero-trade-chip-4 {
+    bottom: 14px;
+    right: 4px;
   }
   .closing-cta,
   .pro-cta {
@@ -2334,7 +2390,6 @@ h3:where(:not(.portal-root *)) {
     opacity: 1 !important;
     transform: none !important;
   }
-  .hero-example-card,
   .top-progress-bar.is-indeterminate {
     animation: none !important;
   }
@@ -2344,5 +2399,11 @@ h3:where(:not(.portal-root *)) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  /* Hero trade chips: keep the gentle float (a few px, slow) even when the
+     global guardrail above shortens animations. */
+  .hero-trade-chip {
+    animation-duration: var(--chip-dur, 6s) !important;
+    animation-iteration-count: infinite !important;
   }
 }

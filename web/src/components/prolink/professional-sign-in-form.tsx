@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { MapPin, ShieldCheck, Sparkles, Wrench } from "lucide-react";
+import { MapPin, ShieldCheck, Wrench } from "lucide-react";
 import { Brand, Icon } from "./brand";
 import { siteConfig } from "@/config/site";
 import { createClient } from "@/utils/supabase/client";
@@ -203,13 +203,6 @@ export function ProfessionalSignInForm() {
         </div>
 
         <div className="auth-content">
-          <span
-            className="pro-header-badge success"
-            style={{ marginBottom: "10px" }}
-          >
-            <Icon name="shield" /> For Skilled Professionals
-          </span>
-
           <h1>
             {mode === "signin"
               ? "Professional Sign In"
@@ -476,30 +469,7 @@ export function ProfessionalSignInForm() {
                   Create a professional account
                 </button>
               </>
-            ) : (
-              <>
-                Already have a ProLink account?{" "}
-                <button
-                  type="button"
-                  className="text-link"
-                  onClick={() => {
-                    setMode("signin");
-                    setMessage("");
-                    setFieldErrors({});
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    cursor: "pointer",
-                    fontSize: "inherit",
-                    fontWeight: 600,
-                  }}
-                >
-                  Sign in instead
-                </button>
-              </>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -518,13 +488,6 @@ export function ProfessionalSignInForm() {
       >
         <div className="auth-ambient-orb orb-primary" aria-hidden="true" />
         <div className="auth-ambient-orb orb-secondary" aria-hidden="true" />
-
-        <div className="auth-panel-top">
-          <span className="badge">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-            Professional Hub · {siteConfig.city}
-          </span>
-        </div>
 
         <div className="auth-welcome-stage">
           <div className="auth-welcome-layers">

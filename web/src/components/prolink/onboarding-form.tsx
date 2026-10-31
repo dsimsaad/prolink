@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { FileText, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { FileText, MapPin, ShieldCheck } from "lucide-react";
 import { Icon } from "./brand";
 import { siteConfig } from "@/config/site";
 import { createClient } from "@/utils/supabase/client";
@@ -210,13 +210,6 @@ export function OnboardingForm({
       <aside className="auth-visual" aria-label="Account setup benefits">
         <div className="auth-ambient-orb orb-primary" aria-hidden="true" />
         <div className="auth-ambient-orb orb-secondary" aria-hidden="true" />
-
-        <div className="auth-panel-top">
-          <span className="badge">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-            {siteConfig.name} {siteConfig.city}
-          </span>
-        </div>
 
         <div className="auth-welcome-stage">
           <div className="auth-welcome-layer is-active">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, HelpCircle } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
 interface FaqItem {
@@ -117,10 +117,6 @@ export function FaqsClient() {
     <>
       <section className="faqs-hero">
         <div className="container">
-          <span className="eyebrow-pill">
-            <HelpCircle className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
-            Help &amp; Questions
-          </span>
           <h1>Frequently Asked Questions</h1>
           <p>
             Straightforward answers about posting jobs in {siteConfig.city},
