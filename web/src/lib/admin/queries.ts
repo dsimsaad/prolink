@@ -310,6 +310,7 @@ export async function fetchAdminUsers(
       }[]
     ).map((u) => ({
       ...u,
+      email: null,
       is_suspended: false,
       suspended_reason: null,
       suspended_at: null,
