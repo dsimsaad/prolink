@@ -31,10 +31,10 @@ flowchart TD
         PythonAPI["Python Insight Service\n(FastAPI / Scikit-Learn)"]
     end
 
-    subgraph StandaloneNetwork["Standalone Host / VM / Local (CN Modules)"]
-        SMTPClient["Custom SMTP Client\n(Raw TCP Sockets)"]
-        HealthMon["Health Monitor\n(UDP / Ping / DNS / TLS)"]
-        TCPRelay["TCP Live-Status Relay\n(Broadcast Server)"]
+    subgraph StandaloneNetwork["Local team machines (CN Modules, Python in network/)"]
+        SMTPClient["SMTP Client / Server / Relay\n(Python, raw TCP sockets)"]
+        HealthMon["Health Monitor (planned)\n(UDP / DNS / TLS)"]
+        TCPRelay["TCP Live-Status Relay\n(Python asyncio, framed protocol)"]
     end
 
     %% Client communication
@@ -74,9 +74,9 @@ flowchart TD
 | **Category Suggestions & Text Classification** | **Python Insight Service (`insight/`)** | NLP/scikit-learn category classifier exposed via FastAPI. |
 | **Advanced Analytics & ML Scoring** | **Python Insight Service (`insight/`)** | Data extraction, aggregations, trend analytics, and model training. |
 | **Synthetic Dataset Generation & EDA** | **Python Insight Service (`insight/`)** | Faker generation scripts and documented Jupyter notebooks (`insight/notebooks/`). |
-| **Transactional Email Notifications** | **CN Modules (`network/smtp-client/`)** | Custom RFC 5321 socket-level SMTP client. |
-| **Service Latency & Uptime Health Monitoring** | **CN Modules (`network/health-monitor/`)** | UDP heartbeat listener, ICMP ping latency monitor, DNS lookup and TLS handshake measurement. |
-| **Realtime Status Broadcast Fan-out** | **CN Modules (`network/tcp-relay/`)** | Optional standalone TCP socket server. |
+| **Transactional Email Notifications** | **CN Modules (`network/prolink_net/smtp/`)** | Hand-written RFC 5321 SMTP client, mini server and relay in Python. Runs locally, not on Render. |
+| **Service Latency & Uptime Health Monitoring** | **CN Modules (`network/prolink_net/heartbeat/`, `dns_tls/`)** | Planned: empty packages for now. |
+| **Realtime Status Broadcast Fan-out** | **CN Modules (`network/prolink_net/status_relay/`)** | Optional asyncio TCP server with a framed binary protocol. Runs locally. |
 | **File Storage (Job photos, Avatars)** | **Supabase Storage** | S3-compatible object buckets with RLS access policies. |
 
 ---
@@ -93,7 +93,7 @@ flowchart TD
 │ insight/ (FastAPI)     │ Render Web Service (Root Directory = insight) │
 │ api/ (C# Core Engine)  │ Render Web Service (Free Tier Docker deploy)  │
 │ db/ (Postgres / Auth)  │ Supabase Hosted Cloud (managed database/auth) │
-│ network/ (CN Modules)  │ Standalone VM / Local Host (not on Vercel)    │
+│ network/ (CN Modules)  │ Local team machines (Python, not deployed)    │
 └────────────────────────┴───────────────────────────────────────────────┘
 ```
 
@@ -101,7 +101,7 @@ flowchart TD
 - **Vercel**: Hosts the Next.js frontend as a web application.
 - **Render (Free Tier)**: Runs the Dockerized C# Core Engine and Python FastAPI Insight Service. *Note: Free instances spin down after ~15 minutes of inactivity; initial cold-start requests may incur a 30–50 second delay.*
 - **Supabase (Free Tier)**: Free tier databases pause after 7 days of inactivity.
-- **Network Modules**: Raw TCP and UDP listener sockets cannot bind inside serverless runtimes. Therefore, all `network/` modules run locally or on a dedicated virtual machine.
+- **Network Modules**: The CN modules are Python in `network/` and run locally on team machines, beside the product. Vercel cannot hold raw sockets, and Render's free services block outbound SMTP ports 25, 465 and 587, so these modules are not part of the deployed product.
 
 ---
 

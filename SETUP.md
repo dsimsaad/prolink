@@ -147,3 +147,19 @@ The API will run on [http://localhost:5000](http://localhost:5000).
    ```
 3. **Never commit `.env` or `.env.local` files**: Real credentials must stay local.
 4. **Test locally before pushing**: Pushing to `main` deploys to Vercel/Render.
+
+---
+
+## 8. Computer Networks Modules (`network/`)
+
+The CN modules are Python (standard library only) and run locally on team machines, beside the product. They are not deployed. Full instructions, ports and the Wireshark guide are in `network/README.md`.
+
+```bash
+cd network
+python3 -m venv .venv
+source .venv/bin/activate        # Windows PowerShell: .\.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+Never commit certificates, keys, `.env` files or packet captures that contain real credentials. See the local development certificate section in `network/README.md`.

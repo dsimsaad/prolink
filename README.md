@@ -106,10 +106,10 @@ flowchart TD
         PythonAPI["Python Insight Service\n(FastAPI / Scikit-Learn)"]
     end
 
-    subgraph StandaloneNetwork["Standalone Host / VM / Local (CN Modules)"]
-        SMTPClient["Custom SMTP Client\n(Raw TCP Sockets)"]
-        HealthMon["Health Monitor\n(UDP / Ping / DNS / TLS)"]
-        TCPRelay["TCP Live-Status Relay\n(Broadcast Server)"]
+    subgraph StandaloneNetwork["Local team machines (CN Modules, Python in network/)"]
+        SMTPClient["SMTP Client / Server / Relay\n(Python, raw TCP sockets)"]
+        HealthMon["Health Monitor (planned)\n(UDP / DNS / TLS)"]
+        TCPRelay["TCP Live-Status Relay\n(Python asyncio, framed protocol)"]
     end
 
     %% Client communication
@@ -145,7 +145,7 @@ flowchart TD
 | **Insight Service** | Python 3.12, FastAPI, Scikit-Learn, Pandas, NumPy | Render (Free Web Service) |
 | **Database & Auth** | PostgreSQL (RLS), Supabase Auth (JWT), Supabase Storage | Supabase Hosted Cloud (Free tier) |
 | **Realtime Messaging** | Supabase Realtime (WebSockets) | Supabase Hosted Cloud |
-| **Computer Networks** | Custom Sockets (TCP SMTP, UDP Health Monitor, TCP Relay) | Localhost / Standalone VM |
+| **Computer Networks** | Python 3.12 standard library sockets (SMTP client/server/relay, framed TCP status relay) | Local team machines, beside the product |
 
 ---
 
@@ -178,11 +178,11 @@ prolink/
 │   ├── data/                      # Raw, processed, and synthetic data directories
 │   ├── models/                    # Serialized machine learning models (.pkl)
 │   └── tests/                     # pytest automated tests
-├── network/                       # Computer Networks modules (runs beside core platform)
-│   ├── smtp-client/               # Socket-level custom SMTP client (RFC 5321 over TCP)
-│   ├── health-monitor/            # UDP heartbeat listener, ICMP ping, DNS/TLS timing monitor
-│   ├── tcp-relay/                 # Optional live broadcast TCP relay server
-│   ├── packet-tracer/             # Cisco Packet Tracer (.pkt) network topology files
+├── network/                       # Computer Networks modules in Python (run locally, beside core platform)
+│   ├── prolink_net/smtp/          # Hand-written SMTP client, server and relay (RFC 5321 over TCP)
+│   ├── prolink_net/status_relay/  # Framed TCP live job status relay (asyncio)
+│   ├── prolink_net/               # dns_tls/, websocket/, heartbeat/ are empty packages for later modules
+│   ├── tests/                     # pytest tests for the CN modules (all on localhost)
 │   ├── captures/                  # Wireshark packet capture analysis files (.pcapng)
 │   └── report/                    # Computer Networks lab report and documentation
 ├── db/                            # Database migrations, RLS policies, and seed data
@@ -218,7 +218,7 @@ All 4 team members must use matching major runtime versions across Mac and Windo
 - **.NET SDK**: `>= 8.0` (or `9.0` per team consensus)
 - **Python**: `3.12.x`
 - **Docker Desktop**: *(Optional)* Only required for members verifying the `api/Dockerfile` locally.
-- **Wireshark & Cisco Packet Tracer**: *(Optional)* Required only for `network/` module development.
+- **Wireshark**: *(Optional)* Required only to capture and analyse the `network/` module traffic.
 
 > [!NOTE]
 > Version pin configurations (`.nvmrc` for Node and `global.json` for .NET) are currently `TODO` and will be committed once exact minor runtime versions are locked across the team.
@@ -307,7 +307,7 @@ uvicorn insight.main:app --reload --port 8000
   - *Render Free Tier Notice*: Render instances spin down after ~15 minutes of inactivity. The first inbound request may experience a 30–50 second cold-start latency.
 - **Database & Realtime (`db/`)**: Hosted on **Supabase**.
   - *Supabase Free Tier Notice*: Inactive free projects are paused after 7 days without queries.
-- **Network Modules (`network/`)**: Executed locally or on a standalone cloud VM (serverless functions cannot bind raw TCP/UDP listener sockets).
+- **Network Modules (`network/`)**: Python, run locally on team machines, beside the product. They are not deployed. Render's free services block outbound SMTP ports 25, 465 and 587, and Vercel cannot hold raw sockets, so the product cannot host them. See `network/README.md`.
 
 ---
 
@@ -327,10 +327,14 @@ All variables are listed with empty placeholders in [`.env.example`](file:///.en
 | `DATABASE_URL` | Core Engine (`api`) | Render Environment | Supabase PostgreSQL pooled connection string |
 | `INSIGHT_URL` | Core Engine (`api`) | Render Environment | Internal service endpoint for Insight microservice |
 | `ALLOWED_ORIGINS` | Core Engine / Insight | Render Environment | CORS allowed web origins (e.g. `https://prolink.vercel.app`) |
-| `SMTP_HOST` | Network (`network`) | Local environment / VM | Target SMTP mail server hostname |
-| `SMTP_PORT` | Network (`network`) | Local environment / VM | Target SMTP mail server port (e.g., 587 or 25) |
-| `SMTP_USER` | Network (`network`) | Local environment / VM | Authentication username for SMTP relay |
-| `SMTP_PASSWORD` | Network (`network`) | Local environment / VM | Authentication password for SMTP relay |
+| `SMTP_HOST` | Network (`network`) | Local environment | Target SMTP mail server hostname |
+| `SMTP_PORT` | Network (`network`) | Local environment | Target SMTP server port (2525 for the local mini server) |
+| `SMTP_USER` | Network (`network`) | Local environment | Authentication username for SMTP relay |
+| `SMTP_PASSWORD` | Network (`network`) | Local environment | Authentication password for SMTP relay |
+| `SMTP_FROM` | Network (`network`) | Local environment | Sender address for the SMTP client |
+| `FAKE_SMTP_USER`, `FAKE_SMTP_PASSWORD` | Network (`network`) | Local environment | Throwaway test user of the local mini SMTP server |
+
+Names only are listed in `network/.env.example`. The `DATABASE_URL` variable is also read by the optional database source of the status relay.
 
 ---
 
@@ -379,5 +383,6 @@ The team operates on a unified `main` trunk branch:
 - [ ] C# Core Engine setup (`ProLink.Engine` & `ProLink.Api` HTTP skeleton)
 - [ ] Python Insight Service FastAPI skeleton & synthetic data generator
 - [ ] DSA custom structures (Trie, Min-Heap, Inverted Index, Dijkstra)
-- [ ] Computer Networks standalone modules (SMTP client, Health Monitor)
+- [x] Computer Networks modules, first two (SMTP client/server/relay and TCP status relay, Python in `network/`)
+- [ ] Computer Networks later modules (DNS and TLS timing, WebSocket, heartbeat)
 - [ ] End-to-end integration & cloud deployment (Vercel + Render + Supabase)
