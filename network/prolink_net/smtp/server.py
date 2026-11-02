@@ -166,17 +166,17 @@ class SmtpServer:
         return tls_conn, LineReader(tls_conn)
 
     def _log_client_line(self, address, session, line):
-        """Log what the client sent, hiding anything that could be a credential or message content."""
+        """Log what the client sent, hiding credentials and leaving message content out of the log."""
+        if session.in_data_mode():
+            return
         if session.state.auth_step or line.upper().startswith(b"AUTH "):
             shown = "********"
-        elif session.in_data_mode():
-            shown = "[message line]"
         else:
             shown = line.decode("utf-8", "replace")
         log.info("%s C: %s", address[0], shown)
 
     def _send(self, conn, address, data):
-        log.info("%s S: %s", address[0], data.decode("utf-8", "replace").rstrip())
+        log.info("%s S: %s", address[0], " | ".join(data.decode("utf-8", "replace").splitlines()))
         conn.sendall(data)
 
 
