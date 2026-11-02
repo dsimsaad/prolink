@@ -63,3 +63,9 @@ insight/data/processed/*
 *.swo
 .vscode/*
 !.vscode/extensions.json
+
+# Computer Networks modules (network/)
+network/mailbox/
+network/queue/
+*.pem
+*.key
