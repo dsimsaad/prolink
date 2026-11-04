@@ -37,7 +37,7 @@ export interface TradeCategory {
 export const siteConfig = {
   name: "ProLink",
   city: "Lahore",
-  supportEmail: "support@prolink.pk",
+  supportEmail: "prolnk.support@gmail.com",
   disclosure:
     "ProLink is a university semester project. Some features are still in development.",
   categories: [

@@ -160,7 +160,7 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
               My Jobs
             </button>
             <button
-              onClick={() => marketplaceStore.addToast('Support & Help', 'Need help with your jobs or offers? Contact support@prolink.pk or call 051-111-776.', 'info')}
+              onClick={() => marketplaceStore.addToast('Support & Help', 'Need help with your jobs or offers? Contact prolnk.support@gmail.com.', 'info')}
               className="hover:text-[#0F6B3E] transition-colors cursor-pointer"
             >
               Help

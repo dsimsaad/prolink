@@ -100,12 +100,10 @@ const categories = [
 
 export function FaqsClient() {
   const [activeCategory, setActiveCategory] = useState("all");
-  const [openIds, setOpenIds] = useState<string[]>(["pricing", "review-process"]);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const toggleItem = (id: string) => {
-    setOpenIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    setOpenId((prev) => (prev === id ? null : id));
   };
 
   const filteredFaqs =
@@ -134,7 +132,10 @@ export function FaqsClient() {
               role="tab"
               aria-selected={activeCategory === cat.id}
               className={`faqs-tab-btn ${activeCategory === cat.id ? "active" : ""}`}
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                setOpenId(null);
+              }}
             >
               {cat.label}
             </button>
@@ -143,7 +144,7 @@ export function FaqsClient() {
 
         <div className="faqs-accordion-group">
           {filteredFaqs.map((faq) => {
-            const isOpen = openIds.includes(faq.id);
+            const isOpen = openId === faq.id;
             return (
               <div
                 key={faq.id}

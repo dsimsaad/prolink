@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
-import { Figtree, JetBrains_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { SiteShell } from "@/components/prolink/site-shell";
 import { siteConfig } from "@/config/site";
 
-const figtree = Figtree({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-figtree",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
   display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  variable: "--font-jetbrains-mono",
-  display: "swap",
+  fallback: [
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Segoe UI",
+    "Roboto",
+    "Helvetica",
+    "Arial",
+    "sans-serif",
+  ],
 });
 
 const defaultTitle = `${siteConfig.name} | Hire local professionals in ${siteConfig.city}`;
@@ -47,7 +49,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${figtree.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={inter.variable}>
       <head>
         <link rel="icon" href="/green-circular-logo.png?v=4" type="image/png" sizes="any" />
         <link rel="icon" href="/Green%20Circular%20P%20Logo-2.png?v=4" type="image/png" sizes="any" />

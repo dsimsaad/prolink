@@ -16,11 +16,11 @@
 
 .features-hero h1 {
   font-size: clamp(34px, 4.2vw, 48px);
-  font-weight: 800;
+  font-weight: 700;
   color: var(--ink);
   margin: 16px 0 14px;
-  letter-spacing: -0.032em;
-  line-height: 1.12;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
 .features-hero p {
@@ -51,9 +51,10 @@
 
 .features-section-header h2 {
   font-size: clamp(28px, 3vw, 36px);
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
   margin: 10px 0 10px;
+  letter-spacing: -0.02em;
 }
 
 .features-section-header p {
@@ -91,7 +92,7 @@
 .feature-item-tag {
   display: inline-block;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--forest);
@@ -102,9 +103,10 @@
 
 .feature-item-card h3 {
   font-size: 19px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
   margin: 4px 0 0;
+  letter-spacing: -0.01em;
 }
 
 .feature-item-card p {
@@ -128,9 +130,10 @@
 
 .features-cta-banner h2 {
   font-size: clamp(24px, 2.6vw, 32px);
-  font-weight: 800;
+  font-weight: 600;
   color: var(--on-dark);
   margin: 0 0 8px;
+  letter-spacing: -0.02em;
 }
 
 .features-cta-banner p {

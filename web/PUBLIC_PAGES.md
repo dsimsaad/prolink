@@ -12,7 +12,7 @@ The visual source is `design & plan/prolink-—-hire-trusted-professionals,-fast
 - `src/app/globals.css`: reference colors, typography, component styles, and breakpoints.
 - `public/images/hero-technician.jpg`: copied reference image.
 
-Figtree and JetBrains Mono load from Google Fonts, as in the reference. System fonts remain available as fallbacks. Layout adapts at 1100, 900, and 600 pixels; the sign-in visual panel is hidden below 900 pixels, matching the reference's mobile form approach.
+Inter loads from Google Fonts via `next/font/google` (weights 400, 500, 600, 700). System fonts remain available as fallbacks. Layout adapts at 1100, 900, and 600 pixels; the sign-in visual panel is hidden below 900 pixels, matching the reference's mobile form approach.
 
 ## Integration
 

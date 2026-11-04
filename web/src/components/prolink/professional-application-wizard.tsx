@@ -619,7 +619,7 @@ export function ProfessionalApplicationWizard({
         >
           Your professional privileges are currently on hold. For details or to
           request a status review, please contact our support team at{" "}
-          <strong>support@prolink.pk</strong>.
+          <strong>prolnk.support@gmail.com</strong>.
         </p>
         <div
           style={{

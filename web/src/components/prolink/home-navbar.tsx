@@ -83,9 +83,9 @@ export function HomeNavbar() {
               <Link
                 href={item.href}
                 key={item.href}
-                className={`relative inline-flex h-[72px] items-center px-3 text-sm font-semibold transition-[color,font-weight] duration-300 ease-out after:absolute after:bottom-[-1px] after:left-3 after:right-3 after:h-0.5 after:origin-left after:scale-x-0 after:bg-[var(--forest)] after:transition-transform after:duration-300 after:ease-out after:content-[''] ${
+                className={`relative inline-flex h-[72px] items-center px-3 text-sm font-medium transition-[color,font-weight] duration-300 ease-out after:absolute after:bottom-[-1px] after:left-3 after:right-3 after:h-0.5 after:origin-left after:scale-x-0 after:bg-[var(--forest)] after:transition-transform after:duration-300 after:ease-out after:content-[''] ${
                   active
-                    ? "font-bold text-[var(--ink)] after:scale-x-100"
+                    ? "font-semibold text-[var(--ink)] after:scale-x-100"
                     : "text-[var(--muted)] hover:text-[var(--ink)] hover:after:scale-x-100"
                 }`}
               >
@@ -244,7 +244,7 @@ export function HomeNavbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="inline-flex min-h-[44px] items-center rounded-xl px-4 py-3 text-sm font-semibold text-[var(--muted)] transition hover:bg-[var(--surface-mint)] hover:text-[var(--ink)]"
+                className="inline-flex min-h-[44px] items-center rounded-xl px-4 py-3 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--surface-mint)] hover:text-[var(--ink)]"
                 onClick={() => setMenuOpen(false)}
               >
                 {item.label}

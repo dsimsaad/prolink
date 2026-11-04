@@ -1,6 +1,6 @@
 import "./contact.css";
 import type { Metadata } from "next";
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Mail, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { SiteFooter } from "@/components/prolink/site-footer";
 import { ContactForm } from "@/components/prolink/contact-form";
 import { siteConfig } from "@/config/site";
@@ -26,58 +26,41 @@ export default function ContactPage() {
       <main id="main">
         <section className="contact-hero">
           <div className="container">
+            <div className="contact-hero-badge">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Direct Support Desk</span>
+            </div>
             <h1>Contact {siteConfig.name} Support</h1>
             <p>
-              Have a question about posting a job, your professional
-              application, or your account? Reach out to our team in{" "}
-              {siteConfig.city}.
+              Have a question about posting a job, your account, or professional
+              applications? Send our team in {siteConfig.city} a direct inquiry.
             </p>
           </div>
         </section>
 
         <section className="contact-main-container">
           <div className="contact-layout-grid">
-            <div className="contact-info-stack">
-              <div className="contact-card">
-                <span className="icon-tile tile-hue-emerald">
-                  <Phone className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div className="contact-card-content">
-                  <h3>Phone Helpline</h3>
-                  <p>Customer service assistance for general inquiries and support.</p>
-                  <span className="contact-highlight-text">+92 (42) 111-776-546</span>
-                  <div className="contact-sub-text">WhatsApp: +92 (300) 123-4567</div>
-                </div>
-              </div>
+            {/* Contact Form as the primary column */}
+            <div className="contact-form-column">
+              <ContactForm />
+            </div>
 
-              <div className="contact-card">
-                <span className="icon-tile tile-hue-amber">
+            {/* Sidebar with Information Cards */}
+            <aside className="contact-info-stack" aria-label="Support Information">
+              <div className="contact-card contact-card-highlight">
+                <span className="icon-tile tile-hue-emerald">
                   <Mail className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="contact-card-content">
-                  <h3>Email Inquiries</h3>
-                  <p>Send questions about jobs, professional applications, or feedback.</p>
+                  <h3>Direct Support Email</h3>
+                  <p>Send questions about jobs, account assistance, or dispute reviews.</p>
                   <a
-                    href={`mailto:${siteConfig.supportEmail}`}
+                    href="mailto:prolnk.support@gmail.com"
                     className="contact-highlight-text"
                   >
-                    {siteConfig.supportEmail}
+                    prolnk.support@gmail.com
                   </a>
-                  <div className="contact-sub-text">Support &amp; Issue Reports: disputes@prolink.pk</div>
-                </div>
-              </div>
-
-              <div className="contact-card">
-                <span className="icon-tile tile-hue-teal">
-                  <MapPin className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div className="contact-card-content">
-                  <h3>Pilot City</h3>
-                  <p>
-                    {siteConfig.name} Project Hub
-                    <br />
-                    {siteConfig.city}, Pakistan
-                  </p>
+                  <div className="contact-sub-text">Inquiries are answered via email by our desk</div>
                 </div>
               </div>
 
@@ -89,13 +72,37 @@ export default function ContactPage() {
                   <h3>Response Hours</h3>
                   <p>Monday through Saturday: 9:00 AM – 8:00 PM PKT</p>
                   <div className="contact-note-accent">
-                    Messages submitted outside these hours are answered the next working day
+                    Inquiries sent outside hours are answered next morning
                   </div>
                 </div>
               </div>
-            </div>
 
-            <ContactForm />
+              <div className="contact-card">
+                <span className="icon-tile tile-hue-teal">
+                  <MapPin className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="contact-card-content">
+                  <h3>Project Hub</h3>
+                  <p>
+                    {siteConfig.name} Operations Hub
+                    <br />
+                    {siteConfig.city}, Pakistan
+                  </p>
+                </div>
+              </div>
+
+              <div className="contact-card">
+                <span className="icon-tile tile-hue-amber">
+                  <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="contact-card-content">
+                  <h3>Spam Protection</h3>
+                  <p>
+                    Daily inquiries are limited to 3 per client to protect our support inbox and ensure timely responses.
+                  </p>
+                </div>
+              </div>
+            </aside>
           </div>
         </section>
       </main>
