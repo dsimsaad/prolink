@@ -107,9 +107,9 @@ flowchart TD
     end
 
     subgraph StandaloneNetwork["Local team machines (CN Modules, Python in network/)"]
-        SMTPClient["SMTP Client / Server / Relay\n(Python, raw TCP sockets)"]
+        SMTPClient["SMTP Send / Server / Proxy\n(standard libraries & aiosmtpd)"]
         HealthMon["Health Monitor (planned)\n(UDP / DNS / TLS)"]
-        TCPRelay["TCP Live-Status Relay\n(Python asyncio, framed protocol)"]
+        TCPRelay["WebSocket Status Feed\n(websockets, run locally)"]
     end
 
     %% Client communication
@@ -145,7 +145,7 @@ flowchart TD
 | **Insight Service** | Python 3.12, FastAPI, Scikit-Learn, Pandas, NumPy | Render (Free Web Service) |
 | **Database & Auth** | PostgreSQL (RLS), Supabase Auth (JWT), Supabase Storage | Supabase Hosted Cloud (Free tier) |
 | **Realtime Messaging** | Supabase Realtime (WebSockets) | Supabase Hosted Cloud |
-| **Computer Networks** | Python 3.12 standard library sockets (SMTP client/server/relay, framed TCP status relay) | Local team machines, beside the product |
+| **Computer Networks** | Python 3.12 built with standard libraries and ready-made tools (SMTP via `smtplib`/`aiosmtpd`, WebSocket status feed) | Local team machines, beside the product |
 
 ---
 
@@ -178,10 +178,11 @@ prolink/
 │   ├── data/                      # Raw, processed, and synthetic data directories
 │   ├── models/                    # Serialized machine learning models (.pkl)
 │   └── tests/                     # pytest automated tests
-├── network/                       # Computer Networks modules in Python (run locally, beside core platform)
-│   ├── prolink_net/smtp/          # Hand-written SMTP client, server and relay (RFC 5321 over TCP)
-│   ├── prolink_net/status_relay/  # Framed TCP live job status relay (asyncio)
-│   ├── prolink_net/               # dns_tls/, websocket/, heartbeat/ are empty packages for later modules
+├── network/                       # Computer Networks modules (built with standard libraries and ready-made tools, run locally)
+│   ├── smtp_send.py               # SMTP sender using smtplib and EmailMessage
+│   ├── smtp_server_tls.py         # Local STARTTLS + AUTH Maildir server and Proxy CLI hook (aiosmtpd)
+│   ├── make_certs.py              # Local CA and localhost TLS certificate generator (trustme)
+│   ├── status_feed.py             # Live job status broadcast feed over WebSocket (websockets)
 │   ├── tests/                     # pytest tests for the CN modules (all on localhost)
 │   ├── captures/                  # Wireshark packet capture analysis files (.pcapng)
 │   └── report/                    # Computer Networks lab report and documentation
@@ -334,7 +335,7 @@ All variables are listed with empty placeholders in [`.env.example`](file:///.en
 | `SMTP_FROM` | Network (`network`) | Local environment | Sender address for the SMTP client |
 | `FAKE_SMTP_USER`, `FAKE_SMTP_PASSWORD` | Network (`network`) | Local environment | Throwaway test user of the local mini SMTP server |
 
-Names only are listed in `network/.env.example`. The `DATABASE_URL` variable is also read by the optional database source of the status relay.
+Names only are listed in `network/.env.example`.
 
 ---
 
@@ -383,6 +384,5 @@ The team operates on a unified `main` trunk branch:
 - [ ] C# Core Engine setup (`ProLink.Engine` & `ProLink.Api` HTTP skeleton)
 - [ ] Python Insight Service FastAPI skeleton & synthetic data generator
 - [ ] DSA custom structures (Trie, Min-Heap, Inverted Index, Dijkstra)
-- [x] Computer Networks modules, first two (SMTP client/server/relay and TCP status relay, Python in `network/`)
-- [ ] Computer Networks later modules (DNS and TLS timing, WebSocket, heartbeat)
+- [x] Computer Networks modules (built with standard libraries and ready-made tools, run locally, status feed uses WebSocket in `network/`)
 - [ ] End-to-end integration & cloud deployment (Vercel + Render + Supabase)

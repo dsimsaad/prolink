@@ -152,7 +152,7 @@ The API will run on [http://localhost:5000](http://localhost:5000).
 
 ## 8. Computer Networks Modules (`network/`)
 
-The CN modules are Python (standard library only) and run locally on team machines, beside the product. They are not deployed. Full instructions, ports and the Wireshark guide are in `network/README.md`.
+The CN modules are built with standard libraries and ready-made tools (`smtplib`, `aiosmtpd`, `websockets`, `trustme`), run locally on team machines beside the product, and the status feed uses WebSocket. They are not deployed. Full instructions, ports and the Wireshark guide are in `network/README.md`.
 
 ```bash
 cd network

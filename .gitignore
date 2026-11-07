@@ -66,6 +66,6 @@ insight/data/processed/*
 
 # Computer Networks modules (network/)
 network/mailbox/
-network/queue/
+network/certs/
 *.pem
 *.key

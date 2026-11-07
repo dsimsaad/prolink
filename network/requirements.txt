@@ -1,4 +1,4 @@
-# The network/ modules use only the Python standard library, so nothing is required.
-# Optional: the status relay database source (--source db) needs psycopg.
-# Not tested in this repo yet; see README.md before using it.
-# psycopg[binary]
+aiosmtpd==1.4.6
+websockets==17.4
+trustme==1.2.1
+typer==0.28.0

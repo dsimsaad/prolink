@@ -32,9 +32,9 @@ flowchart TD
     end
 
     subgraph StandaloneNetwork["Local team machines (CN Modules, Python in network/)"]
-        SMTPClient["SMTP Client / Server / Relay\n(Python, raw TCP sockets)"]
+        SMTPClient["SMTP Send / Server / Proxy\n(standard libraries & aiosmtpd)"]
         HealthMon["Health Monitor (planned)\n(UDP / DNS / TLS)"]
-        TCPRelay["TCP Live-Status Relay\n(Python asyncio, framed protocol)"]
+        TCPRelay["WebSocket Status Feed\n(websockets, run locally)"]
     end
 
     %% Client communication
@@ -74,9 +74,9 @@ flowchart TD
 | **Category Suggestions & Text Classification** | **Python Insight Service (`insight/`)** | NLP/scikit-learn category classifier exposed via FastAPI. |
 | **Advanced Analytics & ML Scoring** | **Python Insight Service (`insight/`)** | Data extraction, aggregations, trend analytics, and model training. |
 | **Synthetic Dataset Generation & EDA** | **Python Insight Service (`insight/`)** | Faker generation scripts and documented Jupyter notebooks (`insight/notebooks/`). |
-| **Transactional Email Notifications** | **CN Modules (`network/prolink_net/smtp/`)** | Hand-written RFC 5321 SMTP client, mini server and relay in Python. Runs locally, not on Render. |
-| **Service Latency & Uptime Health Monitoring** | **CN Modules (`network/prolink_net/heartbeat/`, `dns_tls/`)** | Planned: empty packages for now. |
-| **Realtime Status Broadcast Fan-out** | **CN Modules (`network/prolink_net/status_relay/`)** | Optional asyncio TCP server with a framed binary protocol. Runs locally. |
+| **Transactional Email Notifications** | **CN Modules (`network/`)** | Built with standard libraries and ready-made tools (`smtplib`, `EmailMessage`, `aiosmtpd`). Run locally, not on Render. |
+| **Service Latency & Uptime Health Monitoring** | **CN Modules (`network/`)** | Planned local network monitoring demos. |
+| **Realtime Status Broadcast Fan-out** | **CN Modules (`network/status_feed.py`)** | Built with standard libraries and ready-made tools; status feed uses WebSocket (`websockets`) and runs locally. |
 | **File Storage (Job photos, Avatars)** | **Supabase Storage** | S3-compatible object buckets with RLS access policies. |
 
 ---
