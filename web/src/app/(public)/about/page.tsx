@@ -156,7 +156,7 @@ export default function AboutPage() {
                 </p>
               </div>
               <div className="about-cta-buttons">
-                <Link href="/sign-in" className="button">
+                <Link href="/dashboard/jobs/new" className="button">
                   Post a Job <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
                 <Link

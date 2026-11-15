@@ -11,6 +11,8 @@ function DashboardBackTrap({ pathname }: { pathname: string | null }) {
     if (!pathname) return;
 
     const isInsideDashboard =
+      pathname === "/dashboard" ||
+      pathname.startsWith("/dashboard/") ||
       pathname === "/user" ||
       pathname.startsWith("/user/") ||
       pathname === "/admin" ||
@@ -25,6 +27,8 @@ function DashboardBackTrap({ pathname }: { pathname: string | null }) {
     function handlePopState() {
       const currentPath = window.location.pathname;
       const stillInDashboard =
+        currentPath === "/dashboard" ||
+        currentPath.startsWith("/dashboard/") ||
         currentPath === "/user" ||
         currentPath.startsWith("/user/") ||
         currentPath === "/admin" ||

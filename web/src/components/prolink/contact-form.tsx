@@ -32,6 +32,8 @@ export function ContactForm() {
   const [email, setEmail] = useState("");
   const [topic, setTopic] = useState("general");
   const [message, setMessage] = useState("");
+  const [hpField, setHpField] = useState("");
+  const [renderedAt] = useState<number>(() => Date.now());
 
   const [loading, setLoading] = useState(false);
   const [successNotice, setSuccessNotice] = useState<SuccessNotice | null>(null);
@@ -84,9 +86,15 @@ export function ContactForm() {
   }, []);
 
   useEffect(() => {
-    evaluateRateLimit();
+    // Synchronize stored rate limits
+    const timer = setTimeout(() => {
+      evaluateRateLimit();
+    }, 0);
     const interval = setInterval(evaluateRateLimit, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [evaluateRateLimit]);
 
   useEffect(() => {
@@ -139,6 +147,8 @@ export function ContactForm() {
           email,
           topic,
           message,
+          hp_field: hpField,
+          form_rendered_at: renderedAt,
         }),
       });
 
@@ -356,6 +366,19 @@ export function ContactForm() {
 
         {/* 6. THE CONTACT FORM (Always present with inputs, buttons, and responsive grid) */}
         <form onSubmit={handleSubmit} className="contact-actual-form">
+          {/* Honeypot field hidden from legitimate users */}
+          <div style={{ display: "none" }} aria-hidden="true">
+            <label htmlFor="contact-hp">Leave this field blank</label>
+            <input
+              id="contact-hp"
+              type="text"
+              name="hp_field"
+              tabIndex={-1}
+              autoComplete="off"
+              value={hpField}
+              onChange={(e) => setHpField(e.target.value)}
+            />
+          </div>
           {/* Two-column layout on desktop for Name & Email */}
           <div className="contact-form-row">
             <div className="contact-form-field">

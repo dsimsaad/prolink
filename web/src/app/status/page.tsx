@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
 type ApiState =
@@ -10,12 +10,28 @@ type ApiState =
   | { kind: "auth_error" }
   | { kind: "network_error"; detail: string };
 
+interface LiveJobEvent {
+  job_id: string;
+  from_status: string;
+  to_status: string;
+  time: string;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+const STATUS_FEED_URL = process.env.NEXT_PUBLIC_STATUS_FEED_URL ?? "";
 const TIMEOUT_MS = 60_000;
+const MAX_EVENTS = 50;
+const MAX_RECONNECT_DELAY_MS = 30_000;
 
 export default function StatusPage() {
   const [apiState, setApiState] = useState<ApiState>({ kind: "loading" });
+  const [wsStatus, setWsStatus] = useState<"connected" | "offline">("offline");
+  const [liveEvents, setLiveEvents] = useState<LiveJobEvent[]>([]);
 
+  const reconnectDelayRef = useRef<number>(1000);
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 1. Core API Status Check
   const executeCheck = useCallback(async () => {
     if (!API_URL) {
       setApiState({
@@ -31,7 +47,6 @@ export default function StatusPage() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      // getSession() here is client-side token retrieval only (not an auth decision).
       const token = session?.access_token;
       if (!token) {
         setApiState({ kind: "auth_error" });
@@ -89,6 +104,82 @@ export default function StatusPage() {
     return () => clearTimeout(timer);
   }, [executeCheck]);
 
+  // 2. Realtime WebSocket Feed Connection (only when NEXT_PUBLIC_STATUS_FEED_URL is configured)
+  useEffect(() => {
+    if (!STATUS_FEED_URL) {
+      return;
+    }
+
+    let ws: WebSocket | null = null;
+    let isDisposed = false;
+
+    function connect() {
+      if (isDisposed) return;
+
+      try {
+        ws = new WebSocket(STATUS_FEED_URL);
+
+        ws.onopen = () => {
+          if (isDisposed) {
+            ws?.close();
+            return;
+          }
+          setWsStatus("connected");
+          reconnectDelayRef.current = 1000;
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const raw = JSON.parse(event.data);
+            if (raw && typeof raw === "object" && "job_id" in raw) {
+              const parsed: LiveJobEvent = {
+                job_id: String(raw.job_id || "unknown"),
+                from_status: String(raw.from_status || "-"),
+                to_status: String(raw.to_status || "-"),
+                time: String(raw.time || new Date().toISOString()),
+              };
+              setLiveEvents((prev) => [parsed, ...prev.slice(0, MAX_EVENTS - 1)]);
+            }
+          } catch {
+            // Silently ignore malformed messages without crashing
+          }
+        };
+
+        ws.onclose = () => {
+          setWsStatus("offline");
+          if (!isDisposed) {
+            const delay = reconnectDelayRef.current;
+            reconnectTimerRef.current = setTimeout(() => {
+              reconnectDelayRef.current = Math.min(
+                reconnectDelayRef.current * 1.5,
+                MAX_RECONNECT_DELAY_MS
+              );
+              connect();
+            }, delay);
+          }
+        };
+
+        ws.onerror = () => {
+          ws?.close();
+        };
+      } catch {
+        setWsStatus("offline");
+      }
+    }
+
+    connect();
+
+    return () => {
+      isDisposed = true;
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+      }
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, []);
+
   const handleManualCheck = () => {
     setApiState({ kind: "loading" });
     void executeCheck();
@@ -97,24 +188,111 @@ export default function StatusPage() {
   return (
     <div
       style={{
-        maxWidth: 560,
+        maxWidth: 640,
         margin: "64px auto",
         padding: "0 24px",
         fontFamily: "inherit",
       }}
     >
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
-        API Connectivity Status
+        System & Network Status
       </h1>
       <p style={{ color: "var(--muted, #666)", marginBottom: 32, fontSize: 14 }}>
-        Tests the connection to the ProLink Core Engine API using your current
-        session token.
+        Telemetry and connectivity status for ProLink services.
       </p>
+
+      {/* Live Status Feed Section */}
+      <div
+        style={{
+          padding: 20,
+          borderRadius: 12,
+          border: "1px solid var(--border, #e5e7eb)",
+          background: wsStatus === "connected" ? "#f0fdf4" : "#f9fafb",
+          marginBottom: 24,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>Live Job Status Feed</div>
+            <div style={{ fontSize: 12, color: "#666" }}>
+              {STATUS_FEED_URL ? "Streaming live status broadcast" : "Status feed"}
+            </div>
+          </div>
+          {STATUS_FEED_URL ? (
+            <span
+              style={{
+                padding: "4px 10px",
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 600,
+                background: wsStatus === "connected" ? "#166534" : "#9ca3af",
+                color: "white",
+              }}
+            >
+              {wsStatus === "connected" ? "● Connected" : "○ Offline"}
+            </span>
+          ) : (
+            <span
+              style={{
+                padding: "4px 10px",
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 500,
+                background: "#e5e7eb",
+                color: "#4b5563",
+              }}
+            >
+              Demo only
+            </span>
+          )}
+        </div>
+
+        {!STATUS_FEED_URL ? (
+          <p style={{ margin: 0, fontSize: 13, color: "#6b7280" }}>
+            The live feed is available in the local demo only.
+          </p>
+        ) : wsStatus === "connected" ? (
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#166534", marginBottom: 8 }}>
+              Demo events:
+            </div>
+            {liveEvents.length === 0 ? (
+              <div style={{ fontSize: 13, color: "#666", fontStyle: "italic" }}>
+                Listening for status updates...
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {liveEvents.map((evt, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      background: "white",
+                      padding: "8px 12px",
+                      borderRadius: 6,
+                      fontSize: 13,
+                      border: "1px solid #dcfce7",
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span><strong>{evt.job_id}:</strong> {evt.from_status} → <strong>{evt.to_status}</strong></span>
+                    <span style={{ color: "#9ca3af", fontSize: 11 }}>{evt.time.includes("T") ? evt.time.split("T")[1] : evt.time}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <p style={{ margin: 0, fontSize: 13, color: "#6b7280" }}>
+            Status feed server is currently offline. Retrying automatically...
+          </p>
+        )}
+      </div>
 
       {/* Target URL row */}
       <div style={{ marginBottom: 24 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: "var(--muted, #666)" }}>
-          Target:{" "}
+          Target API:{" "}
         </span>
         <code style={{ fontSize: 13 }}>
           {API_URL ? `${API_URL}/me` : "⚠ NEXT_PUBLIC_API_URL not set"}
@@ -175,7 +353,7 @@ export default function StatusPage() {
           fontSize: 14,
         }}
       >
-        {apiState.kind === "loading" ? "Checking…" : "Re-check"}
+        {apiState.kind === "loading" ? "Checking…" : "Re-check API"}
       </button>
     </div>
   );

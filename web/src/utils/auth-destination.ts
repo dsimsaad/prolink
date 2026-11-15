@@ -1,5 +1,8 @@
 /** Shared destination rules for password and OAuth sign-in. */
-export function getSignInDestination(next: string | null, role: string | null = null): string {
+export function getSignInDestination(
+  next: string | null,
+  role: string | null = null
+): string {
   if (role === "admin" || next === "/admin" || next?.startsWith("/admin/")) {
     return next && next.startsWith("/admin") ? next : "/admin";
   }
@@ -10,6 +13,9 @@ export function getSignInDestination(next: string | null, role: string | null = 
   ) {
     return "/become-professional";
   }
+  if (next === "/dashboard" || next?.startsWith("/dashboard/")) {
+    return next;
+  }
   // Missing, legacy landing-page, and untrusted destinations open My dashboard.
-  return "/user";
+  return "/dashboard";
 }

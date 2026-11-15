@@ -42,7 +42,7 @@ export default async function SignUpPage() {
     if (profile?.role === "admin") {
       redirect("/admin");
     }
-    redirect("/user");
+    redirect("/dashboard");
   }
 
   return (

@@ -573,7 +573,7 @@ export function ProfessionalApplicationWizard({
             gap: "12px",
           }}
         >
-          <Link href="/user" className="button">
+          <Link href="/dashboard" className="button">
             Go to Dashboard
           </Link>
         </div>
@@ -629,7 +629,7 @@ export function ProfessionalApplicationWizard({
             flexWrap: "wrap",
           }}
         >
-          <Link href="/user" className="button">
+          <Link href="/dashboard" className="button">
             Go to Dashboard
           </Link>
         </div>
@@ -893,7 +893,7 @@ export function ProfessionalApplicationWizard({
           return;
         }
         if (result.existingStatus === "approved") {
-          router.replace("/user");
+          router.replace("/dashboard");
           router.refresh();
           return;
         }

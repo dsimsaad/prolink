@@ -46,7 +46,7 @@ export default async function SignInPage() {
     if (profile?.role === "admin") {
       redirect("/admin");
     }
-    redirect("/user");
+    redirect("/dashboard");
   }
 
   return (

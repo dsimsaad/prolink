@@ -33,8 +33,17 @@ public sealed class AdminAndRulesTests
         var sm = new JobStateMachine();
 
         Assert.True(sm.CanTransition(JobStateMachine.Open, JobStateMachine.OffersReceived));
+        Assert.True(sm.CanTransition(JobStateMachine.Open, JobStateMachine.Assigned));
         Assert.False(sm.CanTransition(JobStateMachine.Completed, JobStateMachine.Open));
         Assert.False(sm.CanTransition("Unknown", JobStateMachine.Open));
+
+        Assert.True(sm.CanCustomerCancel(JobStateMachine.Draft));
+        Assert.True(sm.CanCustomerCancel(JobStateMachine.Open));
+        Assert.True(sm.CanCustomerCancel(JobStateMachine.OffersReceived));
+        Assert.True(sm.CanCustomerCancel(JobStateMachine.Assigned));
+        Assert.False(sm.CanCustomerCancel(JobStateMachine.InProgress));
+        Assert.False(sm.CanCustomerCancel(JobStateMachine.Completed));
+        Assert.False(sm.CanCustomerCancel(JobStateMachine.Cancelled));
 
         Assert.True(sm.CanForceCancel(JobStateMachine.Open));
         Assert.True(sm.CanForceCancel(JobStateMachine.OffersReceived));

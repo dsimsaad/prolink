@@ -1,14 +1,38 @@
-import { notFound } from 'next/navigation';
-import { requireUser } from '@/utils/auth';
-import { getProfessionalState } from '@/utils/professional';
-import { PortalLoader } from '@/components/portal/portal-loader';
-export const metadata = { title: 'User Dashboard | ProLink' };
-export default async function Page({ params }: { params: Promise<{ slug?: string[] }> }) {
- const { user, profile } = await requireUser('/user');
- 
- const { slug = [] } = await params;
- if (slug.length > 2 || (slug.length === 2 && slug[0] !== 'jobs')) notFound();
- if (slug[0] && !["overview","jobs","post-job","profile"].includes(slug[0])) notFound();
- const pro = await getProfessionalState();
- return <PortalLoader role="customer" user={{ id: user.id, name: profile?.full_name || user.email?.split('@')[0] || 'User', email: user.email || '' }} professionalState={pro.state} />;
+import { redirect } from "next/navigation";
+
+export default async function LegacyUserRedirectPage({
+  params,
+}: {
+  params: Promise<{ slug?: string[] }>;
+}) {
+  const { slug = [] } = await params;
+
+  if (slug.length === 0 || slug[0] === "overview") {
+    redirect("/dashboard");
+  }
+
+  if (slug[0] === "post-job") {
+    redirect("/dashboard/jobs/new");
+  }
+
+  if (slug[0] === "jobs") {
+    if (slug[1]) {
+      redirect(`/dashboard/jobs/${encodeURIComponent(slug[1])}`);
+    }
+    redirect("/dashboard/jobs");
+  }
+
+  if (slug[0] === "profile") {
+    redirect("/dashboard/profile");
+  }
+
+  if (slug[0] === "notifications") {
+    redirect("/dashboard/notifications");
+  }
+
+  if (slug[0] === "messages") {
+    redirect("/dashboard/messages");
+  }
+
+  redirect("/dashboard");
 }

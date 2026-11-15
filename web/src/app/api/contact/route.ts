@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import nodemailer, { TransportOptions } from "nodemailer";
 
-const SUPPORT_EMAIL = "prolnk.support@gmail.com";
+const DEFAULT_SUPPORT_INBOX = "prolnk.support@gmail.com";
 const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
 const MAX_QUERIES_PER_WINDOW = 3;
+const MIN_FILL_TIME_MS = 2000; // 2 seconds minimum interaction before submission
 
 // Global memory store for IP-based rate limiting
 const ipRateLimits = new Map<string, number[]>();
 
-// In-memory inquiry log so no inquiry is ever lost
+// In-memory inquiry log
 interface StoredInquiry {
   id: string;
   name: string;
@@ -37,7 +38,6 @@ function checkRateLimit(ip: string): { allowed: boolean; hoursRemaining: number 
   const now = Date.now();
   const rawTimestamps = ipRateLimits.get(ip) || [];
 
-  // Filter out timestamps older than 24 hours
   const validTimestamps = rawTimestamps.filter(
     (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS
   );
@@ -64,6 +64,11 @@ function recordQuery(ip: string) {
   ipRateLimits.set(ip, validTimestamps);
 }
 
+// Strip CR, LF, and control characters to prevent header injection
+function sanitizeHeader(value: string): string {
+  return value.replace(/[\r\n\x00-\x1F\x7F]+/g, " ").trim();
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req);
@@ -83,18 +88,34 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => null);
-    if (!body) {
+    if (!body || typeof body !== "object") {
       return NextResponse.json(
         { error: "Invalid request payload" },
         { status: 400 }
       );
     }
 
-    const { fullName, email, topic, message } = body;
+    const { fullName, email, topic, message, hp_field, form_rendered_at } = body;
 
-    if (!fullName || typeof fullName !== "string" || fullName.trim().length < 2) {
+    // Spam defense 1: Honeypot field (bots fill invisible inputs; humans don't)
+    if (hp_field) {
+      console.warn("Spam rejected: honeypot field filled");
+      return NextResponse.json({ success: true, message: "Inquiry processed." });
+    }
+
+    // Spam defense 2: Minimum fill time check (bots submit instantaneously)
+    if (form_rendered_at && typeof form_rendered_at === "number") {
+      const elapsed = Date.now() - form_rendered_at;
+      if (elapsed < MIN_FILL_TIME_MS) {
+        console.warn("Spam rejected: form filled faster than humanly possible");
+        return NextResponse.json({ success: true, message: "Inquiry processed." });
+      }
+    }
+
+    // Spam defense 3: Length limits and validation
+    if (!fullName || typeof fullName !== "string" || fullName.trim().length < 2 || fullName.length > 100) {
       return NextResponse.json(
-        { error: "Please provide a valid full name." },
+        { error: "Please provide a valid full name (2 to 100 characters)." },
         { status: 400 }
       );
     }
@@ -102,6 +123,7 @@ export async function POST(req: NextRequest) {
     if (
       !email ||
       typeof email !== "string" ||
+      email.length > 254 ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
     ) {
       return NextResponse.json(
@@ -110,76 +132,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!message || typeof message !== "string" || message.trim().length < 5) {
+    if (!message || typeof message !== "string" || message.trim().length < 5 || message.length > 5000) {
       return NextResponse.json(
-        { error: "Message must be at least 5 characters long." },
+        { error: "Message must be between 5 and 5,000 characters long." },
         { status: 400 }
       );
     }
 
-    const cleanName = fullName.trim();
-    const cleanEmail = email.trim();
-    const cleanTopic = (topic || "General Inquiry").trim();
+    const cleanName = sanitizeHeader(fullName);
+    const cleanEmail = sanitizeHeader(email);
+    const cleanTopic = sanitizeHeader(topic || "General Inquiry");
     const cleanMessage = message.trim();
 
     const timestampIso = new Date().toISOString();
-    const formattedDate = new Date().toLocaleString("en-PK", {
-      timeZone: "Asia/Karachi",
-    });
 
-    let sentViaSmtp = false;
-
-    // Check for SMTP configuration (e.g. Gmail App Password in .env.local)
-    const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER || SUPPORT_EMAIL;
-    const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
-    const smtpPass = rawPass.replace(/\s+/g, "");
-    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-    const smtpPort = Number(process.env.SMTP_PORT || 465);
-
-    if (smtpPass) {
-      try {
-        const transporter = nodemailer.createTransport({
-          host: smtpHost,
-          port: smtpPort,
-          secure: smtpPort === 465,
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-          connectionTimeout: 3000,
-          greetingTimeout: 3000,
-        });
-
-        await transporter.sendMail({
-          from: `"ProLink Support Desk" <${smtpUser}>`,
-          to: SUPPORT_EMAIL,
-          replyTo: cleanEmail,
-          subject: `[ProLink Contact] ${cleanTopic} - from ${cleanName}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-              <h2 style="color: #0F6B3E; margin-top: 0; font-size: 20px;">New ProLink Contact Form Inquiry</h2>
-              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
-              <p><strong>Sender Name:</strong> ${cleanName}</p>
-              <p><strong>Sender Email:</strong> <a href="mailto:${cleanEmail}" style="color: #0F6B3E;">${cleanEmail}</a></p>
-              <p><strong>Inquiry Topic:</strong> ${cleanTopic}</p>
-              <p><strong>Time:</strong> ${formattedDate} PKT (${timestampIso})</p>
-              <div style="background-color: #f1faf4; border-left: 4px solid #0F6B3E; padding: 14px 18px; margin: 20px 0; border-radius: 6px;">
-                <strong style="color: #0c2a1b;">Message Content:</strong>
-                <p style="white-space: pre-wrap; margin-top: 8px; color: #2d3f35; font-size: 15px;">${cleanMessage}</p>
-              </div>
-              <p style="font-size: 12px; color: #64748b; margin-top: 24px;">Sent securely from ProLink Contact Form.</p>
-            </div>
-          `,
-        });
-
-        sentViaSmtp = true;
-      } catch (smtpErr) {
-        console.warn("SMTP send failed or timed out:", smtpErr);
-      }
-    }
-
-    // Record inquiry in server storage so no message is lost
-    globalInquiries.push({
+    // STEP 1: Persist the message in storage first (never lose an inquiry)
+    const inquiryRecord: StoredInquiry = {
       id: `inq_${Date.now()}`,
       name: cleanName,
       email: cleanEmail,
@@ -187,37 +155,99 @@ export async function POST(req: NextRequest) {
       message: cleanMessage,
       timestamp: timestampIso,
       ip,
-      sentViaSmtp,
-    });
+      sentViaSmtp: false,
+    };
+    globalInquiries.push(inquiryRecord);
 
-    console.log(`[Contact Form Received] Target: ${SUPPORT_EMAIL}`, {
-      cleanName,
-      cleanEmail,
-      cleanTopic,
-      sentViaSmtp,
-    });
+    // STEP 2: Send email notification via SMTP configured strictly from environment variables
+    const supportInbox = process.env.SUPPORT_INBOX || DEFAULT_SUPPORT_INBOX;
+    const smtpHost = process.env.SUPPORT_SMTP_HOST;
+    const smtpPort = process.env.SUPPORT_SMTP_PORT ? Number(process.env.SUPPORT_SMTP_PORT) : undefined;
+    const smtpUser = process.env.SUPPORT_SMTP_USER;
+    const smtpPass = process.env.SUPPORT_SMTP_PASSWORD;
 
-    // Generate pre-filled compose URLs
-    const emailSubject = `[ProLink Inquiry] ${cleanTopic} - ${cleanName}`;
-    const emailBody = `Name: ${cleanName}\nEmail: ${cleanEmail}\nTopic: ${cleanTopic}\n\nMessage:\n${cleanMessage}`;
-    const mailtoUrl = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-    const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${SUPPORT_EMAIL}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    let sentViaSmtp = false;
 
-    // Record the query for rate limiting
+    if (smtpHost && smtpPort) {
+      const isLoopback = smtpHost === "127.0.0.1" || smtpHost === "localhost";
+      const hasAuth = Boolean(smtpUser && smtpPass);
+
+      if (!hasAuth && !isLoopback) {
+        // Any non-loopback host without credentials must fail with a logged error
+        console.error("Configuration error: Remote SMTP host requires authentication credentials.");
+      } else {
+        try {
+          const transportOptions: TransportOptions = {
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpPort === 465,
+            requireTLS: hasAuth && smtpPort === 587,
+            ignoreTLS: !hasAuth && isLoopback,
+            connectionTimeout: 10_000,
+            greetingTimeout: 10_000,
+            socketTimeout: 10_000,
+            ...(hasAuth
+              ? {
+                  auth: {
+                    user: smtpUser,
+                    pass: smtpPass,
+                  },
+                }
+              : {}),
+          } as TransportOptions;
+
+          const transporter = nodemailer.createTransport(transportOptions);
+
+          const mailSubject = sanitizeHeader(`[ProLink Contact] ${cleanTopic} - from ${cleanName}`);
+          const plainTextBody = [
+            `New ProLink Contact Form Inquiry`,
+            `---------------------------------`,
+            `Sender: ${cleanName}`,
+            `Email: ${cleanEmail}`,
+            `Topic: ${cleanTopic}`,
+            `Timestamp: ${timestampIso}`,
+            ``,
+            `Message:`,
+            cleanMessage,
+          ].join("\n");
+
+          await transporter.sendMail({
+            from: `"ProLink Support Desk" <${supportInbox}>`,
+            to: supportInbox,
+            replyTo: cleanEmail,
+            subject: mailSubject,
+            text: plainTextBody,
+          });
+
+          sentViaSmtp = true;
+          inquiryRecord.sentViaSmtp = true;
+        } catch (smtpErr) {
+          // Log only error classification/type; never leak message body or credentials
+          console.warn("SMTP dispatch failed:", smtpErr instanceof Error ? smtpErr.name : "Unknown error");
+        }
+      }
+    }
+
+    // Record rate limit for this IP
     recordQuery(ip);
+
+    const emailSubject = sanitizeHeader(`[ProLink Inquiry] ${cleanTopic} - ${cleanName}`);
+    const emailBody = `Name: ${cleanName}\nEmail: ${cleanEmail}\nTopic: ${cleanTopic}\n\nMessage:\n${cleanMessage}`;
+    const mailtoUrl = `mailto:${supportInbox}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${supportInbox}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 
     return NextResponse.json({
       success: true,
-      message: `Your message has been sent to ${SUPPORT_EMAIL}.`,
-      sentTo: SUPPORT_EMAIL,
+      message: `Your message has been received by our support team.`,
+      sentTo: supportInbox,
       sentViaSmtp,
       mailtoUrl,
       gmailComposeUrl,
     });
   } catch (error) {
-    console.error("Error in contact API route:", error);
+    console.error("Error in contact API route:", error instanceof Error ? error.name : "InternalError");
     return NextResponse.json(
-      { error: "Internal server error while sending message." },
+      { error: "Internal server error while processing message." },
       { status: 500 }
     );
   }

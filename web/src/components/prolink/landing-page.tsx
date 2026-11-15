@@ -138,7 +138,7 @@ export function LandingPage() {
               </p>
 
               <div className="hero-actions">
-                <Link className="button" href="/sign-in">
+                <Link className="button" href="/dashboard/jobs/new">
                   Post a Job <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
                 <Link className="button outline" href="/services">
@@ -348,7 +348,7 @@ export function LandingPage() {
               <h2>Ready to get your job done?</h2>
               <p>Connect with local professionals near you.</p>
             </div>
-            <Link href="/sign-in" className="button">
+            <Link href="/dashboard/jobs/new" className="button">
               Post a Job <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </section>

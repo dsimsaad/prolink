@@ -17,10 +17,16 @@ All SQL scripts must be executed in the **Supabase Dashboard $\rightarrow$ SQL E
 | **4** | [`db/migrations/004_google_onboarding.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/004_google_onboarding.sql) | Legacy Migration | *(Superseded by 005)* Added onboarding flag and RPC for Google OAuth. Safe to run before 005. |
 | **5** | [`db/migrations/005_dual_role_professional_applications.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/005_dual_role_professional_applications.sql) | Dual-Role Migration | Migrates account roles to unified `user` / `admin`, adds application review lifecycle, drops legacy 004 onboarding objects, adds application RPCs, safety triggers, and RLS updates. |
 | **6** | [`db/migrations/006_admin_portal.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/006_admin_portal.sql) | Admin Portal Migration | Adds `profiles` suspension fields, `admin_actions` audit table, `reports` moderation table, `job_events.note`, admin RPCs, disputed-only chat privacy policy, and admin indexes. |
-| **7** | [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) | Seed Data | Seeds 8 standard trade categories, 12 placeholder areas, and graph travel edges. |
-| **8** | [`db/seed/002_admin_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/002_admin_demo_data.sql) | Demo Seed Data | *(Development Only)* Populates 24 demo users (`@example.invalid`), 12 approved pros, 3 pending & 1 rejected application, 40 jobs across all statuses over 30 days, offers, chats, reviews, 3 disputed jobs, 6 reports, and audit entries. |
-| **9** | [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) | Verification | Transactional test suite (auto-rolled back) verifying RLS policies, trigger guards, dual-role workflows, and admin portal functions (Tests 1–32). |
-| **Cleanup** | [`db/seed/999_remove_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/999_remove_demo_data.sql) | Demo Cleanup | Removes all records inserted by `002_admin_demo_data.sql`. |
+| **7** | [`db/migrations/007_professional_multistep_application.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/007_professional_multistep_application.sql) | Professional Onboarding | Extends `professional_profiles` with personal/preference fields and adds `submit_professional_application(...)`. |
+| **8** | [`db/migrations/008_admin_user_emails.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/008_admin_user_emails.sql) | Admin Helper Migration | Adds `admin_get_user_emails(uuid[])` for administrator directory lookup. |
+| **9** | [`db/migrations/009_pakistani_mobile_phone_constraint.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/009_pakistani_mobile_phone_constraint.sql) | Constraint Migration | Enforces 11-digit Pakistani mobile format (`03XXXXXXXXX`) on `contact_details.phone`. |
+| **10** | [`db/migrations/010_customer_dashboard.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/010_customer_dashboard.sql) | Customer Dashboard Migration | Adds `protect_notification_columns()` trigger so clients only update `read_at`, indexes `jobs(customer_id, created_at desc)` and `offers(job_id, status)`, and sets a 7-day default on `jobs.expires_at`. |
+| **11** | [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) | Seed Data | Seeds 8 standard trade categories, 12 placeholder areas, and graph travel edges. |
+| **12** | [`db/seed/002_admin_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/002_admin_demo_data.sql) | Demo Seed Data | *(Development Only)* Populates 24 demo users (`@example.invalid`), 12 approved pros, 3 pending & 1 rejected application, 40 jobs across all statuses over 30 days, offers, chats, reviews, 3 disputed jobs, 6 reports, and audit entries. |
+| **13** | [`db/seed/003_customer_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/003_customer_demo_data.sql) | Customer Demo Data | *(Development Only)* Populates 8 jobs across statuses, 9 offers, `job_events`, `conversations`, a review, and notifications for a single test customer email. Requires `002_admin_demo_data.sql`. |
+| **14** | [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) | Verification | Transactional test suite (auto-rolled back) verifying RLS policies, trigger guards, dual-role workflows, admin portal functions, and customer dashboard isolation (Tests 1–36). |
+| **Cleanup (Customer)** | [`db/seed/998_remove_customer_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/998_remove_customer_demo_data.sql) | Customer Demo Cleanup | Removes only the records inserted by `003_customer_demo_data.sql`. |
+| **Cleanup (Admin)** | [`db/seed/999_remove_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/999_remove_demo_data.sql) | Demo Cleanup | Removes all records inserted by `002_admin_demo_data.sql`. |
 
 ---
 
@@ -343,21 +349,22 @@ is_admin() RETURNS boolean
 
 ---
 
-## 6. How to Run Migration 006, Demo Seed & Admin Setup
+## 6. How to Run Migrations, Demo Seeds & Admin Setup
 
-1. **Apply Migration 006**:
-   - Open the **Supabase SQL Editor**, paste the contents of [`db/migrations/006_admin_portal.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/006_admin_portal.sql), and click **Run**.
+1. **Apply Migrations**:
+   - Open the **Supabase SQL Editor**, paste the contents of [`db/migrations/006_admin_portal.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/006_admin_portal.sql) through [`db/migrations/010_customer_dashboard.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/010_customer_dashboard.sql) in order, and click **Run**.
 2. **Load Demo Data (Optional, Development Only)**:
    - Confirm [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) has been applied.
    - Run [`db/seed/002_admin_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/002_admin_demo_data.sql) in the SQL Editor.
-   - To remove all demo records later, run [`db/seed/999_remove_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/999_remove_demo_data.sql).
+   - To populate demo jobs for a specific test customer, set `v_customer_email` at the top of [`db/seed/003_customer_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/003_customer_demo_data.sql) and run it.
+   - To remove only customer demo records later, run [`db/seed/998_remove_customer_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/998_remove_customer_demo_data.sql). To remove all admin demo records, run [`db/seed/999_remove_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/999_remove_demo_data.sql).
 3. **Create the Administrator Account**:
    - Follow the step-by-step instructions in [`db/ADMIN_SETUP.md`](file:///Users/mrcom/Documents/prolink/db/ADMIN_SETUP.md): register the user via the live site or Supabase Authentication $\rightarrow$ Users $\rightarrow$ Add user, then promote the account in the SQL Editor:
      ```sql
      update public.profiles set role = 'admin' where id = (select id from auth.users where email = '<ADMIN_EMAIL>');
      ```
 4. **Run Automated RLS Tests**:
-   - Paste [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) into the SQL Editor and run it. Check the **Messages** tab to verify that `TEST 1` through `TEST 32` report `PASS` before the transaction rolls back.
+   - Paste [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) into the SQL Editor and run it. Check the **Messages** tab to verify that `TEST 1` through `TEST 36` report `PASS` before the transaction rolls back.
 
 ### Manual Admin Verification Checklist
 - [ ] A non-admin cannot open `/admin` (redirected to `"/"`) or call `/admin` C# API endpoints (`403 Forbidden`).

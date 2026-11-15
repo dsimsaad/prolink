@@ -25,7 +25,7 @@ var origins = (builder.Configuration["ALLOWED_ORIGINS"] ?? "http://localhost:300
 builder.Services.AddCors(o => o.AddPolicy("web", p => p
     .WithOrigins(origins)
     .WithHeaders("Authorization", "Content-Type")
-    .WithMethods("GET", "POST", "OPTIONS")));
+    .WithMethods("GET", "POST", "PATCH", "OPTIONS")));
 
 var supabaseUrl = (builder.Configuration["SUPABASE_URL"] ?? "").TrimEnd('/');
 var issuer = $"{supabaseUrl}/auth/v1";
@@ -49,16 +49,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-string? rawDatabaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
-                         ?? builder.Configuration["DATABASE_URL"];
+string? rawDatabaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 string npgsqlConnectionString = string.IsNullOrWhiteSpace(rawDatabaseUrl)
     ? string.Empty
     : PostgresUriParser.ParseConnectionString(rawDatabaseUrl);
 
+builder.Services.AddHttpClient("Insight");
 builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<IAdminRepository>(_ => new AdminRepository(npgsqlConnectionString));
 builder.Services.AddSingleton<AdminRoleCache>();
 builder.Services.AddSingleton<IAuthorizationHandler, AdminAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, CustomerAuthorizationHandler>();
+builder.Services.AddSingleton<IJobMatcher, FallbackMatcher>();
 builder.Services.AddSingleton<AdminEngineService>();
 
 builder.Services.AddSingleton(sp =>
@@ -78,6 +80,11 @@ builder.Services.AddAuthorizationBuilder()
     {
         policy.RequireAuthenticatedUser();
         policy.AddRequirements(new AdminRequirement());
+    })
+    .AddPolicy("Customer", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new CustomerRequirement());
     });
 
 var app = builder.Build();
@@ -116,6 +123,7 @@ app.MapAdminQueueAndAuditEndpoints();
 app.MapAdminSearchEndpoints();
 app.MapAdminAnalyticsEndpoints();
 app.MapAdminJobsAndDisputesEndpoints();
+app.MapCustomerJobsEndpoints();
 
 app.Run();
 

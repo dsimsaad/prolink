@@ -23,8 +23,8 @@ The Core Engine is a C# ASP.NET Core Web API on .NET 8 backed by a custom Data S
 | **`InvertedIndex`** | `Search/InvertedIndex.cs` | `Add`: $O(T \log P + P)$; `Search` (two-pointer merge from shortest list): $O(\sum P_i)$ | `UserSearchIndex.Search` (`/admin/users/search`) and `JobSearchIndex.Search` (`/admin/jobs/search`) |
 | **`MergeSort`** | `Algorithms/MergeSort.cs` | `Sort`: $O(n \log n)$ worst/average/best, stable | `InvertedIndex` posting-list ordering, `AuditIndex.Load`, `UserSearchIndex.Search`, `JobSearchIndex.Search`, and `/admin/analytics/top-*` |
 | **`BinarySearch`** | `Algorithms/BinarySearch.cs` | `LowerBound`, `UpperBound`: $O(\log n)$ | `AuditIndex.CountBetween`, `AuditIndex.Page`, and `AuditIndex.CountPerDay` (`/admin/audit` & `/admin/audit/summary`) |
-| **`SlidingWindowLimiter`** | `RateLimiting/SlidingWindowLimiter.cs` | `TryAcquire`: $O(1)$ amortized | `AdminRateLimitMiddleware` protecting all `/admin/*` endpoints |
-| **`JobStateMachine`** | `Rules/JobStateMachine.cs` | `CanTransition`, `NextStates`, `CanForceCancel`, `CanResolveDispute`: $O(1)$ | `/admin/jobs/{id}/allowed-actions`, `/admin/jobs/{id}/force-cancel`, and `/admin/disputes/{id}/resolve` |
+| **`SlidingWindowLimiter`** | `RateLimiting/SlidingWindowLimiter.cs` | `TryAcquire`: $O(1)$ amortized | `AdminRateLimitMiddleware` protecting all `/admin/*` and `/jobs/*` endpoints |
+| **`JobStateMachine`** | `Rules/JobStateMachine.cs` | `CanTransition`, `NextStates`, `CanCustomerCancel`, `CanForceCancel`, `CanResolveDispute`: $O(1)$ | Customer `/jobs/*` lifecycle endpoints, `/admin/jobs/{id}/allowed-actions`, `/admin/jobs/{id}/force-cancel`, and `/admin/disputes/{id}/resolve` |
 | **`ReviewQueue`** | `Admin/ReviewQueue.cs` | `Load`: $O(n \log n)$; `Peek(k)`: $O(k \log n)$; `Remove`: $O(\log n)$ | `/admin/review-queue` and `/admin/review-queue/refresh` |
 | **`AuditIndex`** | `Admin/AuditIndex.cs` | `Load`: $O(n \log n)$; `Page`: $O(\log n + k)$; `CountBetween`: $O(\log n)$ | `/admin/audit` and `/admin/audit/summary` |
 | **`UserSearchIndex`** | `Admin/UserSearchIndex.cs` | `Suggest`: $O(L + k)$; `Search`: $O(P + m \log m)$ | `/admin/users/suggest` and `/admin/users/search` |
@@ -38,10 +38,29 @@ Set the following environment variables in Render or your local shell (never com
 
 - `PORT`: HTTP port to bind (default `5080`).
 - `SUPABASE_URL`: Base URL of the Supabase project (used to derive the JWKS endpoint `${SUPABASE_URL}/auth/v1/.well-known/jwks.json`).
-- `DATABASE_URL`: Supabase session-pooler Postgres URI. Note that this connection runs as the database owner role (`postgres`) which bypasses RLS, so all `/admin` endpoints enforce the C# `"Admin"` authorization policy (`role = 'admin'` and `is_suspended = false`).
+- `DATABASE_URL`: Supabase session-pooler Postgres URI. Read from the environment only. Because this connection runs as the database owner role (`postgres`) which bypasses RLS, all `/admin` endpoints enforce the `"Admin"` authorization policy and all `/jobs` endpoints enforce the `"Customer"` authorization policy plus explicit `customer_id` ownership checks.
+- `INSIGHT_URL`: Optional base URL of the Python Insight microservice (`POST /classify`) used by `GET /jobs/suggest-category` with a 3-second timeout.
 - `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins (default `http://localhost:3000`).
-- `RateLimiting__PermitLimit`: Maximum requests allowed per sliding window on `/admin` endpoints (default `60`).
+- `RateLimiting__PermitLimit`: Maximum requests allowed per sliding window on `/admin` and `/jobs` endpoints (default `60`).
 - `RateLimiting__WindowSeconds`: Sliding window duration in seconds (default `60`).
+
+---
+
+## Customer Endpoints (`/jobs`)
+
+Full request/response JSON schemas and rules are documented in [`docs/api/customer.md`](file:///Users/mrcom/Documents/prolink/docs/api/customer.md):
+
+| Method | Path | Purpose |
+| :--- | :--- | :--- |
+| `POST` | `/jobs` | Create a job as `Draft` or `Open` (`publish: true` sets 7-day `expires_at` and runs `IJobMatcher`). |
+| `PATCH` | `/jobs/{id}` | Edit a `Draft` job owned by the caller. |
+| `POST` | `/jobs/{id}/publish` | Transition a `Draft` job to `Open`, set `expires_at`, and notify matching professionals. |
+| `POST` | `/jobs/{id}/cancel` | Cancel a job from `Draft`, `Open`, `Offers received`, or `Assigned`; reject pending offers and notify any assigned professional. |
+| `POST` | `/jobs/{id}/offers/{offerId}/accept` | Accept a pending offer on an `Open` or `Offers received` job, reject other pending offers, assign the professional, create the `conversations` row, and notify professionals. |
+| `POST` | `/jobs/{id}/complete` | Confirm completion (`In progress` $\rightarrow$ `Completed`). |
+| `POST` | `/jobs/{id}/dispute` | Open a dispute (`Assigned` or `In progress` $\rightarrow$ `Disputed`) with a reason stored in `job_events.note`. |
+| `POST` | `/jobs/{id}/review` | Submit a 1–5 star review once on a `Completed` job. |
+| `GET` | `/jobs/suggest-category?text=...` | Optional category suggestion via Python `/classify` (3s timeout, empty fallback on error). |
 
 ---
 

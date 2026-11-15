@@ -38,7 +38,7 @@ export function getCtaConfig(
       };
     case "approved":
       return {
-        href: "/user",
+        href: "/dashboard",
         label:
           variant === "menu-item" || variant === "mobile"
             ? "Professional active"

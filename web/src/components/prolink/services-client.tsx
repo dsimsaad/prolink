@@ -152,7 +152,7 @@ export function ServicesClient() {
 
                   <div className="service-card-footer">
                     <Link
-                      href={`/sign-in?service=${encodeURIComponent(service.name)}`}
+                      href="/dashboard/jobs/new"
                       className="service-cta-btn"
                     >
                       <span>Post a {service.name} Job</span>
@@ -175,7 +175,7 @@ export function ServicesClient() {
             </p>
           </div>
           <div className="services-help-actions">
-            <Link href="/sign-in" className="button">
+            <Link href="/dashboard/jobs/new" className="button">
               Post a Job <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
             <Link href="/contact" className="button outline">

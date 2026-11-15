@@ -142,7 +142,7 @@ export function HomeNavbar() {
                     </Link>
                   )}
                   <Link
-                    href="/user"
+                    href="/dashboard"
                     role="menuitem"
                     onClick={() => setUserMenuOpen(false)}
                   >
@@ -187,7 +187,7 @@ export function HomeNavbar() {
               href={
                 isLoggedIn
                   ? proState === "approved"
-                    ? "/user"
+                    ? "/dashboard"
                     : "/become-professional"
                   : "/become-professional/sign-in?mode=signup"
               }
@@ -255,7 +255,7 @@ export function HomeNavbar() {
               {isLoggedIn ? (
                 <>
                   <Link
-                    href="/user"
+                    href="/dashboard"
                     className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-mint)]"
                     onClick={() => setMenuOpen(false)}
                   >
@@ -286,7 +286,7 @@ export function HomeNavbar() {
                     href={
                       isLoggedIn
                         ? proState === "approved"
-                          ? "/user"
+                          ? "/dashboard"
                           : "/become-professional"
                         : "/become-professional/sign-in?mode=signup"
                     }

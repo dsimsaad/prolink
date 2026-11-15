@@ -1075,6 +1075,181 @@ BEGIN
         END IF;
     END;
 
+    -- Migration 010 Customer Dashboard RLS tests (Tests 33 to 36)
+    DECLARE
+        v_c1_offer_job_id uuid := gen_random_uuid();
+        v_c2_offer_job_id uuid := gen_random_uuid();
+        v_c1_offer_id uuid := gen_random_uuid();
+        v_c2_offer_id uuid := gen_random_uuid();
+        v_c1_event_id uuid := gen_random_uuid();
+        v_c2_event_id uuid := gen_random_uuid();
+        v_c1_notif_id uuid := gen_random_uuid();
+        v_c2_notif_id uuid := gen_random_uuid();
+        v_own_jobs int;
+        v_other_jobs int;
+        v_own_offers int;
+        v_other_offers int;
+        v_own_events int;
+        v_other_events int;
+        v_phone_before text;
+        v_phone_after text;
+        v_c1_read_at timestamptz;
+        v_c2_read_at timestamptz;
+    BEGIN
+        PERFORM set_config('request.jwt.claims', '', true);
+
+        -- Ensure Pro 2 is approved so Pro 2 can submit an offer and have contact details tested
+        UPDATE public.professional_profiles
+        SET status = 'approved', verified = true
+        WHERE profile_id = v_p2_id;
+
+        -- Seed one Open job for Customer 1 and one Open job for Customer 2
+        INSERT INTO public.jobs (id, customer_id, title, description, category_id, area_id, status)
+        VALUES
+            (v_c1_offer_job_id, v_c1_id, 'Customer 1 Water Heater Repair', 'Thermostat and heating element check needed.', v_cat_id, v_area1_id, 'Open'),
+            (v_c2_offer_job_id, v_c2_id, 'Customer 2 Ceiling Fan Wiring', 'Install two new ceiling fans in bedrooms.', v_cat_id, v_area2_id, 'Open');
+
+        -- Seed offers on both jobs
+        INSERT INTO public.offers (id, job_id, professional_id, price, inspection_fee, eta_minutes, message, status)
+        VALUES
+            (v_c1_offer_id, v_c1_offer_job_id, v_p2_id, 2500.00, 300.00, 45, 'Can arrive within 45 minutes.', 'pending'),
+            (v_c2_offer_id, v_c2_offer_job_id, v_p1_id, 1800.00, 0.00, 30, 'Ready with tools.', 'pending');
+
+        -- Seed job_events on both jobs
+        INSERT INTO public.job_events (id, job_id, from_status, to_status, actor_id, note)
+        VALUES
+            (v_c1_event_id, v_c1_offer_job_id, 'Draft', 'Open', v_c1_id, 'Published by Customer 1'),
+            (v_c2_event_id, v_c2_offer_job_id, 'Draft', 'Open', v_c2_id, 'Published by Customer 2');
+
+        -- Seed notifications for Customer 1 and Customer 2
+        INSERT INTO public.notifications (id, user_id, type, payload)
+        VALUES
+            (v_c1_notif_id, v_c1_id, 'offer_received', jsonb_build_object('job_id', v_c1_offer_job_id, 'title', 'Customer 1 Water Heater Repair')),
+            (v_c2_notif_id, v_c2_id, 'offer_received', jsonb_build_object('job_id', v_c2_offer_job_id, 'title', 'Customer 2 Ceiling Fan Wiring'));
+
+        -- TEST 33: Customer can read own jobs, offers, and job_events, but cannot read another customer's
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_c1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT count(*) INTO v_own_jobs FROM public.jobs WHERE id = v_c1_offer_job_id;
+        SELECT count(*) INTO v_other_jobs FROM public.jobs WHERE id = v_c2_offer_job_id;
+        SELECT count(*) INTO v_own_offers FROM public.offers WHERE id = v_c1_offer_id;
+        SELECT count(*) INTO v_other_offers FROM public.offers WHERE id = v_c2_offer_id;
+        SELECT count(*) INTO v_own_events FROM public.job_events WHERE id = v_c1_event_id;
+        SELECT count(*) INTO v_other_events FROM public.job_events WHERE id = v_c2_event_id;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        IF v_own_jobs = 1 AND v_other_jobs = 0
+           AND v_own_offers = 1 AND v_other_offers = 0
+           AND v_own_events = 1 AND v_other_events = 0 THEN
+            RAISE NOTICE 'TEST 33 [Customer reads own jobs/offers/job_events and cannot read another customer''s]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 33 [Customer isolation on jobs/offers/job_events]: FAIL (Own: %/%/%, Other: %/%/%)',
+                v_own_jobs, v_own_offers, v_own_events, v_other_jobs, v_other_offers, v_other_events;
+        END IF;
+
+        -- TEST 34: Customer cannot read a professional's phone before an offer is accepted, and CAN after
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_c1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT phone INTO v_phone_before
+        FROM public.contact_details
+        WHERE profile_id = v_p2_id;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        -- Simulate accepting Pro 2's offer on Customer 1's job (sets status = Assigned and assigned_professional_id = v_p2_id)
+        UPDATE public.offers SET status = 'accepted' WHERE id = v_c1_offer_id;
+        UPDATE public.jobs SET status = 'Assigned', assigned_professional_id = v_p2_id WHERE id = v_c1_offer_job_id;
+
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_c1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT phone INTO v_phone_after
+        FROM public.contact_details
+        WHERE profile_id = v_p2_id;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        IF v_phone_before IS NULL AND v_phone_after IS NOT NULL THEN
+            RAISE NOTICE 'TEST 34 [Customer cannot read pro phone before offer acceptance and can after]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 34 [Customer pro phone visibility before/after offer acceptance]: FAIL (Before: %, After: %)',
+                v_phone_before, v_phone_after;
+        END IF;
+
+        -- TEST 35: Customer can mark only their own notifications as read
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_c1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        UPDATE public.notifications
+        SET read_at = now()
+        WHERE id IN (v_c1_notif_id, v_c2_notif_id);
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT read_at INTO v_c1_read_at FROM public.notifications WHERE id = v_c1_notif_id;
+        SELECT read_at INTO v_c2_read_at FROM public.notifications WHERE id = v_c2_notif_id;
+
+        IF v_c1_read_at IS NOT NULL AND v_c2_read_at IS NULL THEN
+            RAISE NOTICE 'TEST 35 [Customer marks only own notification as read]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 35 [Customer marks only own notification as read]: FAIL (Own read_at: %, Other read_at: %)',
+                v_c1_read_at, v_c2_read_at;
+        END IF;
+
+        -- TEST 36: Customer cannot modify non-read_at columns on their notification
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_c1_id), true);
+        v_error_caught := false;
+        BEGIN
+            UPDATE public.notifications
+            SET type = 'tampered_type'
+            WHERE id = v_c1_notif_id;
+        EXCEPTION
+            WHEN SQLSTATE '42501' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_error_caught THEN
+            RAISE NOTICE 'TEST 36 [Trigger blocks customer from modifying notification type/payload]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 36 [Trigger blocks customer from modifying notification type/payload]: FAIL';
+        END IF;
+    END;
+
     RAISE NOTICE '================================================================';
     RAISE NOTICE 'ALL DUAL-ROLE RLS & APPLICATION TESTS COMPLETED (ROLLING BACK)';
     RAISE NOTICE '================================================================';

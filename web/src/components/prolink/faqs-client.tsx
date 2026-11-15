@@ -180,7 +180,7 @@ export function FaqsClient() {
             <Link href="/contact" className="button">
               Contact Us <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
-            <Link href="/sign-in" className="button outline">
+            <Link href="/dashboard/jobs/new" className="button outline">
               Post a Job
             </Link>
           </div>

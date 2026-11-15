@@ -1,7 +1,9 @@
+using System.Text.Json;
 using Npgsql;
 using NpgsqlTypes;
 using ProLink.Api.Models;
 using ProLink.Engine.Admin;
+using ProLink.Engine.Rules;
 
 namespace ProLink.Api.Data;
 
@@ -369,5 +371,798 @@ public sealed class AdminRepository : IAdminRepository
         }
 
         await tx.CommitAsync(ct);
+    }
+
+    public async Task<bool> IsActiveCategoryAsync(long categoryId, CancellationToken ct = default)
+    {
+        const string sql = @"
+            SELECT EXISTS (
+                SELECT 1
+                FROM public.categories
+                WHERE id = @categoryId
+                  AND is_active = true
+            );";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("categoryId", categoryId);
+        object? result = await cmd.ExecuteScalarAsync(ct);
+        return result is true;
+    }
+
+    public async Task<bool> AreaExistsAsync(long areaId, CancellationToken ct = default)
+    {
+        const string sql = @"
+            SELECT EXISTS (
+                SELECT 1
+                FROM public.areas
+                WHERE id = @areaId
+            );";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("areaId", areaId);
+        object? result = await cmd.ExecuteScalarAsync(ct);
+        return result is true;
+    }
+
+    public async Task<IReadOnlyList<ActiveCategoryRecord>> GetActiveCategoriesAsync(CancellationToken ct = default)
+    {
+        const string sql = @"
+            SELECT id, name
+            FROM public.categories
+            WHERE is_active = true
+            ORDER BY name ASC;";
+
+        var items = new List<ActiveCategoryRecord>();
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+
+        while (await reader.ReadAsync(ct))
+        {
+            items.Add(new ActiveCategoryRecord(reader.GetInt64(0), reader.GetString(1)));
+        }
+
+        return items;
+    }
+
+    public async Task<CustomerJobRecord?> GetCustomerJobAsync(Guid jobId, Guid customerId, CancellationToken ct = default)
+    {
+        const string sql = @"
+            SELECT id, customer_id, title, description, category_id, area_id,
+                   budget_min, budget_max, urgency, status, assigned_professional_id,
+                   expires_at, created_at, updated_at
+            FROM public.jobs
+            WHERE id = @jobId
+              AND customer_id = @customerId
+            LIMIT 1;";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("jobId", jobId);
+        cmd.Parameters.AddWithValue("customerId", customerId);
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        if (!await reader.ReadAsync(ct))
+        {
+            return null;
+        }
+
+        return ReadCustomerJobRecord(reader);
+    }
+
+    public async Task<CustomerJobRecord> CreateCustomerJobAsync(
+        Guid customerId,
+        string title,
+        string description,
+        long categoryId,
+        long areaId,
+        decimal? budgetMin,
+        decimal? budgetMax,
+        string urgency,
+        bool publish,
+        DateTimeOffset? expiresAt,
+        CancellationToken ct = default)
+    {
+        string targetStatus = publish ? JobStateMachine.Open : JobStateMachine.Draft;
+        string eventNote = publish ? "Job published" : "Saved as draft";
+
+        const string insertJobSql = @"
+            INSERT INTO public.jobs (
+                customer_id, title, description, category_id, area_id,
+                budget_min, budget_max, urgency, status, expires_at, created_at, updated_at
+            )
+            VALUES (
+                @customerId, @title, @description, @categoryId, @areaId,
+                @budgetMin, @budgetMax, @urgency, @status, @expiresAt, now(), now()
+            )
+            RETURNING id, customer_id, title, description, category_id, area_id,
+                      budget_min, budget_max, urgency, status, assigned_professional_id,
+                      expires_at, created_at, updated_at;";
+
+        const string insertEventSql = @"
+            INSERT INTO public.job_events (job_id, from_status, to_status, actor_id, note, at)
+            VALUES (@jobId, NULL, @toStatus, @actorId, @note, now());";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        CustomerJobRecord created;
+        await using (var cmd = new NpgsqlCommand(insertJobSql, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("customerId", customerId);
+            cmd.Parameters.AddWithValue("title", title);
+            cmd.Parameters.AddWithValue("description", description);
+            cmd.Parameters.AddWithValue("categoryId", categoryId);
+            cmd.Parameters.AddWithValue("areaId", areaId);
+            cmd.Parameters.AddWithValue("budgetMin", (object?)budgetMin ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("budgetMax", (object?)budgetMax ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("urgency", urgency);
+            cmd.Parameters.AddWithValue("status", targetStatus);
+            cmd.Parameters.AddWithValue("expiresAt", (object?)expiresAt ?? DBNull.Value);
+
+            await using var reader = await cmd.ExecuteReaderAsync(ct);
+            await reader.ReadAsync(ct);
+            created = ReadCustomerJobRecord(reader);
+        }
+
+        await using (var eventCmd = new NpgsqlCommand(insertEventSql, conn, tx))
+        {
+            eventCmd.Parameters.AddWithValue("jobId", created.Id);
+            eventCmd.Parameters.AddWithValue("toStatus", targetStatus);
+            eventCmd.Parameters.AddWithValue("actorId", customerId);
+            eventCmd.Parameters.AddWithValue("note", eventNote);
+            await eventCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        await tx.CommitAsync(ct);
+        return created;
+    }
+
+    public async Task<CustomerJobRecord> UpdateDraftJobAsync(
+        Guid jobId,
+        Guid customerId,
+        string title,
+        string description,
+        long categoryId,
+        long areaId,
+        decimal? budgetMin,
+        decimal? budgetMax,
+        string urgency,
+        CancellationToken ct = default)
+    {
+        const string updateSql = @"
+            UPDATE public.jobs
+            SET title = @title,
+                description = @description,
+                category_id = @categoryId,
+                area_id = @areaId,
+                budget_min = @budgetMin,
+                budget_max = @budgetMax,
+                urgency = @urgency,
+                updated_at = now()
+            WHERE id = @jobId
+              AND customer_id = @customerId
+              AND status = 'Draft'
+            RETURNING id, customer_id, title, description, category_id, area_id,
+                      budget_min, budget_max, urgency, status, assigned_professional_id,
+                      expires_at, created_at, updated_at;";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var cmd = new NpgsqlCommand(updateSql, conn);
+        cmd.Parameters.AddWithValue("jobId", jobId);
+        cmd.Parameters.AddWithValue("customerId", customerId);
+        cmd.Parameters.AddWithValue("title", title);
+        cmd.Parameters.AddWithValue("description", description);
+        cmd.Parameters.AddWithValue("categoryId", categoryId);
+        cmd.Parameters.AddWithValue("areaId", areaId);
+        cmd.Parameters.AddWithValue("budgetMin", (object?)budgetMin ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("budgetMax", (object?)budgetMax ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("urgency", urgency);
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        await reader.ReadAsync(ct);
+        return ReadCustomerJobRecord(reader);
+    }
+
+    public async Task<CustomerJobRecord> PublishCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        DateTimeOffset expiresAt,
+        CancellationToken ct = default)
+    {
+        const string updateSql = @"
+            UPDATE public.jobs
+            SET status = 'Open',
+                expires_at = @expiresAt,
+                updated_at = now()
+            WHERE id = @jobId
+              AND customer_id = @customerId
+            RETURNING id, customer_id, title, description, category_id, area_id,
+                      budget_min, budget_max, urgency, status, assigned_professional_id,
+                      expires_at, created_at, updated_at;";
+
+        const string insertEventSql = @"
+            INSERT INTO public.job_events (job_id, from_status, to_status, actor_id, note, at)
+            VALUES (@jobId, 'Draft', 'Open', @actorId, 'Job published', now());";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        CustomerJobRecord updated;
+        await using (var cmd = new NpgsqlCommand(updateSql, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("jobId", jobId);
+            cmd.Parameters.AddWithValue("customerId", customerId);
+            cmd.Parameters.AddWithValue("expiresAt", expiresAt);
+            await using var reader = await cmd.ExecuteReaderAsync(ct);
+            await reader.ReadAsync(ct);
+            updated = ReadCustomerJobRecord(reader);
+        }
+
+        await using (var eventCmd = new NpgsqlCommand(insertEventSql, conn, tx))
+        {
+            eventCmd.Parameters.AddWithValue("jobId", jobId);
+            eventCmd.Parameters.AddWithValue("actorId", customerId);
+            await eventCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        await tx.CommitAsync(ct);
+        return updated;
+    }
+
+    public async Task<CustomerJobRecord> CancelCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        string fromStatus,
+        Guid? assignedProfessionalId,
+        string jobTitle,
+        string? reason,
+        CancellationToken ct = default)
+    {
+        const string rejectOffersSql = @"
+            UPDATE public.offers
+            SET status = 'rejected',
+                updated_at = now()
+            WHERE job_id = @jobId
+              AND status = 'pending';";
+
+        const string updateJobSql = @"
+            UPDATE public.jobs
+            SET status = 'Cancelled',
+                updated_at = now()
+            WHERE id = @jobId
+              AND customer_id = @customerId
+            RETURNING id, customer_id, title, description, category_id, area_id,
+                      budget_min, budget_max, urgency, status, assigned_professional_id,
+                      expires_at, created_at, updated_at;";
+
+        const string insertEventSql = @"
+            INSERT INTO public.job_events (job_id, from_status, to_status, actor_id, note, at)
+            VALUES (@jobId, @fromStatus, 'Cancelled', @actorId, @note, now());";
+
+        const string insertNotificationSql = @"
+            INSERT INTO public.notifications (user_id, type, payload, created_at)
+            VALUES (@userId, 'job_status_changed', @payload::jsonb, now());";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        await using (var rejectCmd = new NpgsqlCommand(rejectOffersSql, conn, tx))
+        {
+            rejectCmd.Parameters.AddWithValue("jobId", jobId);
+            await rejectCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        CustomerJobRecord updated;
+        await using (var jobCmd = new NpgsqlCommand(updateJobSql, conn, tx))
+        {
+            jobCmd.Parameters.AddWithValue("jobId", jobId);
+            jobCmd.Parameters.AddWithValue("customerId", customerId);
+            await using var reader = await jobCmd.ExecuteReaderAsync(ct);
+            await reader.ReadAsync(ct);
+            updated = ReadCustomerJobRecord(reader);
+        }
+
+        await using (var eventCmd = new NpgsqlCommand(insertEventSql, conn, tx))
+        {
+            eventCmd.Parameters.AddWithValue("jobId", jobId);
+            eventCmd.Parameters.AddWithValue("fromStatus", fromStatus);
+            eventCmd.Parameters.AddWithValue("actorId", customerId);
+            eventCmd.Parameters.AddWithValue("note", (object?)reason ?? DBNull.Value);
+            await eventCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        if (assignedProfessionalId.HasValue)
+        {
+            string payloadJson = JsonSerializer.Serialize(new
+            {
+                job_id = jobId,
+                title = jobTitle,
+                status = JobStateMachine.Cancelled,
+            });
+
+            await using var notifCmd = new NpgsqlCommand(insertNotificationSql, conn, tx);
+            notifCmd.Parameters.AddWithValue("userId", assignedProfessionalId.Value);
+            notifCmd.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Jsonb) { Value = payloadJson });
+            await notifCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        await tx.CommitAsync(ct);
+        return updated;
+    }
+
+    public async Task<JobOfferRecord?> GetJobOfferAsync(Guid jobId, Guid offerId, CancellationToken ct = default)
+    {
+        const string sql = @"
+            SELECT id, job_id, professional_id, status, price, COALESCE(inspection_fee, 0), eta_minutes
+            FROM public.offers
+            WHERE id = @offerId
+              AND job_id = @jobId
+            LIMIT 1;";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("offerId", offerId);
+        cmd.Parameters.AddWithValue("jobId", jobId);
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        if (!await reader.ReadAsync(ct))
+        {
+            return null;
+        }
+
+        return new JobOfferRecord(
+            reader.GetGuid(0),
+            reader.GetGuid(1),
+            reader.GetGuid(2),
+            reader.GetString(3),
+            reader.GetDecimal(4),
+            reader.GetDecimal(5),
+            reader.GetInt32(6));
+    }
+
+    public async Task<AcceptOfferResult> AcceptOfferAsync(
+        Guid jobId,
+        Guid customerId,
+        string fromStatus,
+        string jobTitle,
+        Guid offerId,
+        Guid professionalId,
+        CancellationToken ct = default)
+    {
+        const string acceptOfferSql = @"
+            UPDATE public.offers
+            SET status = 'accepted',
+                updated_at = now()
+            WHERE id = @offerId
+              AND job_id = @jobId;";
+
+        const string rejectOthersSql = @"
+            UPDATE public.offers
+            SET status = 'rejected',
+                updated_at = now()
+            WHERE job_id = @jobId
+              AND id <> @offerId
+              AND status = 'pending'
+            RETURNING professional_id;";
+
+        const string updateJobSql = @"
+            UPDATE public.jobs
+            SET status = 'Assigned',
+                assigned_professional_id = @professionalId,
+                updated_at = now()
+            WHERE id = @jobId
+              AND customer_id = @customerId
+            RETURNING updated_at;";
+
+        const string upsertConversationSql = @"
+            INSERT INTO public.conversations (job_id, customer_id, professional_id, created_at)
+            VALUES (@jobId, @customerId, @professionalId, now())
+            ON CONFLICT (job_id) DO UPDATE
+            SET professional_id = EXCLUDED.professional_id
+            RETURNING id;";
+
+        const string insertEventSql = @"
+            INSERT INTO public.job_events (job_id, from_status, to_status, actor_id, note, at)
+            VALUES (@jobId, @fromStatus, 'Assigned', @actorId, 'Offer accepted by customer', now());";
+
+        const string insertNotificationSql = @"
+            INSERT INTO public.notifications (user_id, type, payload, created_at)
+            VALUES (@userId, @type, @payload::jsonb, now());";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        await using (var acceptCmd = new NpgsqlCommand(acceptOfferSql, conn, tx))
+        {
+            acceptCmd.Parameters.AddWithValue("offerId", offerId);
+            acceptCmd.Parameters.AddWithValue("jobId", jobId);
+            await acceptCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        var rejectedPros = new List<Guid>();
+        await using (var rejectCmd = new NpgsqlCommand(rejectOthersSql, conn, tx))
+        {
+            rejectCmd.Parameters.AddWithValue("jobId", jobId);
+            rejectCmd.Parameters.AddWithValue("offerId", offerId);
+            await using var reader = await rejectCmd.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                rejectedPros.Add(reader.GetGuid(0));
+            }
+        }
+
+        DateTimeOffset updatedAt;
+        await using (var jobCmd = new NpgsqlCommand(updateJobSql, conn, tx))
+        {
+            jobCmd.Parameters.AddWithValue("jobId", jobId);
+            jobCmd.Parameters.AddWithValue("customerId", customerId);
+            jobCmd.Parameters.AddWithValue("professionalId", professionalId);
+            object? scalar = await jobCmd.ExecuteScalarAsync(ct);
+            updatedAt = scalar is DateTimeOffset dto ? dto : DateTimeOffset.UtcNow;
+        }
+
+        Guid conversationId;
+        await using (var convCmd = new NpgsqlCommand(upsertConversationSql, conn, tx))
+        {
+            convCmd.Parameters.AddWithValue("jobId", jobId);
+            convCmd.Parameters.AddWithValue("customerId", customerId);
+            convCmd.Parameters.AddWithValue("professionalId", professionalId);
+            object? scalar = await convCmd.ExecuteScalarAsync(ct);
+            conversationId = scalar is Guid g ? g : Guid.Empty;
+        }
+
+        await using (var eventCmd = new NpgsqlCommand(insertEventSql, conn, tx))
+        {
+            eventCmd.Parameters.AddWithValue("jobId", jobId);
+            eventCmd.Parameters.AddWithValue("fromStatus", fromStatus);
+            eventCmd.Parameters.AddWithValue("actorId", customerId);
+            await eventCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        string acceptedPayload = JsonSerializer.Serialize(new
+        {
+            job_id = jobId,
+            offer_id = offerId,
+            title = jobTitle,
+            status = JobStateMachine.Assigned,
+        });
+
+        await using (var notifCmd = new NpgsqlCommand(insertNotificationSql, conn, tx))
+        {
+            notifCmd.Parameters.AddWithValue("userId", professionalId);
+            notifCmd.Parameters.AddWithValue("type", "offer_accepted");
+            notifCmd.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Jsonb) { Value = acceptedPayload });
+            await notifCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        for (int i = 0; i < rejectedPros.Count; i++)
+        {
+            string rejectedPayload = JsonSerializer.Serialize(new
+            {
+                job_id = jobId,
+                title = jobTitle,
+                status = "Offer not selected",
+            });
+
+            await using var rejNotifCmd = new NpgsqlCommand(insertNotificationSql, conn, tx);
+            rejNotifCmd.Parameters.AddWithValue("userId", rejectedPros[i]);
+            rejNotifCmd.Parameters.AddWithValue("type", "job_status_changed");
+            rejNotifCmd.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Jsonb) { Value = rejectedPayload });
+            await rejNotifCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        await tx.CommitAsync(ct);
+
+        return new AcceptOfferResult(
+            jobId,
+            fromStatus,
+            JobStateMachine.Assigned,
+            offerId,
+            professionalId,
+            conversationId,
+            rejectedPros,
+            updatedAt);
+    }
+
+    public async Task<CustomerJobRecord> CompleteCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        Guid? assignedProfessionalId,
+        string jobTitle,
+        CancellationToken ct = default)
+    {
+        const string updateJobSql = @"
+            UPDATE public.jobs
+            SET status = 'Completed',
+                updated_at = now()
+            WHERE id = @jobId
+              AND customer_id = @customerId
+            RETURNING id, customer_id, title, description, category_id, area_id,
+                      budget_min, budget_max, urgency, status, assigned_professional_id,
+                      expires_at, created_at, updated_at;";
+
+        const string insertEventSql = @"
+            INSERT INTO public.job_events (job_id, from_status, to_status, actor_id, note, at)
+            VALUES (@jobId, 'In progress', 'Completed', @actorId, 'Customer confirmed job completion', now());";
+
+        const string insertNotificationSql = @"
+            INSERT INTO public.notifications (user_id, type, payload, created_at)
+            VALUES (@userId, 'job_status_changed', @payload::jsonb, now());";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        CustomerJobRecord updated;
+        await using (var cmd = new NpgsqlCommand(updateJobSql, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("jobId", jobId);
+            cmd.Parameters.AddWithValue("customerId", customerId);
+            await using var reader = await cmd.ExecuteReaderAsync(ct);
+            await reader.ReadAsync(ct);
+            updated = ReadCustomerJobRecord(reader);
+        }
+
+        await using (var eventCmd = new NpgsqlCommand(insertEventSql, conn, tx))
+        {
+            eventCmd.Parameters.AddWithValue("jobId", jobId);
+            eventCmd.Parameters.AddWithValue("actorId", customerId);
+            await eventCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        if (assignedProfessionalId.HasValue)
+        {
+            string payloadJson = JsonSerializer.Serialize(new
+            {
+                job_id = jobId,
+                title = jobTitle,
+                status = JobStateMachine.Completed,
+            });
+
+            await using var notifCmd = new NpgsqlCommand(insertNotificationSql, conn, tx);
+            notifCmd.Parameters.AddWithValue("userId", assignedProfessionalId.Value);
+            notifCmd.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Jsonb) { Value = payloadJson });
+            await notifCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        await tx.CommitAsync(ct);
+        return updated;
+    }
+
+    public async Task<CustomerJobRecord> DisputeCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        string fromStatus,
+        Guid? assignedProfessionalId,
+        string jobTitle,
+        string reason,
+        CancellationToken ct = default)
+    {
+        const string updateJobSql = @"
+            UPDATE public.jobs
+            SET status = 'Disputed',
+                updated_at = now()
+            WHERE id = @jobId
+              AND customer_id = @customerId
+            RETURNING id, customer_id, title, description, category_id, area_id,
+                      budget_min, budget_max, urgency, status, assigned_professional_id,
+                      expires_at, created_at, updated_at;";
+
+        const string insertEventSql = @"
+            INSERT INTO public.job_events (job_id, from_status, to_status, actor_id, note, at)
+            VALUES (@jobId, @fromStatus, 'Disputed', @actorId, @note, now());";
+
+        const string insertNotificationSql = @"
+            INSERT INTO public.notifications (user_id, type, payload, created_at)
+            VALUES (@userId, 'job_status_changed', @payload::jsonb, now());";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        CustomerJobRecord updated;
+        await using (var cmd = new NpgsqlCommand(updateJobSql, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("jobId", jobId);
+            cmd.Parameters.AddWithValue("customerId", customerId);
+            await using var reader = await cmd.ExecuteReaderAsync(ct);
+            await reader.ReadAsync(ct);
+            updated = ReadCustomerJobRecord(reader);
+        }
+
+        await using (var eventCmd = new NpgsqlCommand(insertEventSql, conn, tx))
+        {
+            eventCmd.Parameters.AddWithValue("jobId", jobId);
+            eventCmd.Parameters.AddWithValue("fromStatus", fromStatus);
+            eventCmd.Parameters.AddWithValue("actorId", customerId);
+            eventCmd.Parameters.AddWithValue("note", reason);
+            await eventCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        if (assignedProfessionalId.HasValue)
+        {
+            string payloadJson = JsonSerializer.Serialize(new
+            {
+                job_id = jobId,
+                title = jobTitle,
+                status = JobStateMachine.Disputed,
+            });
+
+            await using var notifCmd = new NpgsqlCommand(insertNotificationSql, conn, tx);
+            notifCmd.Parameters.AddWithValue("userId", assignedProfessionalId.Value);
+            notifCmd.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Jsonb) { Value = payloadJson });
+            await notifCmd.ExecuteNonQueryAsync(ct);
+        }
+
+        await tx.CommitAsync(ct);
+        return updated;
+    }
+
+    public async Task<bool> HasReviewForJobAsync(Guid jobId, CancellationToken ct = default)
+    {
+        const string sql = @"
+            SELECT EXISTS (
+                SELECT 1
+                FROM public.reviews
+                WHERE job_id = @jobId
+            );";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("jobId", jobId);
+        object? scalar = await cmd.ExecuteScalarAsync(ct);
+        return scalar is true;
+    }
+
+    public async Task<ReviewRecord> CreateReviewAsync(
+        Guid jobId,
+        Guid reviewerId,
+        Guid professionalId,
+        int rating,
+        string? comment,
+        CancellationToken ct = default)
+    {
+        const string insertSql = @"
+            INSERT INTO public.reviews (job_id, reviewer_id, professional_id, rating, comment, created_at)
+            VALUES (@jobId, @reviewerId, @professionalId, @rating, @comment, now())
+            RETURNING id, job_id, reviewer_id, professional_id, rating, comment, created_at;";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        ReviewRecord review;
+        await using (var cmd = new NpgsqlCommand(insertSql, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("jobId", jobId);
+            cmd.Parameters.AddWithValue("reviewerId", reviewerId);
+            cmd.Parameters.AddWithValue("professionalId", professionalId);
+            cmd.Parameters.AddWithValue("rating", rating);
+            cmd.Parameters.AddWithValue("comment", (object?)comment ?? DBNull.Value);
+
+            await using var reader = await cmd.ExecuteReaderAsync(ct);
+            await reader.ReadAsync(ct);
+            review = new ReviewRecord(
+                reader.GetGuid(0),
+                reader.GetGuid(1),
+                reader.GetGuid(2),
+                reader.GetGuid(3),
+                reader.GetInt32(4),
+                reader.IsDBNull(5) ? null : reader.GetString(5),
+                reader.GetFieldValue<DateTimeOffset>(6));
+        }
+
+        await tx.CommitAsync(ct);
+        return review;
+    }
+
+    public async Task<IReadOnlyList<Guid>> FindMatchingProfessionalsAsync(
+        long categoryId,
+        long areaId,
+        Guid excludeCustomerId,
+        int limit,
+        CancellationToken ct = default)
+    {
+        int safeLimit = limit < 1 ? 5 : (limit > 20 ? 20 : limit);
+        const string sql = @"
+            SELECT pp.profile_id
+            FROM public.professional_profiles pp
+            JOIN public.profiles p ON p.id = pp.profile_id
+            JOIN public.professional_skills ps ON ps.professional_id = pp.profile_id AND ps.category_id = @categoryId
+            JOIN public.professional_areas pa ON pa.professional_id = pp.profile_id AND pa.area_id = @areaId
+            WHERE pp.status = 'approved'
+              AND pp.availability = 'available'
+              AND COALESCE(p.is_suspended, false) = false
+              AND pp.profile_id <> @excludeCustomerId
+            ORDER BY COALESCE(pp.avg_rating_bayes, 0) DESC, pp.applied_at ASC
+            LIMIT @limit;";
+
+        var ids = new List<Guid>();
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("categoryId", categoryId);
+        cmd.Parameters.AddWithValue("areaId", areaId);
+        cmd.Parameters.AddWithValue("excludeCustomerId", excludeCustomerId);
+        cmd.Parameters.AddWithValue("limit", safeLimit);
+
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            ids.Add(reader.GetGuid(0));
+        }
+
+        return ids;
+    }
+
+    public async Task InsertJobMatchNotificationsAsync(
+        Guid jobId,
+        string jobTitle,
+        string urgency,
+        IReadOnlyList<Guid> professionalIds,
+        CancellationToken ct = default)
+    {
+        if (professionalIds.Count == 0)
+        {
+            return;
+        }
+
+        const string insertSql = @"
+            INSERT INTO public.notifications (user_id, type, payload, created_at)
+            VALUES (@userId, 'new_job_match', @payload::jsonb, now());";
+
+        string payloadJson = JsonSerializer.Serialize(new
+        {
+            job_id = jobId,
+            title = jobTitle,
+            urgency,
+        });
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+
+        for (int i = 0; i < professionalIds.Count; i++)
+        {
+            await using var cmd = new NpgsqlCommand(insertSql, conn, tx);
+            cmd.Parameters.AddWithValue("userId", professionalIds[i]);
+            cmd.Parameters.Add(new NpgsqlParameter("payload", NpgsqlDbType.Jsonb) { Value = payloadJson });
+            await cmd.ExecuteNonQueryAsync(ct);
+        }
+
+        await tx.CommitAsync(ct);
+    }
+
+    private static CustomerJobRecord ReadCustomerJobRecord(NpgsqlDataReader reader)
+    {
+        return new CustomerJobRecord(
+            reader.GetGuid(0),
+            reader.GetGuid(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetInt64(4),
+            reader.GetInt64(5),
+            reader.IsDBNull(6) ? null : reader.GetDecimal(6),
+            reader.IsDBNull(7) ? null : reader.GetDecimal(7),
+            reader.GetString(8),
+            reader.GetString(9),
+            reader.IsDBNull(10) ? null : reader.GetGuid(10),
+            reader.IsDBNull(11) ? null : reader.GetFieldValue<DateTimeOffset>(11),
+            reader.GetFieldValue<DateTimeOffset>(12),
+            reader.GetFieldValue<DateTimeOffset>(13));
     }
 }

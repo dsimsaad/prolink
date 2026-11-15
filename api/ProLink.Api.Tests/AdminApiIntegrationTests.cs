@@ -66,7 +66,11 @@ public sealed class FakeAdminRepository : IAdminRepository
 {
     public static readonly Guid AdminId = Guid.Parse("55555555-5555-5555-5555-555555555555");
     public static readonly Guid NormalUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    public static readonly Guid OtherCustomerId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+    public static readonly Guid SuspendedUserId = Guid.Parse("77777777-7777-7777-7777-777777777777");
     public static readonly Guid SuspendedAdminId = Guid.Parse("66666666-6666-6666-6666-666666666666");
+    public static readonly Guid Pro1Id = Guid.Parse("33333333-3333-3333-3333-333333333333");
+    public static readonly Guid Pro2Id = Guid.Parse("44444444-4444-4444-4444-444444444444");
 
     public static readonly Guid OpenJobId = Guid.Parse("aaaaaaaa-0000-4000-8000-000000000001");
     public static readonly Guid CompletedJobId = Guid.Parse("aaaaaaaa-0000-4000-8000-000000000002");
@@ -92,6 +96,14 @@ public sealed class FakeAdminRepository : IAdminRepository
         if (userId == NormalUserId)
         {
             return Task.FromResult<AdminAuthRecord?>(new AdminAuthRecord(NormalUserId, "user", false));
+        }
+        if (userId == OtherCustomerId)
+        {
+            return Task.FromResult<AdminAuthRecord?>(new AdminAuthRecord(OtherCustomerId, "user", false));
+        }
+        if (userId == SuspendedUserId)
+        {
+            return Task.FromResult<AdminAuthRecord?>(new AdminAuthRecord(SuspendedUserId, "user", true));
         }
         if (userId == SuspendedAdminId)
         {
@@ -210,6 +222,323 @@ public sealed class FakeAdminRepository : IAdminRepository
         LastTransitionToStatus = toStatus;
         LastAuditAction = auditAction;
         JobStatuses[jobId] = toStatus;
+        return Task.CompletedTask;
+    }
+
+    public readonly Dictionary<Guid, CustomerJobRecord> CustomerJobs = new();
+    public readonly Dictionary<Guid, List<JobOfferRecord>> JobOffers = new();
+    public readonly Dictionary<Guid, Guid> JobConversations = new();
+    public readonly HashSet<Guid> ReviewedJobs = new();
+    public readonly List<(Guid UserId, string Type, string Title)> Notifications = new();
+
+    public Task<bool> IsActiveCategoryAsync(long categoryId, CancellationToken ct = default) =>
+        Task.FromResult(categoryId is 1 or 2 or 3);
+
+    public Task<bool> AreaExistsAsync(long areaId, CancellationToken ct = default) =>
+        Task.FromResult(areaId is 1 or 2);
+
+    public Task<IReadOnlyList<ActiveCategoryRecord>> GetActiveCategoriesAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<ActiveCategoryRecord> cats = new[]
+        {
+            new ActiveCategoryRecord(1, "Plumbing"),
+            new ActiveCategoryRecord(2, "Electrical"),
+            new ActiveCategoryRecord(3, "AC & Cooling"),
+        };
+        return Task.FromResult(cats);
+    }
+
+    public Task<CustomerJobRecord?> GetCustomerJobAsync(Guid jobId, Guid customerId, CancellationToken ct = default)
+    {
+        if (CustomerJobs.TryGetValue(jobId, out var job) && job.CustomerId == customerId)
+        {
+            return Task.FromResult<CustomerJobRecord?>(job);
+        }
+        return Task.FromResult<CustomerJobRecord?>(null);
+    }
+
+    public Task<CustomerJobRecord> CreateCustomerJobAsync(
+        Guid customerId,
+        string title,
+        string description,
+        long categoryId,
+        long areaId,
+        decimal? budgetMin,
+        decimal? budgetMax,
+        string urgency,
+        bool publish,
+        DateTimeOffset? expiresAt,
+        CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var job = new CustomerJobRecord(
+            Guid.NewGuid(),
+            customerId,
+            title,
+            description,
+            categoryId,
+            areaId,
+            budgetMin,
+            budgetMax,
+            urgency,
+            publish ? JobStateMachine.Open : JobStateMachine.Draft,
+            null,
+            expiresAt,
+            now,
+            now);
+
+        CustomerJobs[job.Id] = job;
+        JobStatuses[job.Id] = job.Status;
+        return Task.FromResult(job);
+    }
+
+    public Task<CustomerJobRecord> UpdateDraftJobAsync(
+        Guid jobId,
+        Guid customerId,
+        string title,
+        string description,
+        long categoryId,
+        long areaId,
+        decimal? budgetMin,
+        decimal? budgetMax,
+        string urgency,
+        CancellationToken ct = default)
+    {
+        var existing = CustomerJobs[jobId];
+        var updated = existing with
+        {
+            Title = title,
+            Description = description,
+            CategoryId = categoryId,
+            AreaId = areaId,
+            BudgetMin = budgetMin,
+            BudgetMax = budgetMax,
+            Urgency = urgency,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
+        CustomerJobs[jobId] = updated;
+        return Task.FromResult(updated);
+    }
+
+    public Task<CustomerJobRecord> PublishCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        DateTimeOffset expiresAt,
+        CancellationToken ct = default)
+    {
+        var existing = CustomerJobs[jobId];
+        var updated = existing with
+        {
+            Status = JobStateMachine.Open,
+            ExpiresAt = expiresAt,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
+        CustomerJobs[jobId] = updated;
+        JobStatuses[jobId] = updated.Status;
+        return Task.FromResult(updated);
+    }
+
+    public Task<CustomerJobRecord> CancelCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        string fromStatus,
+        Guid? assignedProfessionalId,
+        string jobTitle,
+        string? reason,
+        CancellationToken ct = default)
+    {
+        if (JobOffers.TryGetValue(jobId, out var offers))
+        {
+            for (int i = 0; i < offers.Count; i++)
+            {
+                if (offers[i].Status == "pending")
+                {
+                    offers[i] = offers[i] with { Status = "rejected" };
+                }
+            }
+        }
+
+        if (assignedProfessionalId.HasValue)
+        {
+            Notifications.Add((assignedProfessionalId.Value, "job_status_changed", jobTitle));
+        }
+
+        var existing = CustomerJobs[jobId];
+        var updated = existing with
+        {
+            Status = JobStateMachine.Cancelled,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
+        CustomerJobs[jobId] = updated;
+        JobStatuses[jobId] = updated.Status;
+        return Task.FromResult(updated);
+    }
+
+    public Task<JobOfferRecord?> GetJobOfferAsync(Guid jobId, Guid offerId, CancellationToken ct = default)
+    {
+        if (JobOffers.TryGetValue(jobId, out var offers))
+        {
+            var match = offers.FirstOrDefault(o => o.Id == offerId);
+            return Task.FromResult(match);
+        }
+        return Task.FromResult<JobOfferRecord?>(null);
+    }
+
+    public Task<AcceptOfferResult> AcceptOfferAsync(
+        Guid jobId,
+        Guid customerId,
+        string fromStatus,
+        string jobTitle,
+        Guid offerId,
+        Guid professionalId,
+        CancellationToken ct = default)
+    {
+        var rejectedPros = new List<Guid>();
+        if (JobOffers.TryGetValue(jobId, out var offers))
+        {
+            for (int i = 0; i < offers.Count; i++)
+            {
+                if (offers[i].Id == offerId)
+                {
+                    offers[i] = offers[i] with { Status = "accepted" };
+                }
+                else if (offers[i].Status == "pending")
+                {
+                    offers[i] = offers[i] with { Status = "rejected" };
+                    rejectedPros.Add(offers[i].ProfessionalId);
+                }
+            }
+        }
+
+        if (!JobConversations.TryGetValue(jobId, out Guid convId))
+        {
+            convId = Guid.NewGuid();
+            JobConversations[jobId] = convId;
+        }
+
+        Notifications.Add((professionalId, "offer_accepted", jobTitle));
+        foreach (var rejId in rejectedPros)
+        {
+            Notifications.Add((rejId, "job_status_changed", jobTitle));
+        }
+
+        var existing = CustomerJobs[jobId];
+        var now = DateTimeOffset.UtcNow;
+        var updated = existing with
+        {
+            Status = JobStateMachine.Assigned,
+            AssignedProfessionalId = professionalId,
+            UpdatedAt = now,
+        };
+        CustomerJobs[jobId] = updated;
+        JobStatuses[jobId] = updated.Status;
+
+        return Task.FromResult(new AcceptOfferResult(
+            jobId,
+            fromStatus,
+            JobStateMachine.Assigned,
+            offerId,
+            professionalId,
+            convId,
+            rejectedPros,
+            now));
+    }
+
+    public Task<CustomerJobRecord> CompleteCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        Guid? assignedProfessionalId,
+        string jobTitle,
+        CancellationToken ct = default)
+    {
+        if (assignedProfessionalId.HasValue)
+        {
+            Notifications.Add((assignedProfessionalId.Value, "job_status_changed", jobTitle));
+        }
+
+        var existing = CustomerJobs[jobId];
+        var updated = existing with
+        {
+            Status = JobStateMachine.Completed,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
+        CustomerJobs[jobId] = updated;
+        JobStatuses[jobId] = updated.Status;
+        return Task.FromResult(updated);
+    }
+
+    public Task<CustomerJobRecord> DisputeCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        string fromStatus,
+        Guid? assignedProfessionalId,
+        string jobTitle,
+        string reason,
+        CancellationToken ct = default)
+    {
+        if (assignedProfessionalId.HasValue)
+        {
+            Notifications.Add((assignedProfessionalId.Value, "job_status_changed", jobTitle));
+        }
+
+        var existing = CustomerJobs[jobId];
+        var updated = existing with
+        {
+            Status = JobStateMachine.Disputed,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
+        CustomerJobs[jobId] = updated;
+        JobStatuses[jobId] = updated.Status;
+        return Task.FromResult(updated);
+    }
+
+    public Task<bool> HasReviewForJobAsync(Guid jobId, CancellationToken ct = default) =>
+        Task.FromResult(ReviewedJobs.Contains(jobId));
+
+    public Task<ReviewRecord> CreateReviewAsync(
+        Guid jobId,
+        Guid reviewerId,
+        Guid professionalId,
+        int rating,
+        string? comment,
+        CancellationToken ct = default)
+    {
+        ReviewedJobs.Add(jobId);
+        return Task.FromResult(new ReviewRecord(
+            Guid.NewGuid(),
+            jobId,
+            reviewerId,
+            professionalId,
+            rating,
+            comment,
+            DateTimeOffset.UtcNow));
+    }
+
+    public Task<IReadOnlyList<Guid>> FindMatchingProfessionalsAsync(
+        long categoryId,
+        long areaId,
+        Guid excludeCustomerId,
+        int limit,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Guid> pros = new[] { Pro1Id, Pro2Id }
+            .Where(id => id != excludeCustomerId)
+            .Take(limit)
+            .ToArray();
+        return Task.FromResult(pros);
+    }
+
+    public Task InsertJobMatchNotificationsAsync(
+        Guid jobId,
+        string jobTitle,
+        string urgency,
+        IReadOnlyList<Guid> professionalIds,
+        CancellationToken ct = default)
+    {
+        foreach (var proId in professionalIds)
+        {
+            Notifications.Add((proId, "new_job_match", jobTitle));
+        }
         return Task.CompletedTask;
     }
 }

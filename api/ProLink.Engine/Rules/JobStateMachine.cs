@@ -25,7 +25,7 @@ public sealed class JobStateMachine
     private readonly Dictionary<string, string[]> _adjacency = new()
     {
         [Draft] = new[] { Open, Cancelled },
-        [Open] = new[] { OffersReceived, Cancelled, Expired },
+        [Open] = new[] { OffersReceived, Assigned, Cancelled, Expired },
         [OffersReceived] = new[] { Assigned, Cancelled, Expired },
         [Assigned] = new[] { InProgress, Cancelled, Disputed },
         [InProgress] = new[] { Completed, Disputed, Cancelled },
@@ -33,6 +33,14 @@ public sealed class JobStateMachine
         [Completed] = Array.Empty<string>(),
         [Cancelled] = Array.Empty<string>(),
         [Expired] = Array.Empty<string>(),
+    };
+
+    private static readonly string[] CustomerCancellableStatuses =
+    {
+        Draft,
+        Open,
+        OffersReceived,
+        Assigned,
     };
 
     private static readonly string[] ForceCancellableStatuses =
@@ -85,6 +93,23 @@ public sealed class JobStateMachine
             if (targets[i] == toStatus)
             {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    public bool CanCustomerCancel(string? currentStatus)
+    {
+        if (string.IsNullOrWhiteSpace(currentStatus))
+        {
+            return false;
+        }
+
+        for (int i = 0; i < CustomerCancellableStatuses.Length; i++)
+        {
+            if (CustomerCancellableStatuses[i] == currentStatus)
+            {
+                return CanTransition(currentStatus, Cancelled);
             }
         }
         return false;

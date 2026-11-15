@@ -37,7 +37,7 @@ export default async function ApplicationSubmittedPage() {
   }
 
   if (proInfo.state === "approved") {
-    redirect("/user");
+    redirect("/dashboard");
   }
 
   const cookieStore = await cookies();
@@ -122,9 +122,9 @@ export default async function ApplicationSubmittedPage() {
             justifyContent: "space-between",
           }}
         >
-          <Brand href="/user" />
+          <Brand href="/dashboard" />
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <Link href="/user" className="pro-back-link" style={{ marginBottom: 0 }}>
+            <Link href="/dashboard" className="pro-back-link" style={{ marginBottom: 0 }}>
               ← Back to Dashboard
             </Link>
           </div>
@@ -384,7 +384,7 @@ export default async function ApplicationSubmittedPage() {
               gap: "12px",
             }}
           >
-            <Link href="/user" className="button">
+            <Link href="/dashboard" className="button">
               Return to Dashboard <Icon name="arrow" />
             </Link>
           </div>

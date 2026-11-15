@@ -4,7 +4,7 @@ using ProLink.Engine.RateLimiting;
 
 namespace ProLink.Api.Auth;
 
-// Applies SlidingWindowLimiter to all /admin/* endpoints, keyed by authenticated user ID or client IP.
+// Applies SlidingWindowLimiter to all /admin/* and /jobs/* endpoints, keyed by authenticated user ID or client IP.
 public sealed class AdminRateLimitMiddleware
 {
     private readonly RequestDelegate _next;
@@ -18,7 +18,11 @@ public sealed class AdminRateLimitMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (!context.Request.Path.StartsWithSegments("/admin", StringComparison.OrdinalIgnoreCase))
+        bool isProtectedPath =
+            context.Request.Path.StartsWithSegments("/admin", StringComparison.OrdinalIgnoreCase)
+            || context.Request.Path.StartsWithSegments("/jobs", StringComparison.OrdinalIgnoreCase);
+
+        if (!isProtectedPath)
         {
             await _next(context);
             return;

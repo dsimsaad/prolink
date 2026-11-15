@@ -127,7 +127,7 @@ export default function FeaturesPage() {
                 </p>
               </div>
               <div className="features-cta-buttons">
-                <Link href="/sign-in" className="button">
+                <Link href="/dashboard/jobs/new" className="button">
                   Post a Job <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
                 <Link href="/services" className="button outline">

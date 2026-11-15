@@ -220,4 +220,93 @@ Verify the CTA appearance across professional lifecycle states:
   - Footer: Displays project disclosure: *"ProLink is a university semester project. Some features are still in development. Sample content is for demonstration only."*
   - Auth & Onboarding: Free of fake testimonials ("Khurram Abbas"), fake ratings ("4.92 / 5"), and unused lab technician image (`hero-technician.jpg`).
 
+---
+
+## 9. Network Integration & Contact Desk Verification Checklist
+
+### A. Live Status Page (`/status`)
+- [ ] **With `NEXT_PUBLIC_STATUS_FEED_URL` unset (Vercel Production Default)**:
+  - Navigate to `http://localhost:3000/status`.
+  - Verify the browser makes **zero** WebSocket connection attempts (check Network tab $\rightarrow$ WS filter).
+  - Status badge shows `Demo only`.
+  - Informational text clearly states: *"The live feed is available in the local demo only."*
+  - No `127.0.0.1` or `ws://` addresses appear anywhere in the UI.
+- [ ] **With `NEXT_PUBLIC_STATUS_FEED_URL="ws://127.0.0.1:9099"` set (Local Demo)**:
+  - Run `python network/status_feed.py`.
+  - Open `/status`: badge displays `● Connected`.
+  - Up to 50 latest events are shown in the "Demo events" section with clean `from_status → to_status` and timestamp.
+  - Stop the Python server (`Ctrl+C`): badge switches to `○ Offline` and automatically retries with exponential backoff up to ~30 seconds without crashing.
+  - Malformed WebSocket frames (e.g., non-JSON) are discarded safely without breaking page state.
+
+### B. Contact Form & SMTP Integration (`/contact` & `/api/contact`)
+- [ ] **Local SMTP (`SUPPORT_SMTP_HOST=127.0.0.1`, `SUPPORT_SMTP_PORT=2525`)**:
+  - Start the local Python server: `python -m aiosmtpd -n -l 127.0.0.1:2525 -c aiosmtpd.handlers.Mailbox mailbox`.
+  - Submit a message on `http://localhost:3000/contact`.
+  - Form submits successfully (`sentViaSmtp: true`).
+  - The message arrives under `network/mailbox/new/` as a valid RFC 5322 email with clean subject and headers.
+- [ ] **Production / Gmail SMTP Settings (Deployed Preview)**:
+  - Configure `SUPPORT_SMTP_HOST=smtp.gmail.com`, `SUPPORT_SMTP_PORT=587`, `SUPPORT_SMTP_USER`, and `SUPPORT_SMTP_PASSWORD`.
+  - Submit the contact form.
+  - NodeMailer connects using STARTTLS (`requireTLS: true`) and delivers the inquiry to `SUPPORT_INBOX`.
+- [ ] **No SMTP Variables Configured**:
+  - Leave `SUPPORT_SMTP_HOST` unset.
+  - Submit the contact form.
+  - The message is safely retained in internal storage first; the visitor receives a success response with mailto/Gmail fallback links.
+  - Zero internal errors, zero leaked server paths or credentials in console or response.
+- [ ] **Spam Protections Verified**:
+  - Honeypot: Submitting with `hp_field` populated returns success silently but drops email dispatch.
+  - Min fill time: Submitting faster than 2 seconds returns success silently without email dispatch.
+  - Rate limit: 4th submission within 24 hours from same IP returns `429 Too Many Requests`.
+
+---
+
+## 10. Customer Dashboard & C# Customer API Verification Checklist (`010_customer_dashboard.sql`)
+
+### A. Database Migration, Demo Seed & RLS Verification
+- [ ] **Run Migration 010**:
+  - Execute [`db/migrations/010_customer_dashboard.sql`](file:///Users/mrcom/Documents/prolink/db/migrations/010_customer_dashboard.sql) in the Supabase SQL Editor.
+- [ ] **Run RLS Test Suite (`Tests 1–36`)**:
+  - Execute [`db/tests/rls_tests.sql`](file:///Users/mrcom/Documents/prolink/db/tests/rls_tests.sql) in the Supabase SQL Editor and verify `TEST 33` through `TEST 36` report `PASS`:
+    - `TEST 33`: Customer can read their own `jobs`, `offers`, and `job_events`, and cannot read another customer's.
+    - `TEST 34`: Customer cannot read a professional's phone in `contact_details` before an offer is accepted, and can after acceptance (`status = 'Assigned'`).
+    - `TEST 35`: Customer can mark only their own notifications as read (`read_at`).
+    - `TEST 36`: Trigger `trg_protect_notifications_columns` blocks authenticated clients from modifying non-`read_at` columns (`type`, `payload`, `user_id`, `created_at`) on `public.notifications`.
+- [ ] **Seed Customer Demo Data (Development Only)**:
+  - Ensure [`db/seed/001_categories_areas.sql`](file:///Users/mrcom/Documents/prolink/db/seed/001_categories_areas.sql) and [`db/seed/002_admin_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/002_admin_demo_data.sql) are loaded.
+  - Edit `v_customer_email` at the top of [`db/seed/003_customer_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/003_customer_demo_data.sql) to match your test customer account and run it in the SQL Editor.
+  - Verify 8 jobs across statuses (`Draft`, `Open` without offers, `Open` with 3 offers, `Assigned`, `In progress`, `Completed` with review, `Completed` without review, `Cancelled`), 9 offers, 18 `job_events`, 4 `conversations`, 1 review, and 5 notifications are created.
+  - Run [`db/seed/998_remove_customer_demo_data.sql`](file:///Users/mrcom/Documents/prolink/db/seed/998_remove_customer_demo_data.sql) when finished to remove only those customer demo rows.
+
+### B. Canonical Route & Auth Guard Checks
+- [ ] **Logged-out guard**: Visiting `/dashboard` or any `/dashboard/*` subroute while signed out redirects to `/sign-in?next=/dashboard...`.
+- [ ] **Suspended account guard**: Visiting `/dashboard` as a suspended user (`profiles.is_suspended = true`) signs the user out and redirects to `/sign-in?error=...`.
+- [ ] **Legacy `/user` redirects**: Visiting `/user`, `/user/overview`, `/user/post-job`, `/user/jobs`, `/user/jobs/[id]`, or `/user/profile` redirects to the corresponding `/dashboard` path.
+- [ ] **Post-login & CTA links**: Signing in as a customer or clicking **Post a Job** / **My dashboard** across the public pages navigates to `/dashboard` or `/dashboard/jobs/new`.
+
+### C. Customer Dashboard Flows (`/dashboard/*`)
+- [ ] **Overview (`/dashboard`)**:
+  - Displays personalized greeting, 4 stat cards (*Active jobs*, *Offers waiting*, *In progress*, *Completed*), **Needs your attention** list, and **Recent activity** from `job_events` (or the 3-step empty state when the customer has zero jobs).
+- [ ] **Create & Edit Jobs (`/dashboard/jobs/new` & `/dashboard/jobs/[id]/edit`)**:
+  - Validates title (`5–120` chars), description (`20–2000` chars), active category, Lahore area, urgency (`normal` | `urgent`), and optional non-negative PKR budget (`budgetMin <= budgetMax`).
+  - Displays honest pricing note: *"Prices are agreed directly with the professional; ProLink does not process payments."*
+  - **Save as draft** creates a `Draft` job (`POST /jobs` with `publish: false`); **Post job** creates an `Open` job (`publish: true`) with 7-day `expires_at` and notifies up to 5 matching professionals.
+  - Drafts can be edited on `/dashboard/jobs/[id]/edit` (`PATCH /jobs/{id}`) and published (`POST /jobs/{id}/publish`); non-drafts redirect to `/dashboard/jobs/[id]`.
+- [ ] **My Jobs (`/dashboard/jobs`)**:
+  - Filters jobs by status tabs (*All*, *Open*, *Offers received*, *In progress*, *Completed*, *Closed*) and title search (`20` per page).
+- [ ] **Job Detail, Offer Sorting & Lifecycle Actions (`/dashboard/jobs/[id]`)**:
+  - Sorts offers by *Lowest price*, *Shortest arrival time*, and *Highest rating* using the single comparator (`web/src/lib/customer/offer-sort.ts`).
+  - Displays `"New"` when a professional has `rating_count === 0` (never fake stars).
+  - **Accept offer** (`POST /jobs/{id}/offers/{offerId}/accept`) confirms via `<dialog>`, marks the offer `accepted`, rejects other pending offers, assigns the professional, creates the `conversations` row, and reveals the professional's phone number from `contact_details` alongside a disabled **Chat (coming soon)** button.
+  - **Cancel job** (`POST /jobs/{id}/cancel`) works from `Draft`, `Open`, `Offers received`, and `Assigned`.
+  - **Mark as completed** (`POST /jobs/{id}/complete`) transitions `In progress` $\rightarrow$ `Completed`.
+  - **Report a problem** (`POST /jobs/{id}/dispute`) requires a reason of at least 10 characters and transitions `Assigned` or `In progress` $\rightarrow$ `Disputed`.
+  - **Leave a review** (`POST /jobs/{id}/review`) submits a 1–5 star rating and optional comment once on `Completed` jobs and renders the submitted review afterward.
+- [ ] **Notifications (`/dashboard/notifications`)**:
+  - Lists notifications with friendly descriptions and job links, marks individual or all notifications as read (`read_at`), and updates the header unread badge in real time.
+- [ ] **Messages (`/dashboard/messages`) & Profile (`/dashboard/profile`)**:
+  - `/dashboard/messages` explains that real-time chat is coming soon and lists accepted jobs with links to view the assigned professional's contact details.
+  - `/dashboard/profile` updates `full_name`, `area_id`, and 11-digit Pakistani mobile `phone` (`03XXXXXXXXX`) in `contact_details`, allows changing password via `supabase.auth.updateUser`, shows the professional application status card, and displays the support email for account deletion requests.
+
+
+
 

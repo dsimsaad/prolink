@@ -26,4 +26,100 @@ public interface IAdminRepository
         string auditAction,
         string auditDetailsJson,
         CancellationToken ct = default);
+
+    Task<bool> IsActiveCategoryAsync(long categoryId, CancellationToken ct = default);
+    Task<bool> AreaExistsAsync(long areaId, CancellationToken ct = default);
+    Task<IReadOnlyList<ActiveCategoryRecord>> GetActiveCategoriesAsync(CancellationToken ct = default);
+    Task<CustomerJobRecord?> GetCustomerJobAsync(Guid jobId, Guid customerId, CancellationToken ct = default);
+
+    Task<CustomerJobRecord> CreateCustomerJobAsync(
+        Guid customerId,
+        string title,
+        string description,
+        long categoryId,
+        long areaId,
+        decimal? budgetMin,
+        decimal? budgetMax,
+        string urgency,
+        bool publish,
+        DateTimeOffset? expiresAt,
+        CancellationToken ct = default);
+
+    Task<CustomerJobRecord> UpdateDraftJobAsync(
+        Guid jobId,
+        Guid customerId,
+        string title,
+        string description,
+        long categoryId,
+        long areaId,
+        decimal? budgetMin,
+        decimal? budgetMax,
+        string urgency,
+        CancellationToken ct = default);
+
+    Task<CustomerJobRecord> PublishCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        DateTimeOffset expiresAt,
+        CancellationToken ct = default);
+
+    Task<CustomerJobRecord> CancelCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        string fromStatus,
+        Guid? assignedProfessionalId,
+        string jobTitle,
+        string? reason,
+        CancellationToken ct = default);
+
+    Task<JobOfferRecord?> GetJobOfferAsync(Guid jobId, Guid offerId, CancellationToken ct = default);
+
+    Task<AcceptOfferResult> AcceptOfferAsync(
+        Guid jobId,
+        Guid customerId,
+        string fromStatus,
+        string jobTitle,
+        Guid offerId,
+        Guid professionalId,
+        CancellationToken ct = default);
+
+    Task<CustomerJobRecord> CompleteCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        Guid? assignedProfessionalId,
+        string jobTitle,
+        CancellationToken ct = default);
+
+    Task<CustomerJobRecord> DisputeCustomerJobAsync(
+        Guid jobId,
+        Guid customerId,
+        string fromStatus,
+        Guid? assignedProfessionalId,
+        string jobTitle,
+        string reason,
+        CancellationToken ct = default);
+
+    Task<bool> HasReviewForJobAsync(Guid jobId, CancellationToken ct = default);
+
+    Task<ReviewRecord> CreateReviewAsync(
+        Guid jobId,
+        Guid reviewerId,
+        Guid professionalId,
+        int rating,
+        string? comment,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<Guid>> FindMatchingProfessionalsAsync(
+        long categoryId,
+        long areaId,
+        Guid excludeCustomerId,
+        int limit,
+        CancellationToken ct = default);
+
+    Task InsertJobMatchNotificationsAsync(
+        Guid jobId,
+        string jobTitle,
+        string urgency,
+        IReadOnlyList<Guid> professionalIds,
+        CancellationToken ct = default);
 }
