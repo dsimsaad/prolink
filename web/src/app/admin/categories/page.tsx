@@ -163,10 +163,10 @@ export default function AdminCategoriesPage() {
         <button
           type="button"
           onClick={() => { setError(null); setNewName(""); setNewParentId(""); setCreateOpen(true); }}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430]"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0B5430]"
         >
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>Create Category</span>
+          <Plus className="h-3.5 w-3.5 !text-white text-white" aria-hidden="true" />
+          <span className="!text-white text-white">Create Category</span>
         </button>
       </div>
 
@@ -257,7 +257,7 @@ export default function AdminCategoriesPage() {
                           className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
                             cat.is_active
                               ? "border border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100"
-                              : "bg-[#0F6B3E] text-white hover:bg-[#0B5430]"
+                              : "bg-[#0F6B3E] !text-white text-white hover:bg-[#0B5430]"
                           }`}
                         >
                           {cat.is_active ? "Deactivate" : "Activate"}
@@ -309,7 +309,7 @@ export default function AdminCategoriesPage() {
           {error && <p role="alert" className="text-xs font-semibold text-red-700">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={() => setCreateOpen(false)} className="rounded-lg border border-[#DCE8E0] bg-white px-4 py-2 text-xs font-semibold text-[#34453B] hover:bg-[#F4FAF6]">Cancel</button>
-            <button type="submit" disabled={creating} className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430] disabled:opacity-50">{creating ? "Creating..." : "Create Category"}</button>
+            <button type="submit" disabled={creating} className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0B5430] disabled:opacity-50">{creating ? "Creating..." : "Create Category"}</button>
           </div>
         </form>
       </AdminDialog>
@@ -357,7 +357,7 @@ export default function AdminCategoriesPage() {
               type="button"
               disabled={savingRename}
               onClick={handleConfirmRename}
-              className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430] disabled:opacity-50"
+              className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0B5430] disabled:opacity-50"
             >
               {savingRename ? "Saving..." : "Save Name"}
             </button>

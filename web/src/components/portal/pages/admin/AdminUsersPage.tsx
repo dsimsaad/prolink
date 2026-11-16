@@ -85,7 +85,7 @@ export const AdminUsersPage: React.FC = () => {
             onClick={() => setRoleTab('professional')}
             className={`px-4 py-1.5 rounded-[6px] text-xs font-semibold cursor-pointer transition-colors ${
               roleTab === 'professional'
-                ? 'bg-[#0F6B3E] text-white shadow-2xs'
+                ? 'bg-[#0F6B3E] !text-white text-white shadow-2xs'
                 : 'text-[#6A7B70] hover:text-[#0C2A1B] hover:bg-[#F4FAF6]'
             }`}
           >
@@ -95,7 +95,7 @@ export const AdminUsersPage: React.FC = () => {
             onClick={() => setRoleTab('customer')}
             className={`px-4 py-1.5 rounded-[6px] text-xs font-semibold cursor-pointer transition-colors ${
               roleTab === 'customer'
-                ? 'bg-[#0F6B3E] text-white shadow-2xs'
+                ? 'bg-[#0F6B3E] !text-white text-white shadow-2xs'
                 : 'text-[#6A7B70] hover:text-[#0C2A1B] hover:bg-[#F4FAF6]'
             }`}
           >

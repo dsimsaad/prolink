@@ -177,7 +177,7 @@ export function FaqsClient() {
             account, job requests, or professional application.
           </p>
           <div className="faqs-cta-actions">
-            <Link href="/contact" className="button">
+            <Link href="/contact" className="button outline">
               Contact Us <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
             <Link href="/dashboard/jobs/new" className="button outline">

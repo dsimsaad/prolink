@@ -151,22 +151,14 @@
   flex-shrink: 0;
 }
 
-.features-cta-banner .button {
-  background: var(--surface-white);
-  color: var(--forest);
-}
-
-.features-cta-banner .button:hover {
-  background: var(--accent-soft);
-  color: var(--ink);
-}
-
+.features-cta-banner .button,
 .features-cta-banner .button.outline {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.45);
   color: var(--on-dark);
 }
 
+.features-cta-banner .button:hover,
 .features-cta-banner .button.outline:hover {
   background: rgba(255, 255, 255, 0.14);
 }

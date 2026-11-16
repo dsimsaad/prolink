@@ -128,7 +128,7 @@ export default function AdminApplicationsPage() {
               }}
               className={`rounded-lg px-4 py-2 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E] ${
                 isSelected
-                  ? "bg-[#0F6B3E] text-white"
+                  ? "bg-[#0F6B3E] !text-white text-white"
                   : "border border-[#DCE8E0] bg-white text-[#34453B] hover:bg-[#F4FAF6]"
               }`}
             >
@@ -257,7 +257,7 @@ export default function AdminApplicationsPage() {
                     <button
                       type="button"
                       onClick={() => openReviewModal(row, "approved")}
-                      className="rounded-lg bg-[#0F6B3E] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#0B5430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
+                      className="rounded-lg bg-[#0F6B3E] px-3.5 py-2 text-xs font-semibold !text-white text-white transition hover:bg-[#0B5430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
                     >
                       Approve
                     </button>
@@ -354,7 +354,7 @@ export default function AdminApplicationsPage() {
               type="button"
               disabled={submitting}
               onClick={submitDecision}
-              className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430] disabled:opacity-50"
+              className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0B5430] disabled:opacity-50"
             >
               {submitting ? "Saving..." : "Confirm Decision"}
             </button>

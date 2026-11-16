@@ -361,10 +361,10 @@ export function JobDetailClient({
                   type="button"
                   disabled={busyAction !== null}
                   onClick={() => void handlePublishDraft()}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0A4D2B] disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0A4D2B] disabled:opacity-60"
                 >
-                  <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>
+                  <Send className="h-3.5 w-3.5 !text-white text-white" aria-hidden="true" />
+                  <span className="!text-white text-white">
                     {busyAction === "publish" ? "Publishing..." : "Publish job"}
                   </span>
                 </button>
@@ -376,10 +376,10 @@ export function JobDetailClient({
                 type="button"
                 disabled={busyAction !== null}
                 onClick={() => setCompleteDialogOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0A4D2B] disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0A4D2B] disabled:opacity-60"
               >
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>Mark as completed</span>
+                <CheckCircle2 className="h-3.5 w-3.5 !text-white text-white" aria-hidden="true" />
+                <span className="!text-white text-white">Mark as completed</span>
               </button>
             )}
 
@@ -583,7 +583,7 @@ export function JobDetailClient({
               <button
                 type="submit"
                 disabled={busyAction !== null}
-                className="inline-flex items-center rounded-xl bg-[#0F6B3E] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#0A4D2B] disabled:opacity-60"
+                className="inline-flex items-center rounded-xl bg-[#0F6B3E] px-5 py-2.5 text-xs font-semibold !text-white text-white hover:bg-[#0A4D2B] disabled:opacity-60"
               >
                 {busyAction === "review" ? "Submitting review..." : "Submit review"}
               </button>
@@ -694,7 +694,7 @@ export function JobDetailClient({
                         <span
                           className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                             isAccepted
-                              ? "bg-[#0F6B3E] text-white"
+                              ? "bg-[#0F6B3E] !text-white text-white"
                               : isPending
                                 ? "bg-amber-100 text-amber-800"
                                 : "bg-stone-200 text-stone-700"
@@ -719,7 +719,7 @@ export function JobDetailClient({
                           type="button"
                           disabled={busyAction !== null}
                           onClick={() => setOfferToAccept(offer)}
-                          className="rounded-xl bg-[#0F6B3E] px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0A4D2B] disabled:opacity-60"
+                          className="rounded-xl bg-[#0F6B3E] px-3.5 py-1.5 text-xs font-semibold !text-white text-white transition hover:bg-[#0A4D2B] disabled:opacity-60"
                         >
                           Accept offer
                         </button>
@@ -818,7 +818,7 @@ export function JobDetailClient({
                 type="button"
                 disabled={busyAction !== null}
                 onClick={() => void handleConfirmAcceptOffer()}
-                className="rounded-xl bg-[#0F6B3E] px-4 py-2 font-semibold text-white hover:bg-[#0A4D2B] disabled:opacity-60"
+                className="rounded-xl bg-[#0F6B3E] px-4 py-2 font-semibold !text-white text-white hover:bg-[#0A4D2B] disabled:opacity-60"
               >
                 {busyAction?.startsWith("accept-")
                   ? "Accepting..."
@@ -898,7 +898,7 @@ export function JobDetailClient({
               type="button"
               disabled={busyAction !== null}
               onClick={() => void handleConfirmCompleteJob()}
-              className="rounded-xl bg-[#0F6B3E] px-4 py-2 font-semibold text-white hover:bg-[#0A4D2B] disabled:opacity-60"
+              className="rounded-xl bg-[#0F6B3E] px-4 py-2 font-semibold !text-white text-white hover:bg-[#0A4D2B] disabled:opacity-60"
             >
               {busyAction === "complete"
                 ? "Confirming..."

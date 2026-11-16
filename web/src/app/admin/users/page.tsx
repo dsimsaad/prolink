@@ -215,7 +215,7 @@ export default function AdminUsersPage() {
           </div>
           <button
             type="submit"
-            className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430]"
+            className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0B5430]"
           >
             Search
           </button>
@@ -444,7 +444,7 @@ export default function AdminUsersPage() {
               className={`rounded-lg px-4 py-2 text-xs font-semibold text-white disabled:opacity-50 ${
                 dialogTarget?.suspend
                   ? "bg-red-700 hover:bg-red-800"
-                  : "bg-[#0F6B3E] hover:bg-[#0B5430]"
+                  : "bg-[#0F6B3E] !text-white text-white hover:bg-[#0B5430]"
               }`}
             >
               {submitting

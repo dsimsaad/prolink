@@ -213,22 +213,14 @@
   flex-shrink: 0;
 }
 
-.about-cta-banner .button {
-  background: var(--surface-white);
-  color: var(--forest);
-}
-
-.about-cta-banner .button:hover {
-  background: var(--accent-soft);
-  color: var(--ink);
-}
-
+.about-cta-banner .button,
 .about-cta-banner .button.outline {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.45);
   color: var(--on-dark);
 }
 
+.about-cta-banner .button:hover,
 .about-cta-banner .button.outline:hover {
   background: rgba(255, 255, 255, 0.14);
 }

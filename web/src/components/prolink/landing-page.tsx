@@ -4,12 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  Flame,
   Hammer,
   Lock,
   PaintRoller,
   ReceiptText,
-  SlidersHorizontal,
   UserCheck,
   Wrench,
   Zap,
@@ -19,7 +17,6 @@ import { CategoryIcon } from "./category-icon";
 import { Reveal } from "./reveal";
 import { SiteFooter } from "./site-footer";
 import { useNavigationAccount } from "./use-navigation-account";
-import { ScrollToTop } from "./scroll-to-top";
 import { siteConfig } from "@/config/site";
 
 const steps = [
@@ -157,29 +154,6 @@ export function LandingPage() {
                     {item}
                   </a>
                 ))}
-              </div>
-
-              <div className="hero-badges-grid">
-                <div className="hero-info-pill">
-                  <span className="hero-info-pill-icon tile-hue-emerald">
-                    <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <span>Compare offers before you hire</span>
-                </div>
-                <div className="hero-info-pill">
-                  <span className="hero-info-pill-icon tile-hue-teal">
-                    <Lock className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <span>
-                    Your phone number stays private until you accept an offer
-                  </span>
-                </div>
-                <div className="hero-info-pill">
-                  <span className="hero-info-pill-icon tile-hue-amber">
-                    <Flame className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <span>Mark a job urgent to be matched first</span>
-                </div>
               </div>
             </div>
 
@@ -348,8 +322,8 @@ export function LandingPage() {
               <h2>Ready to get your job done?</h2>
               <p>Connect with local professionals near you.</p>
             </div>
-            <Link href="/dashboard/jobs/new" className="button">
-              Post a Job <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <Link href="/dashboard/jobs/new" className="button outline">
+              Post a job <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </section>
 
@@ -363,7 +337,6 @@ export function LandingPage() {
         </div>
       </main>
       <SiteFooter />
-      <ScrollToTop />
     </>
   );
 }

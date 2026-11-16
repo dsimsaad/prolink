@@ -8,7 +8,6 @@ import {
   Clock,
   Inbox,
   PlusCircle,
-  Sparkles,
   Star,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
@@ -139,7 +138,7 @@ export default async function CustomerOverviewPage() {
             href="/dashboard/jobs/new"
             className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#0A4D2B]"
           >
-            <PlusCircle className="h-4 w-4" aria-hidden="true" />
+            <PlusCircle className="h-4 w-4 text-white" aria-hidden="true" />
             <span>Post a job</span>
           </Link>
         </div>
@@ -207,11 +206,7 @@ export default async function CustomerOverviewPage() {
         /* First-time empty state with 3 steps */
         <section className="rounded-2xl border border-[#DCE8E0] bg-white p-6 sm:p-8 shadow-2xs">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F4EA] px-3 py-1 text-[11px] font-bold text-[#0F6B3E]">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Getting started on ProLink
-            </span>
-            <h2 className="mt-3 text-lg font-extrabold text-[#0C2A1B]">
+            <h2 className="text-lg font-extrabold text-[#0C2A1B]">
               Post your first job in three simple steps
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-[#6A7B70]">
@@ -262,7 +257,7 @@ export default async function CustomerOverviewPage() {
               href="/dashboard/jobs/new"
               className="inline-flex items-center gap-2 rounded-xl bg-[#0F6B3E] px-5 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#0A4D2B]"
             >
-              <PlusCircle className="h-4 w-4" aria-hidden="true" />
+              <PlusCircle className="h-4 w-4 text-white" aria-hidden="true" />
               <span>Post your first job</span>
             </Link>
           </div>

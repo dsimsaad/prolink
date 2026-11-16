@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { HomeNavbar } from "./home-navbar";
 import { NavigationAccountProvider } from "./use-navigation-account";
 import { TopProgressBar } from "./top-progress-bar";
+import { ScrollToTop } from "./scroll-to-top";
 
 function DashboardBackTrap({ pathname }: { pathname: string | null }) {
   useEffect(() => {
@@ -80,6 +81,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <div id="page-content" tabIndex={-1}>
         {children}
       </div>
+      {isPublicPage && <ScrollToTop />}
     </NavigationAccountProvider>
   );
 }

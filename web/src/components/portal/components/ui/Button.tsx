@@ -25,7 +25,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   }[size];
 
   const variantClasses = {
-    primary: "bg-[var(--forest)] text-white hover:bg-[var(--forest-hover)] active:bg-[var(--forest-active)] shadow-xs hover:shadow-sm",
+    primary: "bg-[var(--forest)] !text-white text-white hover:!text-white hover:text-white active:!text-white active:text-white hover:bg-[var(--forest-hover)] active:bg-[var(--forest-active)] shadow-xs hover:shadow-sm [&_*]:!text-white [&_svg]:!text-white [&_svg]:!stroke-white",
     outline: "bg-white text-[var(--ink)] border border-[var(--border)] hover:bg-[var(--surface-mint)] hover:border-[var(--forest)] active:bg-[var(--mint)]",
     ghost: "bg-transparent text-[var(--ink)] hover:bg-[var(--surface-mint)] active:bg-[var(--mint)]",
     secondary: "bg-[var(--mint)] text-[var(--forest)] hover:bg-[#cde9d6] active:bg-[#a9d3b5]",

@@ -39,7 +39,7 @@ export default async function CustomerJobsPage() {
           href="/dashboard/jobs/new"
           className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#0A4D2B]"
         >
-          <PlusCircle className="h-4 w-4" aria-hidden="true" />
+          <PlusCircle className="h-4 w-4 text-white" aria-hidden="true" />
           <span>Post a job</span>
         </Link>
       </div>

@@ -80,7 +80,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
                     onClick={() => marketplaceStore.navigate(item.path)}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-medium transition-colors cursor-pointer text-left ${
                       isActive
-                        ? 'bg-[#0F6B3E] text-white font-semibold'
+                        ? 'bg-[#0F6B3E] !text-white text-white font-semibold'
                         : 'text-[#CDE9D6] hover:bg-white/5 hover:text-white'
                     }`}
                   >
@@ -252,7 +252,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
                           marketplaceStore.navigate(item.path);
                         }}
                         className={`w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs ${
-                          currentPath === item.path ? 'bg-[#0F6B3E] text-white font-semibold' : 'text-[#CDE9D6]'
+                          currentPath === item.path ? 'bg-[#0F6B3E] !text-white text-white font-semibold' : 'text-[#CDE9D6]'
                         }`}
                       >
                         <item.icon className="w-4 h-4" />

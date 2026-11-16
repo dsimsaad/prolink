@@ -175,7 +175,7 @@ export function ServicesClient() {
             </p>
           </div>
           <div className="services-help-actions">
-            <Link href="/dashboard/jobs/new" className="button">
+            <Link href="/dashboard/jobs/new" className="button outline">
               Post a Job <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
             <Link href="/contact" className="button outline">

@@ -175,9 +175,9 @@ function SidebarProCta({
       <Link
         href="/become-professional"
         onClick={onNavigate}
-        className="mt-2.5 inline-flex w-full items-center justify-center rounded-lg bg-[#0F6B3E] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#0A4D2B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
+        className="mt-2.5 inline-flex w-full items-center justify-center rounded-lg bg-[#0F6B3E] px-3 py-2 text-xs font-semibold !text-white text-white transition hover:bg-[#0A4D2B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
       >
-        Apply as a professional
+        <span className="!text-white text-white">Apply as a professional</span>
       </Link>
     </div>
   );
@@ -396,10 +396,10 @@ export function CustomerShell({
           <div className="flex items-center gap-2.5 sm:gap-3">
             <Link
               href="/dashboard/jobs/new"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-3.5 py-2 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#0A4D2B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-3.5 py-2 text-xs font-semibold !text-white text-white shadow-2xs transition hover:bg-[#0A4D2B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
             >
-              <PlusCircle className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Post a job</span>
+              <PlusCircle className="h-3.5 w-3.5 !text-white text-white" aria-hidden="true" />
+              <span className="!text-white text-white">Post a job</span>
             </Link>
 
             <Link
@@ -413,7 +413,7 @@ export function CustomerShell({
             >
               <Bell className="h-4 w-4" aria-hidden="true" />
               {unreadCount > 0 && (
-                <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-[#0F6B3E] px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-[#0F6B3E] px-1 text-[10px] font-bold !text-white text-white">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
@@ -428,7 +428,7 @@ export function CustomerShell({
                 aria-label="Open customer account menu"
                 className="flex items-center gap-2.5 rounded-full border border-[#DCE8E0] bg-white py-1 pl-1.5 pr-3 text-xs font-semibold text-[#0C2A1B] shadow-2xs transition hover:border-[#0F6B3E]/40 hover:bg-[#F4FAF6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0F6B3E] text-[11px] font-bold text-white">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0F6B3E] text-[11px] font-bold !text-white text-white">
                   {initials}
                 </span>
                 <span className="hidden max-w-[140px] truncate sm:inline-block">

@@ -115,7 +115,7 @@ export default function AdminDisputesPage() {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/admin/disputes/${job.id}`}
-                        className="rounded-lg bg-[#0F6B3E] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0B5430]"
+                        className="rounded-lg bg-[#0F6B3E] px-3 py-1.5 text-xs font-semibold !text-white text-white hover:bg-[#0B5430]"
                       >
                         Review & Resolve
                       </Link>

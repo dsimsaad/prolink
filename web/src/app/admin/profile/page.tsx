@@ -134,10 +134,10 @@ export default function AdminProfilePage() {
               setError(null);
               setIsEditing(true);
             }}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#0B5430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white shadow-2xs transition hover:bg-[#0B5430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
           >
-            <UserPen className="h-4 w-4" aria-hidden="true" />
-            <span>Edit Profile</span>
+            <UserPen className="h-4 w-4 !text-white text-white" aria-hidden="true" />
+            <span className="!text-white text-white">Edit Profile</span>
           </button>
         )}
       </div>
@@ -164,7 +164,7 @@ export default function AdminProfilePage() {
         {/* Top Banner & Avatar */}
         <div className="border-b border-[#DCE8E0] bg-[#F4FAF6] p-6">
           <div className="flex flex-wrap items-center gap-5">
-            <span className="inline-flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[#0F6B3E] text-xl font-extrabold text-white shadow-sm">
+            <span className="inline-flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[#0F6B3E] text-xl font-extrabold !text-white text-white shadow-sm">
               {initials}
             </span>
 
@@ -246,7 +246,7 @@ export default function AdminProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430] disabled:opacity-50"
+                className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0B5430] disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>

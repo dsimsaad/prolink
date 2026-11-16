@@ -213,10 +213,10 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
             variant="primary"
             size="sm"
             onClick={() => marketplaceStore.navigate('/user/post-job')}
-            className="font-semibold shadow-xs"
+            className="font-semibold shadow-xs !text-white text-white"
           >
-            <PlusCircle className="w-4 h-4 mr-1.5" />
-            Post a Job
+            <PlusCircle className="w-4 h-4 mr-1.5 !text-white text-white" />
+            <span className="!text-white text-white">Post a Job</span>
           </Button>
 
           {/* Round Profile Avatar & Dropdown Menu (Matching Admin Dashboard) */}
@@ -229,7 +229,7 @@ export const CustomerShell: React.FC<CustomerShellProps> = ({ children }) => {
               aria-label="Customer profile menu"
               className="flex cursor-pointer items-center gap-2 rounded-full border border-[#DCE8E0] bg-white p-1 pr-2.5 transition hover:border-[#0F6B3E] hover:bg-[#F4FAF6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
             >
-              <span className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0F6B3E] text-xs font-bold text-white">
+              <span className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0F6B3E] text-xs font-bold !text-white text-white">
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

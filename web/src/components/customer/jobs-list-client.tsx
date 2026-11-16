@@ -107,7 +107,7 @@ export function JobsListClient({ jobs }: { jobs: CustomerJobRow[] }) {
                 }}
                 className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E] ${
                   selected
-                    ? "bg-[#0F6B3E] text-white shadow-2xs"
+                    ? "bg-[#0F6B3E] !text-white text-white shadow-2xs"
                     : "bg-[#F8FBF9] text-[#34453B] hover:bg-[#E6F4EA] hover:text-[#0C2A1B]"
                 }`}
               >
@@ -157,10 +157,10 @@ export function JobsListClient({ jobs }: { jobs: CustomerJobRow[] }) {
           <div className="mt-4">
             <Link
               href="/dashboard/jobs/new"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#0A4D2B]"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white transition hover:bg-[#0A4D2B]"
             >
-              <PlusCircle className="h-4 w-4" aria-hidden="true" />
-              <span>Post a job</span>
+              <PlusCircle className="h-4 w-4 !text-white text-white" aria-hidden="true" />
+              <span className="!text-white text-white">Post a job</span>
             </Link>
           </div>
         </div>

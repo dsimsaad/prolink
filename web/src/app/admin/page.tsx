@@ -122,13 +122,13 @@ export default function AdminOverviewPage() {
             type="button"
             onClick={handleReloadEngine}
             disabled={reloadingEngine}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#0B5430] disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white shadow-xs transition hover:bg-[#0B5430] disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${reloadingEngine ? "animate-spin" : ""}`}
+              className={`h-3.5 w-3.5 !text-white text-white ${reloadingEngine ? "animate-spin" : ""}`}
               aria-hidden="true"
             />
-            <span>{reloadingEngine ? "Reloading engine..." : "Reload engine data"}</span>
+            <span className="!text-white text-white">{reloadingEngine ? "Reloading engine..." : "Reload engine data"}</span>
           </button>
         </div>
       </div>

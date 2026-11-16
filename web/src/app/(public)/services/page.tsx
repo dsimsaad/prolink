@@ -2,7 +2,6 @@ import "./services.css";
 import type { Metadata } from "next";
 import { ServicesClient } from "@/components/prolink/services-client";
 import { SiteFooter } from "@/components/prolink/site-footer";
-import { ScrollToTop } from "@/components/prolink/scroll-to-top";
 import { siteConfig } from "@/config/site";
 
 const pageTitle = `Services in ${siteConfig.city} | ${siteConfig.name}`;
@@ -27,7 +26,6 @@ export default function ServicesPage() {
         <ServicesClient />
       </main>
       <SiteFooter />
-      <ScrollToTop />
     </div>
   );
 }

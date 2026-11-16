@@ -231,10 +231,10 @@ export function NotificationsClient({
                         type="button"
                         disabled={busyId !== null}
                         onClick={() => void markOneAsRead(item.id)}
-                        className="inline-flex items-center gap-1 rounded-xl bg-[#0F6B3E] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0A4D2B] disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-xl bg-[#0F6B3E] px-3 py-1.5 text-xs font-semibold !text-white text-white hover:bg-[#0A4D2B] disabled:opacity-50"
                       >
-                        <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                        <span>Mark read</span>
+                        <Check className="h-3.5 w-3.5 !text-white text-white" aria-hidden="true" />
+                        <span className="!text-white text-white">Mark read</span>
                       </button>
                     )}
                   </div>

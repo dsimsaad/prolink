@@ -278,12 +278,14 @@ h3:where(:not(.portal-root *)) {
   height: 32px;
   border-radius: 10px;
   background: var(--forest);
-  color: var(--on-dark);
+  color: #ffffff;
 }
 
 .brand-mark svg {
   width: 24px;
   height: 24px;
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 /* Core Buttons (minimum 48px touch target) */
@@ -297,7 +299,7 @@ h3:where(:not(.portal-root *)) {
   border: 1px solid transparent;
   border-radius: var(--radius-pill);
   background: var(--forest);
-  color: var(--on-dark);
+  color: #ffffff;
   font-size: 14px;
   font-weight: 600;
   box-shadow: 0 10px 24px -8px rgba(15, 107, 62, 0.38);
@@ -305,12 +307,21 @@ h3:where(:not(.portal-root *)) {
 
 .button:hover {
   background: var(--forest-hover);
+  color: #ffffff;
   transform: translateY(-2px);
 }
 
 .button:active {
   background: var(--forest-active);
+  color: #ffffff;
   transform: translateY(0);
+}
+
+.button:not(.outline) svg,
+.button:not(.outline):hover svg,
+.button:not(.outline):active svg {
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 .button.small {
@@ -904,7 +915,7 @@ h3:where(:not(.portal-root *)) {
   height: 44px;
   border-radius: var(--radius-pill);
   background: var(--forest);
-  color: var(--on-dark);
+  color: #ffffff;
   font-family: inherit;
   font-variant-numeric: tabular-nums;
   font-size: 14px;
@@ -912,13 +923,20 @@ h3:where(:not(.portal-root *)) {
   box-shadow: 0 8px 18px -6px rgba(15, 107, 62, 0.45);
 }
 
+.step-circle svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
 .step-circle-accent {
   background: var(--accent-ink);
+  color: #ffffff;
   box-shadow: 0 8px 18px -6px rgba(180, 83, 9, 0.4);
 }
 
 .step-circle-secondary {
   background: var(--secondary-deep);
+  color: #ffffff;
   box-shadow: 0 8px 18px -6px rgba(11, 93, 94, 0.4);
 }
 
@@ -1009,16 +1027,32 @@ h3:where(:not(.portal-root *)) {
   margin-top: 10px;
 }
 
-.closing-cta .button {
+.closing-cta .button,
+.closing-cta .button.outline {
   background: var(--surface-white);
-  color: var(--forest);
+  color: var(--forest) !important;
+  border-color: transparent;
+  font-weight: 700;
   box-shadow: 0 12px 26px -8px rgba(0, 0, 0, 0.28);
   white-space: nowrap;
 }
 
-.closing-cta .button:hover {
-  background: var(--accent-soft);
-  color: var(--ink);
+.closing-cta .button:hover,
+.closing-cta .button.outline:hover {
+  background: var(--mint);
+  color: var(--ink) !important;
+}
+
+.closing-cta .button svg,
+.closing-cta .button.outline svg {
+  color: var(--forest) !important;
+  stroke: var(--forest) !important;
+}
+
+.closing-cta .button:hover svg,
+.closing-cta .button.outline:hover svg {
+  color: var(--ink) !important;
+  stroke: var(--ink) !important;
 }
 
 .pro-cta {
@@ -1156,8 +1190,8 @@ h3:where(:not(.portal-root *)) {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--mint);
-  color: var(--forest);
+  background: var(--forest);
+  color: #ffffff;
   display: grid;
   place-items: center;
   font-size: 12px;
@@ -1963,10 +1997,19 @@ h3:where(:not(.portal-root *)) {
   transform: translateY(-1px);
 }
 
-.faq-category-pill.active {
+.faq-category-pill.active,
+.faq-category-pill.active:hover,
+.faq-category-pill.active:active,
+.faq-category-pill.active:focus-visible {
   background: var(--forest);
   border-color: var(--forest);
-  color: var(--on-dark);
+  color: #ffffff;
+}
+
+.faq-category-pill.active svg,
+.faq-category-pill.active:hover svg {
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 .faq-list {
@@ -2297,7 +2340,7 @@ h3:where(:not(.portal-root *)) {
   height: 48px;
   border-radius: 50%;
   background-color: var(--forest);
-  color: var(--on-dark);
+  color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.25);
   box-shadow: 0 4px 18px rgba(15, 107, 62, 0.35);
   display: flex;
@@ -2320,19 +2363,18 @@ h3:where(:not(.portal-root *)) {
   transform: translateY(0) scale(1);
 }
 
-.scroll-to-top:hover {
+.scroll-to-top:hover,
+.scroll-to-top:active,
+.scroll-to-top:focus-visible {
   background-color: var(--forest-hover);
-  transform: translateY(-3px) scale(1.05);
-}
-
-.scroll-to-top:active {
-  transform: translateY(0) scale(0.96);
+  color: #ffffff;
 }
 
 .scroll-to-top-icon {
   width: 22px;
   height: 22px;
-  stroke: currentColor;
+  stroke: #ffffff;
+  color: #ffffff;
 }
 
 .sr-only {
@@ -2418,4 +2460,90 @@ h3:where(:not(.portal-root *)) {
     animation-duration: var(--chip-dur, 6s) !important;
     animation-iteration-count: infinite !important;
   }
+}
+
+/* Explicit high-contrast white text & icon enforcement for core solid dark-green components */
+.button:not(.outline):not(.closing-cta *):not(.pro-cta *),
+.button:not(.outline):not(.closing-cta *):not(.pro-cta *):hover,
+.button:not(.outline):not(.closing-cta *):not(.pro-cta *):active,
+.button:not(.outline):not(.closing-cta *):not(.pro-cta *):focus-visible,
+.step-circle,
+.brand-mark,
+.scroll-to-top,
+.scroll-to-top:hover,
+.scroll-to-top:active,
+.scroll-to-top:focus-visible,
+.user-avatar-pill,
+.faq-category-pill.active,
+.faq-category-pill.active:hover,
+.faq-category-pill.active:focus-visible,
+.services-tab-btn.active,
+.services-tab-btn.active:hover,
+.services-tab-btn.active:focus-visible,
+.service-cta-btn,
+.service-cta-btn:hover,
+.service-cta-btn:active,
+.service-cta-btn:focus-visible,
+.faqs-tab-btn.active,
+.faqs-tab-btn.active:hover,
+.faqs-tab-btn.active:focus-visible,
+.contact-submit-btn,
+.contact-submit-btn:hover:not(:disabled),
+.contact-submit-btn:active:not(:disabled) {
+  color: #ffffff !important;
+}
+
+.button:not(.outline):not(.closing-cta *):not(.pro-cta *) svg,
+.button:not(.outline):not(.closing-cta *):not(.pro-cta *):hover svg,
+.button:not(.outline):not(.closing-cta *):not(.pro-cta *):active svg,
+.step-circle svg,
+.brand-mark svg,
+.scroll-to-top svg,
+.scroll-to-top:hover svg,
+.scroll-to-top:active svg,
+.faq-category-pill.active svg,
+.services-tab-btn.active svg,
+.service-cta-btn svg,
+.service-cta-btn:hover svg,
+.faqs-tab-btn.active svg,
+.contact-submit-btn svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Ensure navbar links always maintain high-contrast dark text on the light header */
+/* Desktop navbar text links (Home, Services, FAQs, Contact Us...) in green.
+   Sign in / Become a Professional buttons live outside <nav> and are unaffected. */
+.site-header nav a,
+.site-header nav a:visited {
+  color: var(--forest) !important;
+  font-weight: 600;
+}
+
+.site-header nav a:hover,
+.site-header nav a:focus-visible {
+  color: var(--forest-hover) !important;
+}
+
+/* Customer & Admin Portal: High contrast pure white text for all solid green buttons, blocks, pills, and icons */
+button[class*="bg-[#0F6B3E]"]:not([class*="/"]):not(.site-header nav a),
+a[class*="bg-[#0F6B3E]"]:not([class*="/"]):not(.site-header nav a),
+button[class*="bg-[var(--forest)]"]:not([class*="/"]):not(.site-header nav a),
+a[class*="bg-[var(--forest)]"]:not([class*="/"]):not(.site-header nav a) {
+  color: #ffffff !important;
+}
+
+button[class*="bg-[#0F6B3E]"]:not([class*="/"]):not(.site-header nav a) span,
+a[class*="bg-[#0F6B3E]"]:not([class*="/"]):not(.site-header nav a) span,
+button[class*="bg-[var(--forest)]"]:not([class*="/"]):not(.site-header nav a) span,
+a[class*="bg-[var(--forest)]"]:not([class*="/"]):not(.site-header nav a) span {
+  color: #ffffff !important;
+}
+
+button[class*="bg-[#0F6B3E]"]:not([class*="/"]):not(.site-header nav a) svg,
+a[class*="bg-[#0F6B3E]"]:not([class*="/"]):not(.site-header nav a) svg,
+button[class*="bg-[var(--forest)]"]:not([class*="/"]):not(.site-header nav a) svg,
+a[class*="bg-[var(--forest)]"]:not([class*="/"]):not(.site-header nav a) svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }

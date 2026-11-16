@@ -8,8 +8,6 @@ import {
   ExternalLink,
   Mail,
   Send,
-  ShieldCheck,
-  Sparkles,
   X,
 } from "lucide-react";
 
@@ -251,10 +249,6 @@ export function ContactForm() {
         {/* Panel Header */}
         <div className="contact-form-header">
           <div className="contact-header-copy">
-            <div className="contact-header-badge">
-              <Sparkles className="h-3.5 w-3.5 text-forest" aria-hidden="true" />
-              <span>Direct Support Inbox</span>
-            </div>
             <h2>Send us a message</h2>
             <p className="panel-intro">
               Have a question or need assistance? Fill out the form and our team in Lahore will respond via email.
@@ -494,24 +488,6 @@ export function ContactForm() {
               <Mail className="h-4 w-4" aria-hidden="true" />
               <span>Email directly via {TARGET_EMAIL}</span>
             </a>
-          </div>
-
-          {/* Security and SLA Trust Footnote */}
-          <div className="contact-trust-footer">
-            <div className="trust-item">
-              <ShieldCheck className="h-3.5 w-3.5 text-forest" />
-              <span>Spam protected (3 daily limit)</span>
-            </div>
-            <div className="trust-divider" />
-            <div className="trust-item">
-              <Clock className="h-3.5 w-3.5 text-forest" />
-              <span>Average response: 2–4 hours</span>
-            </div>
-            <div className="trust-divider" />
-            <div className="trust-item">
-              <Mail className="h-3.5 w-3.5 text-forest" />
-              <span>{TARGET_EMAIL}</span>
-            </div>
           </div>
         </form>
       </div>

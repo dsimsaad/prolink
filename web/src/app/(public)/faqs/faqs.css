@@ -67,10 +67,19 @@
   background: var(--mint);
 }
 
-.faqs-tab-btn.active {
+.faqs-tab-btn.active,
+.faqs-tab-btn.active:hover,
+.faqs-tab-btn.active:active,
+.faqs-tab-btn.active:focus-visible {
   background: var(--forest);
   border-color: var(--forest);
-  color: var(--on-dark);
+  color: #ffffff;
+}
+
+.faqs-tab-btn.active svg,
+.faqs-tab-btn.active:hover svg {
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 .faqs-accordion-group {
@@ -169,22 +178,14 @@
   flex-wrap: wrap;
 }
 
-.faqs-support-cta-box .button {
-  background: var(--surface-white);
-  color: var(--forest);
-}
-
-.faqs-support-cta-box .button:hover {
-  background: var(--accent-soft);
-  color: var(--ink);
-}
-
+.faqs-support-cta-box .button,
 .faqs-support-cta-box .button.outline {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.45);
   color: var(--on-dark);
 }
 
+.faqs-support-cta-box .button:hover,
 .faqs-support-cta-box .button.outline:hover {
   background: rgba(255, 255, 255, 0.14);
 }

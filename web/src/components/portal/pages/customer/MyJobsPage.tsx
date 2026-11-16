@@ -65,7 +65,7 @@ export const MyJobsPage: React.FC = () => {
               onClick={() => setActiveTab(t.id)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
                 activeTab === t.id
-                  ? 'bg-[#0F6B3E] text-white shadow-2xs'
+                  ? 'bg-[#0F6B3E] !text-white text-white shadow-2xs'
                   : 'text-[#6A7B70] hover:text-[#0C2A1B] hover:bg-[#F4FAF6]'
               }`}
             >

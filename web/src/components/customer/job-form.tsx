@@ -338,7 +338,7 @@ export function JobForm({
                   setCategoryId(activeSuggestion.id);
                   setSuggestedCat(null);
                 }}
-                className="rounded-lg bg-[#0F6B3E] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#0A4D2B]"
+                className="rounded-lg bg-[#0F6B3E] px-2.5 py-1 text-[11px] font-semibold !text-white text-white hover:bg-[#0A4D2B]"
               >
                 Apply
               </button>
@@ -606,7 +606,7 @@ export function JobForm({
             <button
               type="submit"
               disabled={submittingAction !== null}
-              className="rounded-xl bg-[#0F6B3E] px-5 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#0A4D2B] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-[#0F6B3E] px-5 py-2.5 text-xs font-semibold !text-white text-white shadow-2xs transition hover:bg-[#0A4D2B] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submittingAction === "publish"
                 ? "Publishing job..."

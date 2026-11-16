@@ -285,7 +285,7 @@ export function ProfileClient({
             <button
               type="submit"
               disabled={savingProfile}
-              className="rounded-xl bg-[#0F6B3E] px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#0A4D2B] disabled:opacity-60"
+              className="rounded-xl bg-[#0F6B3E] px-5 py-2.5 text-xs font-semibold !text-white text-white transition hover:bg-[#0A4D2B] disabled:opacity-60"
             >
               {savingProfile ? "Saving changes..." : "Save profile"}
             </button>
@@ -340,7 +340,7 @@ export function ProfileClient({
             )}
             <Link
               href="/become-professional"
-              className="inline-flex items-center rounded-xl bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0A4D2B]"
+              className="inline-flex items-center rounded-xl bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0A4D2B]"
             >
               Update and reapply
             </Link>
@@ -359,7 +359,7 @@ export function ProfileClient({
             </div>
             <Link
               href="/become-professional"
-              className="inline-flex shrink-0 items-center rounded-xl bg-[#0F6B3E] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#0A4D2B]"
+              className="inline-flex shrink-0 items-center rounded-xl bg-[#0F6B3E] px-4 py-2.5 text-xs font-semibold !text-white text-white hover:bg-[#0A4D2B]"
             >
               Apply as a professional
             </Link>

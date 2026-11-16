@@ -378,9 +378,9 @@ export const CustomerOverview: React.FC = () => {
                       <h4 className="text-xs font-bold text-[#0C2A1B]">{off.proName}</h4>
                       <RatingStars rating={off.proRating} totalReviews={off.proReviewCount} size="sm" />
                       {off.isBestMatch && (
-                        <span className="px-2 py-0.2 bg-[#0F6B3E] text-white text-[10px] font-bold rounded-full flex items-center gap-1">
-                          <Award className="w-3 h-3" />
-                          BEST MATCH
+                        <span className="px-2 py-0.2 bg-[#0F6B3E] !text-white text-white text-[10px] font-bold rounded-full flex items-center gap-1">
+                          <Award className="w-3 h-3 !text-white text-white" />
+                          <span className="!text-white text-white">BEST MATCH</span>
                         </span>
                       )}
                     </div>
@@ -408,7 +408,7 @@ export const CustomerOverview: React.FC = () => {
                     onClick={() => marketplaceStore.toggleCompareOffer(off.id)}
                     className={`h-9 px-3.5 text-xs font-semibold rounded-xl border transition-colors cursor-pointer ${
                       isComparing
-                        ? 'bg-[#0F6B3E] text-white border-[#0F6B3E] shadow-2xs'
+                        ? 'bg-[#0F6B3E] !text-white text-white border-[#0F6B3E] shadow-2xs'
                         : 'bg-white text-[#0C2A1B] border-[#DCE8E0] hover:bg-[#F4FAF6]'
                     }`}
                   >

@@ -350,7 +350,7 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
                             onClick={() => marketplaceStore.toggleCompareOffer(off.id)}
                             className={`px-2.5 py-1 text-xs rounded-[6px] border cursor-pointer transition-colors ${
                               isComparing
-                                ? 'bg-[#0F6B3E] text-white border-[#0F6B3E]'
+                                ? 'bg-[#0F6B3E] !text-white text-white border-[#0F6B3E]'
                                 : 'bg-white text-[#0C2A1B] border-[#DCE8E0] hover:bg-[#F4FAF6]'
                             }`}
                           >
@@ -369,7 +369,7 @@ export const CustomerJobDetails: React.FC<{ jobId?: string }> = ({ jobId: propJo
                           )}
 
                           {isAccepted && (
-                            <span className="px-2.5 py-1 bg-[#0F6B3E] text-white font-bold text-xs rounded-[6px]">
+                            <span className="px-2.5 py-1 bg-[#0F6B3E] !text-white text-white font-bold text-xs rounded-[6px]">
                               Hired ✓
                             </span>
                           )}

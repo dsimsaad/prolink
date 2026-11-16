@@ -73,9 +73,9 @@ export const CompareDrawer: React.FC = () => {
                     </div>
                   </div>
                   {off.isBestMatch && (
-                    <span className="px-2 py-0.5 bg-[#0F6B3E] text-white text-[10px] font-bold rounded-full flex items-center gap-1">
-                      <Award className="w-3 h-3" />
-                      BEST MATCH
+                    <span className="px-2 py-0.5 bg-[#0F6B3E] !text-white text-white text-[10px] font-bold rounded-full flex items-center gap-1">
+                      <Award className="w-3 h-3 !text-white text-white" />
+                      <span className="!text-white text-white">BEST MATCH</span>
                     </span>
                   )}
                 </div>

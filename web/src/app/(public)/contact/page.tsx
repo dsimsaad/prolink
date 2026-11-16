@@ -1,6 +1,6 @@
 import "./contact.css";
 import type { Metadata } from "next";
-import { Clock, Mail, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { Clock, Mail, MapPin, ShieldCheck } from "lucide-react";
 import { SiteFooter } from "@/components/prolink/site-footer";
 import { ContactForm } from "@/components/prolink/contact-form";
 import { siteConfig } from "@/config/site";
@@ -26,10 +26,6 @@ export default function ContactPage() {
       <main id="main">
         <section className="contact-hero">
           <div className="container">
-            <div className="contact-hero-badge">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Direct Support Desk</span>
-            </div>
             <h1>Contact {siteConfig.name} Support</h1>
             <p>
               Have a question about posting a job, your account, or professional

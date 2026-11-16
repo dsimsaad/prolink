@@ -495,12 +495,22 @@
 
 .contact-submit-btn:hover:not(:disabled) {
   background: var(--forest-hover);
+  color: #ffffff;
   transform: translateY(-2px);
   box-shadow: 0 14px 28px -6px rgba(15, 107, 62, 0.42);
 }
 
 .contact-submit-btn:active:not(:disabled) {
+  background: var(--forest-hover);
+  color: #ffffff;
   transform: translateY(0);
+}
+
+.contact-submit-btn svg,
+.contact-submit-btn:hover:not(:disabled) svg,
+.contact-submit-btn:active:not(:disabled) svg {
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 .contact-submit-btn:disabled {

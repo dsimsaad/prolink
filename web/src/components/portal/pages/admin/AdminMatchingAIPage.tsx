@@ -222,7 +222,7 @@ export const AdminMatchingAIPage: React.FC = () => {
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold text-[#0C2A1B]">{pro.name}</span>
                         {idx === 0 && (
-                          <span className="text-[9px] font-bold bg-[#0F6B3E] text-white px-1.5 rounded-full">
+                          <span className="text-[9px] font-bold bg-[#0F6B3E] !text-white text-white px-1.5 rounded-full">
                             TOP DISPATCH
                           </span>
                         )}

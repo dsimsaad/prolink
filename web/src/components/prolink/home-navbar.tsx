@@ -173,11 +173,9 @@ export function HomeNavbar() {
           ) : (
             <Link
               href="/sign-in"
-              className="relative inline-flex items-center px-4 py-2.5 text-sm font-semibold text-[var(--ink)] transition-[color,font-weight] duration-300 ease-out hover:font-bold hover:text-[var(--forest)]"
+              className="inline-flex items-center rounded-xl border border-[#0F6B3E] bg-white px-4 py-2 text-sm font-semibold text-[#0F6B3E] transition-all duration-200 hover:bg-[#F4FAF6] hover:border-[#0B5632] hover:text-[#0B5632]"
             >
-              <span className="relative after:absolute after:bottom-[-3px] after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-[var(--forest)] after:transition-transform after:duration-300 after:ease-out after:content-[''] hover:after:scale-x-100">
-                Sign in
-              </span>
+              Sign in
             </Link>
           )}
 
@@ -191,10 +189,9 @@ export function HomeNavbar() {
                     : "/become-professional"
                   : "/become-professional/sign-in?mode=signup"
               }
-              style={{ borderRadius: "0px", color: "#ffffff" }}
-              className="inline-flex items-center gap-2 rounded-none bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold !text-white shadow-[0_10px_22px_rgba(15,107,62,0.22)] transition-all duration-200 hover:bg-[var(--forest-hover)] hover:!text-white hover:shadow-[0_12px_26px_rgba(15,107,62,0.3)] active:scale-[0.98]"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0F6B3E] px-4 py-2 text-sm font-semibold text-white shadow-xs transition-all duration-200 hover:bg-[#0B5632] active:scale-[0.98]"
             >
-              <span style={{ color: "#ffffff" }}>
+              <span>
                 {isLoggedIn && proState === "approved"
                   ? "Pro Dashboard"
                   : "Become a Professional"}
@@ -277,7 +274,7 @@ export function HomeNavbar() {
                 <>
                   <Link
                     href="/sign-in"
-                    className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-mint)]"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[#0F6B3E] bg-white px-4 py-3 text-center text-sm font-semibold text-[#0F6B3E] transition hover:bg-[#F4FAF6]"
                     onClick={() => setMenuOpen(false)}
                   >
                     Sign in
@@ -290,11 +287,10 @@ export function HomeNavbar() {
                           : "/become-professional"
                         : "/become-professional/sign-in?mode=signup"
                     }
-                    style={{ borderRadius: "0px", color: "#ffffff" }}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-none bg-[var(--forest)] px-4 py-3 text-center text-sm font-semibold !text-white shadow-[0_10px_22px_rgba(15,107,62,0.22)] transition hover:bg-[var(--forest-hover)] hover:!text-white"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-3 text-center text-sm font-semibold text-white shadow-xs transition hover:bg-[#0B5632]"
                     onClick={() => setMenuOpen(false)}
                   >
-                    <span style={{ color: "#ffffff" }}>
+                    <span>
                       {isLoggedIn && proState === "approved"
                         ? "Pro Dashboard"
                         : "Become a Professional"}

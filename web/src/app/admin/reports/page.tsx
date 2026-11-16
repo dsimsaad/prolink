@@ -130,7 +130,7 @@ export default function AdminReportsPage() {
               }}
               className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${
                 isSelected
-                  ? "bg-[#0F6B3E] text-white"
+                  ? "bg-[#0F6B3E] !text-white text-white"
                   : "border border-[#DCE8E0] bg-white text-[#34453B] hover:bg-[#F4FAF6]"
               }`}
             >
@@ -252,7 +252,7 @@ export default function AdminReportsPage() {
                         setNote("");
                         setDialogError(null);
                       }}
-                      className="rounded-lg bg-[#0F6B3E] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0B5430]"
+                      className="rounded-lg bg-[#0F6B3E] px-3 py-1.5 text-xs font-semibold !text-white text-white hover:bg-[#0B5430]"
                     >
                       Resolve
                     </button>
@@ -339,7 +339,7 @@ export default function AdminReportsPage() {
               type="button"
               disabled={submitting}
               onClick={handleConfirmReportAction}
-              className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0B5430] disabled:opacity-50"
+              className="rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0B5430] disabled:opacity-50"
             >
               {submitting ? "Saving..." : "Confirm"}
             </button>
