@@ -1,5 +1,16 @@
 import { createClient } from "@/utils/supabase/client";
 import type { JobStatus, JobUrgency } from "@/lib/customer/types";
+import {
+  fallbackAcceptJobOffer,
+  fallbackCancelCustomerJob,
+  fallbackCompleteCustomerJob,
+  fallbackCreateCustomerJob,
+  fallbackCreateJobReview,
+  fallbackDisputeCustomerJob,
+  fallbackPublishCustomerJob,
+  fallbackSuggestJobCategory,
+  fallbackUpdateDraftJob,
+} from "@/lib/customer/engine-fallback";
 
 const REQUEST_TIMEOUT_MS = 60_000;
 const WAKING_NOTICE_DELAY_MS = 3_500;
@@ -204,27 +215,46 @@ async function customerRequest<T>(
   }
 }
 
+function shouldUseFallback(err: unknown): boolean {
+  if (err instanceof CustomerApiError) {
+    return (
+      err.status === 503 ||
+      err.status === 504 ||
+      err.status === 500 ||
+      err.code === "network_error"
+    );
+  }
+  return true;
+}
+
 export async function createCustomerJob(
   input: CreateOrUpdateJobInput,
   options?: CustomerRequestOptions
 ): Promise<CustomerJobMutationResponse> {
-  return customerRequest<CustomerJobMutationResponse>(
-    "/jobs",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        title: input.title,
-        description: input.description,
-        categoryId: input.categoryId,
-        areaId: input.areaId,
-        budgetMin: input.budgetMin,
-        budgetMax: input.budgetMax,
-        urgency: input.urgency,
-        publish: Boolean(input.publish),
-      }),
-    },
-    options
-  );
+  try {
+    return await customerRequest<CustomerJobMutationResponse>(
+      "/jobs",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          title: input.title,
+          description: input.description,
+          categoryId: input.categoryId,
+          areaId: input.areaId,
+          budgetMin: input.budgetMin,
+          budgetMax: input.budgetMax,
+          urgency: input.urgency,
+          publish: Boolean(input.publish),
+        }),
+      },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return await fallbackCreateCustomerJob(input);
+    }
+    throw err;
+  }
 }
 
 export async function updateDraftJob(
@@ -232,33 +262,47 @@ export async function updateDraftJob(
   input: Omit<CreateOrUpdateJobInput, "publish">,
   options?: CustomerRequestOptions
 ): Promise<CustomerJobMutationResponse> {
-  return customerRequest<CustomerJobMutationResponse>(
-    `/jobs/${encodeURIComponent(jobId)}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify({
-        title: input.title,
-        description: input.description,
-        categoryId: input.categoryId,
-        areaId: input.areaId,
-        budgetMin: input.budgetMin,
-        budgetMax: input.budgetMax,
-        urgency: input.urgency,
-      }),
-    },
-    options
-  );
+  try {
+    return await customerRequest<CustomerJobMutationResponse>(
+      `/jobs/${encodeURIComponent(jobId)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          title: input.title,
+          description: input.description,
+          categoryId: input.categoryId,
+          areaId: input.areaId,
+          budgetMin: input.budgetMin,
+          budgetMax: input.budgetMax,
+          urgency: input.urgency,
+        }),
+      },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return await fallbackUpdateDraftJob(jobId, input);
+    }
+    throw err;
+  }
 }
 
 export async function publishCustomerJob(
   jobId: string,
   options?: CustomerRequestOptions
 ): Promise<PublishJobResponse> {
-  return customerRequest<PublishJobResponse>(
-    `/jobs/${encodeURIComponent(jobId)}/publish`,
-    { method: "POST" },
-    options
-  );
+  try {
+    return await customerRequest<PublishJobResponse>(
+      `/jobs/${encodeURIComponent(jobId)}/publish`,
+      { method: "POST" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return await fallbackPublishCustomerJob(jobId);
+    }
+    throw err;
+  }
 }
 
 export async function cancelCustomerJob(
@@ -266,14 +310,21 @@ export async function cancelCustomerJob(
   reason?: string,
   options?: CustomerRequestOptions
 ): Promise<JobStatusChangeResponse> {
-  return customerRequest<JobStatusChangeResponse>(
-    `/jobs/${encodeURIComponent(jobId)}/cancel`,
-    {
-      method: "POST",
-      body: JSON.stringify({ reason: reason?.trim() || null }),
-    },
-    options
-  );
+  try {
+    return await customerRequest<JobStatusChangeResponse>(
+      `/jobs/${encodeURIComponent(jobId)}/cancel`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason: reason?.trim() || null }),
+      },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return await fallbackCancelCustomerJob(jobId, reason);
+    }
+    throw err;
+  }
 }
 
 export async function acceptJobOffer(
@@ -281,22 +332,36 @@ export async function acceptJobOffer(
   offerId: string,
   options?: CustomerRequestOptions
 ): Promise<AcceptOfferResponse> {
-  return customerRequest<AcceptOfferResponse>(
-    `/jobs/${encodeURIComponent(jobId)}/offers/${encodeURIComponent(offerId)}/accept`,
-    { method: "POST" },
-    options
-  );
+  try {
+    return await customerRequest<AcceptOfferResponse>(
+      `/jobs/${encodeURIComponent(jobId)}/offers/${encodeURIComponent(offerId)}/accept`,
+      { method: "POST" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return await fallbackAcceptJobOffer(jobId, offerId);
+    }
+    throw err;
+  }
 }
 
 export async function completeCustomerJob(
   jobId: string,
   options?: CustomerRequestOptions
 ): Promise<JobStatusChangeResponse> {
-  return customerRequest<JobStatusChangeResponse>(
-    `/jobs/${encodeURIComponent(jobId)}/complete`,
-    { method: "POST" },
-    options
-  );
+  try {
+    return await customerRequest<JobStatusChangeResponse>(
+      `/jobs/${encodeURIComponent(jobId)}/complete`,
+      { method: "POST" },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return await fallbackCompleteCustomerJob(jobId);
+    }
+    throw err;
+  }
 }
 
 export async function disputeCustomerJob(
@@ -304,14 +369,21 @@ export async function disputeCustomerJob(
   reason: string,
   options?: CustomerRequestOptions
 ): Promise<JobStatusChangeResponse> {
-  return customerRequest<JobStatusChangeResponse>(
-    `/jobs/${encodeURIComponent(jobId)}/dispute`,
-    {
-      method: "POST",
-      body: JSON.stringify({ reason }),
-    },
-    options
-  );
+  try {
+    return await customerRequest<JobStatusChangeResponse>(
+      `/jobs/${encodeURIComponent(jobId)}/dispute`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return await fallbackDisputeCustomerJob(jobId, reason);
+    }
+    throw err;
+  }
 }
 
 export async function createJobReview(
@@ -320,17 +392,24 @@ export async function createJobReview(
   comment?: string,
   options?: CustomerRequestOptions
 ): Promise<CreateReviewResponse> {
-  return customerRequest<CreateReviewResponse>(
-    `/jobs/${encodeURIComponent(jobId)}/review`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        rating,
-        comment: comment?.trim() || null,
-      }),
-    },
-    options
-  );
+  try {
+    return await customerRequest<CreateReviewResponse>(
+      `/jobs/${encodeURIComponent(jobId)}/review`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          rating,
+          comment: comment?.trim() || null,
+        }),
+      },
+      options
+    );
+  } catch (err) {
+    if (shouldUseFallback(err)) {
+      return await fallbackCreateJobReview(jobId, rating, comment);
+    }
+    throw err;
+  }
 }
 
 export async function suggestJobCategory(
@@ -351,10 +430,6 @@ export async function suggestJobCategory(
       { method: "GET" }
     );
   } catch {
-    return {
-      suggestedCategoryId: null,
-      suggestedCategoryName: null,
-      confidence: 0,
-    };
+    return await fallbackSuggestJobCategory(trimmed);
   }
 }

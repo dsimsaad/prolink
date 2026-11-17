@@ -49,7 +49,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-string? rawDatabaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+string? rawDatabaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration["DATABASE_URL"]
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
 string npgsqlConnectionString = string.IsNullOrWhiteSpace(rawDatabaseUrl)
     ? string.Empty
     : PostgresUriParser.ParseConnectionString(rawDatabaseUrl);

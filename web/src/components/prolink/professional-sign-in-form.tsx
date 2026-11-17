@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { MapPin, ShieldCheck, Wrench } from "lucide-react";
-import { Brand, Icon } from "./brand";
-import { siteConfig } from "@/config/site";
+import { Brand } from "./brand";
+import { AuthVisualPanel } from "./auth-visual-panel";
 import { createClient } from "@/utils/supabase/client";
 import {
   clearOAuthDestination,
@@ -16,6 +14,29 @@ import { resolvePostLoginAction } from "@/app/sign-in/actions";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function GoogleIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.27 21.44 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.13z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.27 2.56 1.25 6.58l4.03 3.13c.95-2.83 3.6-4.96 6.72-4.96z"
+      />
+    </svg>
+  );
+}
+
 export function ProfessionalSignInForm() {
   const searchParams = useSearchParams();
   const queryMode = searchParams.get("mode");
@@ -24,6 +45,7 @@ export function ProfessionalSignInForm() {
   const [mode, setMode] = useState<"signin" | "signup">(
     queryMode === "signup" ? "signup" : "signin"
   );
+  const [spinCount, setSpinCount] = useState(1);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -104,32 +126,30 @@ export function ProfessionalSignInForm() {
     }
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
-    setIsSuccessMessage(false);
-
     if (!validateFields()) {
       return;
     }
+    setSpinCount((prev) => prev + 1);
 
     try {
+      setMessage("");
+      setIsSuccessMessage(false);
       setLoading(true);
+
+      const trimmedEmail = email.trim();
+      const trimmedName = fullName.trim();
       const supabase = createClient();
-      const cleanEmail = email.trim();
 
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
+          email: trimmedEmail,
           password,
         });
 
         if (error) {
-          setMessage(
-            error.message === "Invalid login credentials"
-              ? "Invalid email or password. Please check your credentials and try again."
-              : error.message
-          );
+          setMessage(error.message);
           setLoading(false);
           return;
         }
@@ -139,20 +159,16 @@ export function ProfessionalSignInForm() {
           await supabase.auth.signOut();
           setMessage(check.message);
           setLoading(false);
-          return;
+        } else {
+          window.location.replace(check.destination);
         }
-
-        window.location.replace(
-          check.destination === "/admin" ? "/admin" : targetDestination
-        );
       } else {
-        const cleanFullName = fullName.trim();
         const { data, error } = await supabase.auth.signUp({
-          email: cleanEmail,
+          email: trimmedEmail,
           password,
           options: {
             data: {
-              full_name: cleanFullName,
+              full_name: trimmedName,
             },
           },
         });
@@ -169,15 +185,13 @@ export function ProfessionalSignInForm() {
             await supabase.auth.signOut();
             setMessage(check.message);
             setLoading(false);
-            return;
+          } else {
+            window.location.replace(check.destination);
           }
-          window.location.replace(
-            check.destination === "/admin" ? "/admin" : targetDestination
-          );
         } else if (data.user) {
           setIsSuccessMessage(true);
           setMessage(
-            "Account created! Please check your email inbox to confirm your email address, then sign in to complete your professional application."
+            "Professional account created! Please check your email to confirm your address before signing in."
           );
           setLoading(false);
         }
@@ -193,109 +207,68 @@ export function ProfessionalSignInForm() {
   }
 
   return (
-    <div className="sign-in-page">
-      <main className="auth-column">
-        <div className="auth-top">
-          <Brand />
-          <Link href="/" className="text-link">
-            Back to home <Icon name="arrow" />
+    <div className="prolink-auth-page">
+      <main className="prolink-auth-main">
+        {/* Top Header */}
+        <header className="prolink-auth-header">
+          <Brand priority />
+          <Link href="/" className="prolink-auth-back-link">
+            <span>Back to home</span>
+            <span aria-hidden="true" className="arrow">→</span>
           </Link>
-        </div>
+        </header>
 
-        <div className="auth-content">
-          <h1>
-            {mode === "signin"
-              ? "Professional Sign In"
-              : "Create a Professional Account"}
-          </h1>
-          <p className="auth-intro">
-            {mode === "signin"
-              ? `Sign in to your ${siteConfig.name} account to start or continue your professional application.`
-              : `Create your ${siteConfig.name} account first, then complete the 3-step professional application.`}
-          </p>
-
-          {/* Step preview strip */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              flexWrap: "wrap",
-              marginTop: "18px",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              background: "var(--tint)",
-              border: "1px solid var(--border)",
-              fontSize: "12px",
-              color: "var(--body)",
-            }}
-          >
-            <strong style={{ color: "var(--forest)" }}>1. Sign In</strong>
-            <span style={{ color: "var(--muted)" }}>→</span>
-            <span>2. Complete 3-Step Application</span>
-            <span style={{ color: "var(--muted)" }}>→</span>
-            <span>3. Application Review</span>
+        {/* Content Form Area */}
+        <div key={mode} className="prolink-auth-content auth-form-enter">
+          <div className="prolink-auth-intro">
+            {mode === "signin" ? (
+              <>
+                <h1 className="prolink-auth-title">Professional Sign In</h1>
+                <p className="prolink-auth-subtitle">
+                  Sign in to track your trade application and manage your professional profile.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="prolink-auth-title">Become a Trade Partner</h1>
+                <p className="prolink-auth-subtitle">
+                  Create your account to start your professional application and offer local services.
+                </p>
+              </>
+            )}
           </div>
 
-          <div
-            className="social-buttons"
-            style={{ gridTemplateColumns: "1fr", marginTop: "22px" }}
+          {/* Google Button */}
+          <button
+            type="button"
+            className="prolink-google-btn"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
           >
-            <button
-              type="button"
-              className="social-button"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-              aria-label="Continue with Google"
-              style={{ width: "100%" }}
-            >
-              <span aria-hidden="true" className="social-symbol google">
-                G
-              </span>
+            <GoogleIcon className="prolink-google-icon" />
+            <span>
               {loading
                 ? "Connecting..."
                 : mode === "signin"
                   ? "Continue with Google"
                   : "Sign up with Google"}
-            </button>
+            </span>
+          </button>
+
+          <div className="prolink-auth-divider">
+            <span>Or with email</span>
           </div>
 
-          <div className="divider">
-            <span>Or continue with email</span>
-          </div>
-
-          {displayMessage && (
-            <div
-              id="pro-auth-status"
-              role="alert"
-              aria-live="polite"
-              style={{
-                background: isSuccessMessage ? "var(--mint)" : "var(--danger-soft)",
-                border: isSuccessMessage
-                  ? "1px solid var(--success-border)"
-                  : "1px solid var(--danger-border)",
-                color: isSuccessMessage ? "var(--forest)" : "var(--danger-fg-hover)",
-                borderRadius: "8px",
-                padding: "12px 14px",
-                marginBottom: "16px",
-                fontSize: "13px",
-                lineHeight: 1.5,
-                fontWeight: 500,
-              }}
-            >
-              {displayMessage}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={submit} className="prolink-auth-form" noValidate>
             {mode === "signup" && (
-              <div className="field">
-                <label htmlFor="pro-signin-fullname">Full Name</label>
+              <div className="prolink-form-field">
+                <label htmlFor="proFullName">Full name</label>
                 <input
-                  id="pro-signin-fullname"
+                  id="proFullName"
                   name="fullName"
                   type="text"
                   autoComplete="name"
+                  placeholder="e.g. Tariq Mehmood"
                   value={fullName}
                   onChange={(e) => {
                     setFullName(e.target.value);
@@ -303,38 +276,23 @@ export function ProfessionalSignInForm() {
                       setFieldErrors((prev) => ({ ...prev, fullName: undefined }));
                     }
                   }}
-                  placeholder="e.g. Tariq Mehmood"
                   disabled={loading}
-                  aria-invalid={Boolean(fieldErrors.fullName)}
-                  style={
-                    fieldErrors.fullName
-                      ? { borderColor: "var(--danger-border-strong)" }
-                      : undefined
-                  }
+                  className={fieldErrors.fullName ? "has-error" : ""}
                 />
                 {fieldErrors.fullName && (
-                  <p
-                    role="alert"
-                    style={{
-                      color: "var(--danger-border-strong)",
-                      fontSize: "12px",
-                      marginTop: "6px",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {fieldErrors.fullName}
-                  </p>
+                  <p className="prolink-field-error">{fieldErrors.fullName}</p>
                 )}
               </div>
             )}
 
-            <div className="field">
-              <label htmlFor="pro-signin-email">Email Address</label>
+            <div className="prolink-form-field">
+              <label htmlFor="proEmail">Email address</label>
               <input
-                id="pro-signin-email"
+                id="proEmail"
                 name="email"
                 type="email"
                 autoComplete="email"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -342,221 +300,130 @@ export function ProfessionalSignInForm() {
                     setFieldErrors((prev) => ({ ...prev, email: undefined }));
                   }
                 }}
-                placeholder="name@example.com"
                 disabled={loading}
-                aria-invalid={Boolean(fieldErrors.email)}
-                style={
-                  fieldErrors.email ? { borderColor: "var(--danger-border-strong)" } : undefined
-                }
+                className={fieldErrors.email ? "has-error" : ""}
               />
               {fieldErrors.email && (
-                <p
-                  role="alert"
-                  style={{
-                    color: "var(--danger-border-strong)",
-                    fontSize: "12px",
-                    marginTop: "6px",
-                    fontWeight: 500,
-                  }}
-                >
-                  {fieldErrors.email}
-                </p>
+                <p className="prolink-field-error">{fieldErrors.email}</p>
               )}
             </div>
 
-            <div className="field">
-              <label htmlFor="pro-signin-password">Password</label>
-              <div className="password-field">
+            <div className="prolink-form-field">
+              <label htmlFor="proPassword">Password</label>
+              <div className="prolink-password-wrapper">
                 <input
-                  id="pro-signin-password"
+                  id="proPassword"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete={
-                    mode === "signin" ? "current-password" : "new-password"
-                  }
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (fieldErrors.password) {
-                      setFieldErrors((prev) => ({
-                        ...prev,
-                        password: undefined,
-                      }));
-                    }
-                  }}
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
                   placeholder={
                     mode === "signin"
                       ? "Enter your password"
                       : "Create a password (min 6 characters)"
                   }
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (fieldErrors.password) {
+                      setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                    }
+                  }}
                   disabled={loading}
-                  aria-invalid={Boolean(fieldErrors.password)}
-                  style={
-                    fieldErrors.password
-                      ? { borderColor: "var(--danger-border-strong)" }
-                      : undefined
-                  }
+                  className={fieldErrors.password ? "has-error" : ""}
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
                   onClick={() => setShowPassword(!showPassword)}
+                  className="prolink-password-toggle"
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
               {fieldErrors.password && (
-                <p
-                  role="alert"
-                  style={{
-                    color: "var(--danger-border-strong)",
-                    fontSize: "12px",
-                    marginTop: "6px",
-                    fontWeight: 500,
-                  }}
-                >
-                  {fieldErrors.password}
-                </p>
+                <p className="prolink-field-error">{fieldErrors.password}</p>
               )}
             </div>
 
+            {mode === "signin" && (
+              <div className="prolink-form-options">
+                <label className="prolink-remember-checkbox">
+                  <input type="checkbox" name="remember" defaultChecked />
+                  <span>Remember me</span>
+                </label>
+                <Link href="/forgot-password" className="prolink-forgot-link">
+                  Forgot password?
+                </Link>
+              </div>
+            )}
+
             <button
-              className="button submit-button"
+              className="prolink-submit-btn"
               type="submit"
               disabled={loading}
-              style={{ marginTop: "24px" }}
             >
-              {loading
-                ? mode === "signin"
-                  ? "Signing in..."
-                  : "Creating account..."
-                : mode === "signin"
-                  ? "Sign In & Continue to Application"
-                  : "Create Account & Continue"}{" "}
-              <Icon name="arrow" />
+              <span>
+                {loading
+                  ? "Processing..."
+                  : mode === "signin"
+                    ? "Sign In & Continue"
+                    : "Create Account & Continue"}
+              </span>
+              <span aria-hidden="true" className="arrow">→</span>
             </button>
           </form>
 
-          <div
-            style={{
-              marginTop: "20px",
-              textAlign: "center",
-              fontSize: "13px",
-              color: "var(--muted)",
-            }}
-          >
+          {/* Switch link */}
+          <div className="prolink-auth-switch">
             {mode === "signin" ? (
               <>
                 New to ProLink?{" "}
                 <button
                   type="button"
-                  className="text-link"
+                  className="prolink-switch-link"
                   onClick={() => {
+                    setSpinCount((prev) => prev + 1);
                     setMode("signup");
                     setMessage("");
                     setFieldErrors({});
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    cursor: "pointer",
-                    fontSize: "inherit",
-                    fontWeight: 600,
                   }}
                 >
                   Create a professional account
                 </button>
               </>
-            ) : null}
+            ) : (
+              <>
+                Already registered?{" "}
+                <button
+                  type="button"
+                  className="prolink-switch-link"
+                  onClick={() => {
+                    setSpinCount((prev) => prev + 1);
+                    setMode("signin");
+                    setMessage("");
+                    setFieldErrors({});
+                  }}
+                >
+                  Sign in
+                </button>
+              </>
+            )}
           </div>
-        </div>
 
-        <footer className="auth-footer">
-          <ShieldCheck className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
-          <span>{siteConfig.name} · Professional Network</span>
-          <Link href="/">Back to home</Link>
-        </footer>
+          {displayMessage && (
+            <div
+              role="status"
+              className={`prolink-auth-alert ${
+                isSuccessMessage ? "is-success" : "is-error"
+              }`}
+            >
+              {displayMessage}
+            </div>
+          )}
+        </div>
       </main>
 
-      <aside
-        className="auth-visual"
-        data-mode={mode}
-        aria-label="Welcome to ProLink Professionals"
-        aria-live="polite"
-      >
-        <div className="auth-ambient-orb orb-primary" aria-hidden="true" />
-        <div className="auth-ambient-orb orb-secondary" aria-hidden="true" />
-
-        <div className="auth-welcome-stage">
-          <div className="auth-welcome-layers">
-            <div
-              className={`auth-welcome-layer ${
-                mode === "signin" ? "is-active" : "is-inactive-up"
-              }`}
-              aria-hidden={mode !== "signin"}
-            >
-              <span className="auth-welcome-eyebrow">Professional Sign In</span>
-              <h2 className="auth-welcome-heading">Welcome Back, Trade Partner!</h2>
-              <p className="auth-welcome-description">
-                Sign in to track your trade application, view local service requests,
-                and manage your professional profile in {siteConfig.city}.
-              </p>
-            </div>
-
-            <div
-              className={`auth-welcome-layer ${
-                mode === "signup" ? "is-active" : "is-inactive-down"
-              }`}
-              aria-hidden={mode !== "signup"}
-            >
-              <span className="auth-welcome-eyebrow">Trade Partner Access</span>
-              <h2 className="auth-welcome-heading">Grow Your Trade in {siteConfig.city}</h2>
-              <p className="auth-welcome-description">
-                Create your account to start your 3-step application, send itemised
-                offers directly to households, and grow your local client base.
-              </p>
-            </div>
-          </div>
-
-          <div className="auth-photo-card">
-            <Image
-              src="/images/auth-craft.webp"
-              alt="Professional skilled artisan at work"
-              fill
-              sizes="(min-width: 1024px) 420px, 320px"
-              style={{ objectFit: "cover" }}
-            />
-          </div>
-
-          <ul className="auth-benefits-list">
-            <li className="auth-benefit-item">
-              <span className="auth-benefit-icon">
-                <Wrench className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span>Send itemised quotes to local households</span>
-            </li>
-            <li className="auth-benefit-item">
-              <span className="auth-benefit-icon">
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span>Reviewed application process</span>
-            </li>
-            <li className="auth-benefit-item">
-              <span className="auth-benefit-icon">
-                <MapPin className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span>Direct matching in {siteConfig.city}</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="auth-welcome-bottom">
-          <span>{siteConfig.city} pilot · University semester project</span>
-          <span>{siteConfig.name}</span>
-        </div>
-      </aside>
+      {/* Right Side Visual Panel */}
+      <AuthVisualPanel spinCount={spinCount} isLoading={loading} />
     </div>
   );
 }

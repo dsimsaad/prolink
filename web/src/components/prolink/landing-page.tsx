@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -73,8 +74,19 @@ const trustItems = [
 ];
 
 export function LandingPage() {
-  const { isAdmin, proState, reviewNote } = useNavigationAccount();
+  const account = useNavigationAccount();
+  const { isLoggedIn, isAdmin, proState, reviewNote } = account;
   const popularServices = siteConfig.categories.slice(0, 6);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      window.location.replace(isAdmin ? "/admin" : "/dashboard");
+    }
+  }, [isLoggedIn, isAdmin]);
+
+  if (isLoggedIn) {
+    return null;
+  }
 
   return (
     <>

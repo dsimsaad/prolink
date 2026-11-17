@@ -64,7 +64,7 @@ export function HomeNavbar() {
   return (
     <header className={`site-header ${scrolled ? "is-scrolled" : ""}`.trim()}>
       <div className="container flex h-[72px] items-center justify-between gap-6">
-        <Brand />
+        <Brand href={isLoggedIn ? (isAdmin ? "/admin" : "/dashboard") : "/"} />
 
         {/* Desktop Navigation Links */}
         <nav

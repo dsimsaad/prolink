@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { FileText, MapPin, ShieldCheck } from "lucide-react";
-import { Brand, Icon } from "./brand";
-import { siteConfig } from "@/config/site";
+import { Brand } from "./brand";
+import { AuthVisualPanel } from "./auth-visual-panel";
 import { createClient } from "@/utils/supabase/client";
 import { getSignInDestination } from "@/utils/auth-destination";
 import {
@@ -15,25 +13,52 @@ import {
 } from "@/utils/oauth-navigation";
 import { resolvePostLoginAction } from "@/app/sign-in/actions";
 
+function GoogleIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.27 21.44 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.13z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.27 2.56 1.25 6.58l4.03 3.13c.95-2.83 3.6-4.96 6.72-4.96z"
+      />
+    </svg>
+  );
+}
+
 export function SignInForm({
-  defaultMode,
+  defaultMode = "signin",
 }: {
-  defaultMode?: "signin" | "signup";
+  defaultMode?: "signin" | "signup" | "forgot";
 } = {}) {
   const searchParams = useSearchParams();
 
   const queryMode = searchParams.get("mode");
   const hasRoleParam = searchParams.get("role") === "professional";
-  const initialMode =
-    defaultMode === "signup" || queryMode === "signup" || hasRoleParam
+  const initialMode: "signin" | "signup" | "forgot" =
+    queryMode === "signup" || hasRoleParam || defaultMode === "signup"
       ? "signup"
-      : "signin";
+      : queryMode === "forgot" || queryMode === "reset" || defaultMode === "forgot"
+        ? "forgot"
+        : "signin";
 
   const queryError = searchParams.get("error") || "";
 
-  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">(initialMode);
+  const [spinCount, setSpinCount] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSuccessMessage, setIsSuccessMessage] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const displayMessage = message || queryError;
@@ -43,8 +68,10 @@ export function SignInForm({
   );
 
   async function handleGoogleSignIn() {
+    setSpinCount((prev) => prev + 1);
     try {
       setMessage("");
+      setIsSuccessMessage(false);
       setLoading(true);
       const supabase = createClient();
       document.cookie = `prolink_oauth_next=${encodeURIComponent(safeNext)}; path=/; max-age=900; SameSite=Lax`;
@@ -78,11 +105,13 @@ export function SignInForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSpinCount((prev) => prev + 1);
     try {
       setMessage("");
+      setIsSuccessMessage(false);
       setLoading(true);
       const formData = new FormData(event.currentTarget);
-      const email = formData.get("email") as string;
+      const email = (formData.get("email") as string)?.trim();
       const password = formData.get("password") as string;
 
       const supabase = createClient();
@@ -104,7 +133,7 @@ export function SignInForm({
             window.location.replace(check.destination);
           }
         }
-      } else {
+      } else if (mode === "signup") {
         const fullName = (formData.get("fullName") as string)?.trim() || "";
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -127,8 +156,23 @@ export function SignInForm({
             window.location.replace(check.destination);
           }
         } else if (data.user) {
+          setIsSuccessMessage(true);
           setMessage(
             "Account created! Please check your email inbox to confirm your email address before signing in.",
+          );
+        }
+      } else if (mode === "forgot") {
+        const callbackUrl = `${window.location.origin}/auth/callback?next=/dashboard/profile`;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: callbackUrl,
+        });
+
+        if (error) {
+          setMessage(error.message);
+        } else {
+          setIsSuccessMessage(true);
+          setMessage(
+            "If an account exists for that email, a password reset link has been sent. Please check your inbox.",
           );
         }
       }
@@ -136,102 +180,119 @@ export function SignInForm({
       setMessage(
         err instanceof Error
           ? err.message
-          : `Failed to ${mode === "signin" ? "sign in" : "sign up"}. Please try again.`,
+          : `Failed to ${
+              mode === "signin"
+                ? "sign in"
+                : mode === "signup"
+                  ? "sign up"
+                  : "reset password"
+            }. Please try again.`,
       );
     } finally {
       setLoading(false);
     }
   }
 
+  function handleModeChange(newMode: "signin" | "signup" | "forgot") {
+    setSpinCount((prev) => prev + 1);
+    setMode(newMode);
+    setMessage("");
+    setIsSuccessMessage(false);
+    const targetUrl =
+      newMode === "signin"
+        ? "/sign-in"
+        : newMode === "signup"
+          ? "/sign-up"
+          : "/forgot-password";
+    window.history.pushState(null, "", targetUrl);
+  }
+
   return (
-    <div className="sign-in-page">
-      <main className="auth-column">
-        <div className="auth-top">
-          <Brand />
-          <Link href="/" className="text-link">
-            Back to home <Icon name="arrow" />
+    <div className="prolink-auth-page">
+      <main className="prolink-auth-main">
+        {/* Top Header: ProLink logo on left, Back to home on right */}
+        <header className="prolink-auth-header">
+          <Brand priority />
+          <Link href="/" className="prolink-auth-back-link">
+            <span>Back to home</span>
+            <span aria-hidden="true" className="arrow">→</span>
           </Link>
-        </div>
+        </header>
 
-        <div className="auth-content">
-          <div className="auth-heading-stage">
-            <div
-              className={`auth-heading-layer ${
-                mode === "signin" ? "is-active" : "is-inactive"
-              }`}
-              aria-hidden={mode !== "signin"}
-            >
-              <h1>Sign in to your account</h1>
-              <p className="auth-intro">
-                Access your jobs, review offers, and manage your ProLink
-                activity.
-              </p>
-            </div>
-            <div
-              className={`auth-heading-layer ${
-                mode === "signup" ? "is-active" : "is-inactive"
-              }`}
-              aria-hidden={mode !== "signup"}
-            >
-              <h1>Create your account</h1>
-              <p className="auth-intro">
-                Set up your ProLink profile in seconds to get started.
-              </p>
-            </div>
+        {/* Center Content / Form Area */}
+        <div key={mode} className="prolink-auth-content auth-form-enter">
+          <div className="prolink-auth-intro">
+            {mode === "signin" && (
+              <>
+                <h1 className="prolink-auth-title">Sign in to your account</h1>
+                <p className="prolink-auth-subtitle">
+                  Access your jobs, review offers, and manage your ProLink activity.
+                </p>
+              </>
+            )}
+            {mode === "signup" && (
+              <>
+                <h1 className="prolink-auth-title">Create your account</h1>
+                <p className="prolink-auth-subtitle">
+                  Set up your ProLink profile in seconds to get started.
+                </p>
+              </>
+            )}
+            {mode === "forgot" && (
+              <>
+                <h1 className="prolink-auth-title">Reset your password</h1>
+                <p className="prolink-auth-subtitle">
+                  Enter your email address and we&apos;ll send you a link to reset your password.
+                </p>
+              </>
+            )}
           </div>
 
-          <div
-            className="social-buttons"
-            style={{ gridTemplateColumns: "1fr" }}
-          >
-            <button
-              type="button"
-              className="social-button"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-              aria-label="Continue with Google"
-              style={{ width: "100%" }}
-            >
-              <span aria-hidden="true" className="social-symbol google">
-                G
-              </span>
-              {loading
-                ? "Connecting..."
-                : mode === "signin"
-                  ? "Continue with Google"
-                  : "Sign up with Google"}
-            </button>
-          </div>
+          {/* Social Sign-in (Google) - for signin & signup */}
+          {mode !== "forgot" && (
+            <>
+              <button
+                type="button"
+                className="prolink-google-btn"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                aria-label={
+                  mode === "signin" ? "Continue with Google" : "Sign up with Google"
+                }
+              >
+                <GoogleIcon className="prolink-google-icon" />
+                <span>
+                  {loading
+                    ? "Connecting..."
+                    : mode === "signin"
+                      ? "Continue with Google"
+                      : "Sign up with Google"}
+                </span>
+              </button>
 
-          <div className="divider">
-            <span>Or with email</span>
-          </div>
-
-          <form onSubmit={submit}>
-            <div
-              className={`auth-expandable-field ${
-                mode === "signup" ? "is-open" : ""
-              }`}
-              aria-hidden={mode !== "signup"}
-            >
-              <div className="auth-expandable-inner">
-                <div className="field" style={{ marginTop: 0 }}>
-                  <label htmlFor="fullName">Full name</label>
-                  <input
-                    id="fullName"
-                    name="fullName"
-                    type="text"
-                    autoComplete="name"
-                    placeholder="Enter your full name"
-                    required={mode === "signup"}
-                    disabled={mode !== "signup"}
-                    tabIndex={mode === "signup" ? 0 : -1}
-                  />
-                </div>
+              <div className="prolink-auth-divider">
+                <span>Or with email</span>
               </div>
-            </div>
+            </>
+          )}
 
-            <div className="field">
+          {/* Form */}
+          <form onSubmit={submit} className="prolink-auth-form">
+            {mode === "signup" && (
+              <div className="prolink-form-field">
+                <label htmlFor="fullName">Full name</label>
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+            )}
+
+            <div className="prolink-form-field">
               <label htmlFor="email">Email address</label>
               <input
                 id="email"
@@ -243,118 +304,106 @@ export function SignInForm({
               />
             </div>
 
-            <div className="field">
-              <label htmlFor="password">Password</label>
-              <div className="password-field">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete={
-                    mode === "signin" ? "current-password" : "new-password"
-                  }
-                  placeholder={
-                    mode === "signin"
-                      ? "Enter your password"
-                      : "Create a password (min 6 characters)"
-                  }
-                  minLength={6}
-                  required
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-
-            {mode === "signin" && (
-              <div className="form-options">
-                <label className="remember">
-                  <input type="checkbox" name="remember" defaultChecked />
-                  Remember me
-                </label>
-                <a
-                  href="#auth-status"
-                  className="text-link"
-                  onClick={() =>
-                    setMessage(
-                      "Password recovery is not connected yet. Connect your authentication provider to enable reset emails.",
-                    )
-                  }
-                >
-                  Forgot password?
-                </a>
+            {mode !== "forgot" && (
+              <div className="prolink-form-field">
+                <label htmlFor="password">Password</label>
+                <div className="prolink-password-wrapper">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete={
+                      mode === "signin" ? "current-password" : "new-password"
+                    }
+                    placeholder={
+                      mode === "signin"
+                        ? "Enter your password"
+                        : "Create a password (min 6 characters)"
+                    }
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="prolink-password-toggle"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
               </div>
             )}
 
+            {mode === "signin" && (
+              <div className="prolink-form-options">
+                <label className="prolink-remember-checkbox">
+                  <input type="checkbox" name="remember" defaultChecked />
+                  <span>Remember me</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("forgot")}
+                  className="prolink-forgot-link"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            {/* Pill Submit Button */}
             <button
-              className="button submit-button"
+              className="prolink-submit-btn"
               type="submit"
               disabled={loading}
-              style={{ marginTop: mode === "signup" ? "24px" : undefined }}
             >
-              {loading
-                ? "Processing..."
-                : mode === "signin"
-                  ? "Sign In"
-                  : "Create Account"}{" "}
-              <Icon name="arrow" />
+              <span>
+                {loading
+                  ? "Processing..."
+                  : mode === "signin"
+                    ? "Sign In"
+                    : mode === "signup"
+                      ? "Create Account"
+                      : "Send Reset Link"}
+              </span>
+              <span aria-hidden="true" className="arrow">→</span>
             </button>
           </form>
 
-          <div
-            style={{
-              marginTop: "20px",
-              textAlign: "center",
-              fontSize: "13px",
-              color: "var(--muted)",
-            }}
-          >
-            {mode === "signin" ? (
+          {/* Switch Mode Links */}
+          <div className="prolink-auth-switch">
+            {mode === "signin" && (
               <>
                 Don&apos;t have an account?{" "}
                 <button
                   type="button"
-                  className="text-link"
-                  onClick={() => {
-                    setMode("signup");
-                    setMessage("");
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    cursor: "pointer",
-                    fontSize: "inherit",
-                    fontWeight: 600,
-                  }}
+                  onClick={() => handleModeChange("signup")}
+                  className="prolink-switch-link"
                 >
                   Sign up
                 </button>
               </>
-            ) : (
+            )}
+            {mode === "signup" && (
               <>
                 Already have an account?{" "}
                 <button
                   type="button"
-                  className="text-link"
-                  onClick={() => {
-                    setMode("signin");
-                    setMessage("");
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    cursor: "pointer",
-                    fontSize: "inherit",
-                    fontWeight: 600,
-                  }}
+                  onClick={() => handleModeChange("signin")}
+                  className="prolink-switch-link"
+                >
+                  Sign in
+                </button>
+              </>
+            )}
+            {mode === "forgot" && (
+              <>
+                Remember your password?{" "}
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("signin")}
+                  className="prolink-switch-link"
                 >
                   Sign in
                 </button>
@@ -362,100 +411,24 @@ export function SignInForm({
             )}
           </div>
 
-          <div
-            id="auth-status"
-            role="status"
-            aria-live="polite"
-            className={displayMessage ? "auth-message" : ""}
-          >
-            {displayMessage}
-          </div>
+          {/* Status Message */}
+          {displayMessage && (
+            <div
+              id="auth-status"
+              role="status"
+              aria-live="polite"
+              className={`prolink-auth-alert ${
+                isSuccessMessage ? "is-success" : "is-error"
+              }`}
+            >
+              {displayMessage}
+            </div>
+          )}
         </div>
-
-        <footer className="auth-footer">
-          <ShieldCheck className="h-4 w-4 text-[var(--forest)]" aria-hidden="true" />
-          <span>{siteConfig.name} · {siteConfig.city} Pilot</span>
-          <Link href="/">Back to home</Link>
-        </footer>
       </main>
 
-      <aside
-        className="auth-visual"
-        data-mode={mode}
-        aria-label="Welcome to ProLink"
-        aria-live="polite"
-      >
-        <div className="auth-ambient-orb orb-primary" aria-hidden="true" />
-        <div className="auth-ambient-orb orb-secondary" aria-hidden="true" />
-
-        <div className="auth-welcome-stage">
-          <div className="auth-welcome-layers">
-            <div
-              className={`auth-welcome-layer ${
-                mode === "signin" ? "is-active" : "is-inactive-up"
-              }`}
-              aria-hidden={mode !== "signin"}
-            >
-              <span className="auth-welcome-eyebrow">Household &amp; Pro Access</span>
-              <h2 className="auth-welcome-heading">Welcome Back to {siteConfig.name}!</h2>
-              <p className="auth-welcome-description">
-                Sign in to manage your household repair requests, compare itemised
-                offers, and message local trades in {siteConfig.city}.
-              </p>
-            </div>
-
-            <div
-              className={`auth-welcome-layer ${
-                mode === "signup" ? "is-active" : "is-inactive-down"
-              }`}
-              aria-hidden={mode !== "signup"}
-            >
-              <span className="auth-welcome-eyebrow">Get Started</span>
-              <h2 className="auth-welcome-heading">Welcome to {siteConfig.name}!</h2>
-              <p className="auth-welcome-description">
-                Post repair jobs, receive itemised offers from local trades, and keep
-                your phone number private until you choose to hire.
-              </p>
-            </div>
-          </div>
-
-          <div className="auth-photo-card">
-            <Image
-              src="/images/auth-craft.webp"
-              alt="Hands-on trade repair work in progress"
-              fill
-              sizes="(min-width: 1024px) 420px, 320px"
-              style={{ objectFit: "cover" }}
-            />
-          </div>
-
-          <ul className="auth-benefits-list">
-            <li className="auth-benefit-item">
-              <span className="auth-benefit-icon">
-                <FileText className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span>Compare itemised offers before you hire</span>
-            </li>
-            <li className="auth-benefit-item">
-              <span className="auth-benefit-icon">
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span>Your phone number stays private until you accept</span>
-            </li>
-            <li className="auth-benefit-item">
-              <span className="auth-benefit-icon">
-                <MapPin className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span>Local tradespeople in {siteConfig.city}</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="auth-welcome-bottom">
-          <span>{siteConfig.city} pilot · University semester project</span>
-          <span>{siteConfig.name}</span>
-        </div>
-      </aside>
+      {/* Right Side Visual Panel */}
+      <AuthVisualPanel spinCount={spinCount} isLoading={loading} />
     </div>
   );
 }

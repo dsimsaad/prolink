@@ -85,7 +85,6 @@ const NAV_ITEMS: NavItem[] = [
     showUnreadBadge: true,
   },
   { label: "Messages", href: "/dashboard/messages", icon: MessageSquare },
-  { label: "Profile", href: "/dashboard/profile", icon: User },
 ];
 
 function getInitials(name: string): string {
@@ -104,7 +103,7 @@ function SidebarProCta({
   reviewNote: string | null;
   onNavigate?: () => void;
 }) {
-  if (state === "suspended") {
+  if (state === "suspended" || state === "approved") {
     return null;
   }
 
@@ -142,26 +141,6 @@ function SidebarProCta({
         >
           View note and reapply →
         </Link>
-      </div>
-    );
-  }
-
-  if (state === "approved") {
-    return (
-      <div className="rounded-xl border border-[#DCE8E0] bg-[#F4FAF6] p-3.5 text-xs text-[#0C2A1B]">
-        <div className="flex items-center gap-2 font-bold text-[#0F6B3E]">
-          <Sparkles className="h-4 w-4" aria-hidden="true" />
-          <span>Approved Professional</span>
-        </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-[#34453B]">
-          Your professional profile is active. The dedicated professional workspace is coming soon.
-        </p>
-        <span
-          aria-disabled="true"
-          className="mt-2.5 inline-flex cursor-not-allowed items-center rounded-lg border border-[#DCE8E0] bg-white px-2.5 py-1.5 text-[11px] font-semibold text-[#6A7B70]"
-        >
-          Switch to professional view (coming soon)
-        </span>
       </div>
     );
   }
@@ -481,16 +460,6 @@ export function CustomerShell({
                         <span>Admin portal</span>
                       </Link>
                     )}
-
-                    <Link
-                      href="/"
-                      role="menuitem"
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-[#34453B] transition hover:bg-[#F4FAF6] hover:text-[#0C2A1B]"
-                    >
-                      <LayoutDashboard className="h-4 w-4 text-[#6A7B70]" aria-hidden="true" />
-                      <span>Public home page</span>
-                    </Link>
                   </div>
 
                   <div className="border-t border-[#DCE8E0] pt-1">
@@ -515,9 +484,11 @@ export function CustomerShell({
             <div className="space-y-6">
               {renderNavList()}
             </div>
-            <div className="mt-6 pt-4 border-t border-[#DCE8E0]">
-              <SidebarProCta state={professionalState} reviewNote={reviewNote} />
-            </div>
+            {professionalState !== "approved" && professionalState !== "suspended" && (
+              <div className="mt-6 pt-4 border-t border-[#DCE8E0]">
+                <SidebarProCta state={professionalState} reviewNote={reviewNote} />
+              </div>
+            )}
           </aside>
 
           {mobileMenuOpen && (
@@ -543,13 +514,15 @@ export function CustomerShell({
                   </div>
                   {renderNavList(() => setMobileMenuOpen(false))}
                 </div>
-                <div className="mt-6 border-t border-[#DCE8E0] pt-4">
-                  <SidebarProCta
-                    state={professionalState}
-                    reviewNote={reviewNote}
-                    onNavigate={() => setMobileMenuOpen(false)}
-                  />
-                </div>
+                {professionalState !== "approved" && professionalState !== "suspended" && (
+                  <div className="mt-6 border-t border-[#DCE8E0] pt-4">
+                    <SidebarProCta
+                      state={professionalState}
+                      reviewNote={reviewNote}
+                      onNavigate={() => setMobileMenuOpen(false)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

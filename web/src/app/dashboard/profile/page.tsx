@@ -36,14 +36,14 @@ export default async function CustomerProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <span className="text-[11px] font-bold uppercase tracking-wider text-[#0F6B3E]">
-          Account Settings
+        <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#0F6B3E]">
+          My Account
         </span>
-        <h1 className="mt-1 text-xl font-extrabold tracking-tight text-[#0C2A1B] sm:text-2xl">
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#0C2A1B] sm:text-3xl">
           Profile
         </h1>
-        <p className="mt-1 text-xs text-[#6A7B70]">
-          Manage your name, default area in Lahore, phone number, and password.
+        <p className="mt-1 text-sm text-[#6A7B70]">
+          Keep your profile current so professionals and administrators can see the right contact details and service area context.
         </p>
       </div>
 
