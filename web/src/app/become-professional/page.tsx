@@ -50,9 +50,9 @@ export default async function BecomeProfessionalPage() {
     redirect("/admin");
   }
 
-  // 2. If user is already an approved professional, redirect to the dashboard
+  // 2. If user is already an approved professional, redirect to the professional dashboard
   if (proInfo.state === "approved") {
-    redirect("/dashboard");
+    redirect("/pro");
   }
 
   const cookieStore = await cookies();

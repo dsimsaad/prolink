@@ -10,11 +10,13 @@ const supabaseKey =
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Protect landing page, customer dashboard, and become-professional routes against role mismatches
+  // Protect landing page, customer dashboard, professional dashboard, and become-professional routes against role mismatches
   const isCustomerOrProPath =
     pathname === "/" ||
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
+    pathname === "/pro" ||
+    pathname.startsWith("/pro/") ||
     pathname === "/user" ||
     pathname.startsWith("/user/") ||
     pathname === "/become-professional" ||

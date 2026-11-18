@@ -42,7 +42,7 @@ export default async function ApplicationSubmittedPage() {
   }
 
   if (proInfo.state === "approved") {
-    redirect("/dashboard");
+    redirect("/pro");
   }
 
   const cookieStore = await cookies();

@@ -331,6 +331,28 @@ export function JobDetailClient({
           {job.description}
         </p>
 
+        {job.status === "In progress" && job.professional_marked_done_at && (
+          <div
+            role="status"
+            className="flex flex-col justify-between gap-3 rounded-xl border border-emerald-300 bg-[#E6F4EA] p-4 sm:flex-row sm:items-center"
+          >
+            <div className="flex items-start gap-2.5 text-xs text-[#0C2A1B]">
+              <CheckCircle2
+                className="mt-0.5 h-4 w-4 shrink-0 text-[#0F6B3E]"
+                aria-hidden="true"
+              />
+              <div>
+                <p className="font-bold text-[#0C2A1B]">
+                  Your professional marked the work as done. Please confirm if you are satisfied.
+                </p>
+                <p className="mt-0.5 text-[11px] text-[#34453B]">
+                  Marked done on {formatKarachiDateTime(job.professional_marked_done_at)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#DCE8E0] pt-4 text-xs">
           <div className="flex flex-wrap items-center gap-4 text-[11px] text-[#6A7B70]">
             <span className="inline-flex items-center gap-1">

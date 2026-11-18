@@ -61,6 +61,18 @@ export default async function CustomerOverviewPage() {
 
   const attentionItems = [
     ...jobs
+      .filter((j) => j.status === "In progress" && j.professional_marked_done_at)
+      .map((j) => ({
+        id: `marked-done-${j.id}`,
+        jobId: j.id,
+        title: j.title,
+        badge: "Marked done",
+        description:
+          "Your professional marked the work as done. Please confirm if you are satisfied.",
+        ctaLabel: "Confirm completion",
+        href: `/dashboard/jobs/${j.id}`,
+      })),
+    ...jobs
       .filter(
         (j) =>
           (j.status === "Open" || j.status === "Offers received") &&
@@ -78,7 +90,7 @@ export default async function CustomerOverviewPage() {
         href: `/dashboard/jobs/${j.id}`,
       })),
     ...jobs
-      .filter((j) => j.status === "In progress")
+      .filter((j) => j.status === "In progress" && !j.professional_marked_done_at)
       .map((j) => ({
         id: `progress-${j.id}`,
         jobId: j.id,

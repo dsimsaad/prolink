@@ -39,6 +39,8 @@ export interface CustomerJobRow {
   status: JobStatus;
   assigned_professional_id: string | null;
   expires_at: string | null;
+  work_started_at: string | null;
+  professional_marked_done_at: string | null;
   created_at: string;
   updated_at: string;
   category_name: string;

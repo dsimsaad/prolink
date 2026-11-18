@@ -57,7 +57,7 @@ export async function fetchCustomerJobs(
     supabase
       .from("jobs")
       .select(
-        "id, customer_id, title, description, category_id, area_id, budget_min, budget_max, urgency, status, assigned_professional_id, expires_at, created_at, updated_at"
+        "id, customer_id, title, description, category_id, area_id, budget_min, budget_max, urgency, status, assigned_professional_id, expires_at, work_started_at, professional_marked_done_at, created_at, updated_at"
       )
       .eq("customer_id", customerId)
       .order("created_at", { ascending: false }),
@@ -97,7 +97,9 @@ export async function fetchCustomerJobs(
   for (const o of offersRes.data ?? []) {
     const jId = String(o.job_id);
     const current = offerCounts.get(jId) ?? { total: 0, pending: 0 };
-    current.total += 1;
+    if (o.status === "pending" || o.status === "accepted") {
+      current.total += 1;
+    }
     if (o.status === "pending") {
       current.pending += 1;
     }
@@ -132,6 +134,10 @@ export async function fetchCustomerJobs(
         ? String(job.assigned_professional_id)
         : null,
       expires_at: job.expires_at ? String(job.expires_at) : null,
+      work_started_at: job.work_started_at ? String(job.work_started_at) : null,
+      professional_marked_done_at: job.professional_marked_done_at
+        ? String(job.professional_marked_done_at)
+        : null,
       created_at: String(job.created_at),
       updated_at: String(job.updated_at),
       category_name: categoryMap.get(Number(job.category_id)) ?? "General",
@@ -159,7 +165,7 @@ export async function fetchCustomerJobDetail(
   const { data: rawJob } = await supabase
     .from("jobs")
     .select(
-      "id, customer_id, title, description, category_id, area_id, budget_min, budget_max, urgency, status, assigned_professional_id, expires_at, created_at, updated_at"
+      "id, customer_id, title, description, category_id, area_id, budget_min, budget_max, urgency, status, assigned_professional_id, expires_at, work_started_at, professional_marked_done_at, created_at, updated_at"
     )
     .eq("id", jobId)
     .eq("customer_id", customerId)
@@ -266,26 +272,28 @@ export async function fetchCustomerJobDetail(
     });
   }
 
-  const offers: OfferWithProfessional[] = rawOffers.map((o) => {
-    const proId = String(o.professional_id);
-    const proMeta = proProfileMap.get(proId);
-    return {
-      id: String(o.id),
-      job_id: String(o.job_id),
-      professional_id: proId,
-      price: Number(o.price),
-      inspection_fee: Number(o.inspection_fee ?? 0),
-      eta_minutes: Number(o.eta_minutes),
-      message: o.message ? String(o.message) : null,
-      status: String(o.status) as OfferStatus,
-      created_at: String(o.created_at),
-      professional_name: nameMap.get(proId) ?? "Professional",
-      years_experience: proMeta?.years_experience ?? 0,
-      rating_count: proMeta?.rating_count ?? 0,
-      avg_rating_bayes: proMeta?.avg_rating_bayes ?? 0,
-      verified: proMeta?.verified ?? false,
-    };
-  });
+  const offers: OfferWithProfessional[] = rawOffers
+    .filter((o) => o.status === "pending" || o.status === "accepted")
+    .map((o) => {
+      const proId = String(o.professional_id);
+      const proMeta = proProfileMap.get(proId);
+      return {
+        id: String(o.id),
+        job_id: String(o.job_id),
+        professional_id: proId,
+        price: Number(o.price),
+        inspection_fee: Number(o.inspection_fee ?? 0),
+        eta_minutes: Number(o.eta_minutes),
+        message: o.message ? String(o.message) : null,
+        status: String(o.status) as OfferStatus,
+        created_at: String(o.created_at),
+        professional_name: nameMap.get(proId) ?? "Professional",
+        years_experience: proMeta?.years_experience ?? 0,
+        rating_count: proMeta?.rating_count ?? 0,
+        avg_rating_bayes: proMeta?.avg_rating_bayes ?? 0,
+        verified: proMeta?.verified ?? false,
+      };
+    });
 
   const events: JobEventItem[] = rawEvents.map((ev) => ({
     id: String(ev.id),
@@ -358,6 +366,12 @@ export async function fetchCustomerJobDetail(
       ? String(rawJob.assigned_professional_id)
       : null,
     expires_at: rawJob.expires_at ? String(rawJob.expires_at) : null,
+    work_started_at: rawJob.work_started_at
+      ? String(rawJob.work_started_at)
+      : null,
+    professional_marked_done_at: rawJob.professional_marked_done_at
+      ? String(rawJob.professional_marked_done_at)
+      : null,
     created_at: String(rawJob.created_at),
     updated_at: String(rawJob.updated_at),
     category_name: catRes.data?.name ? String(catRes.data.name) : "General",

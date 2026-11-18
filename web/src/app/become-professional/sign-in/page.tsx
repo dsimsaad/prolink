@@ -51,7 +51,7 @@ export default async function ProfessionalSignInPage() {
 
     const proInfo = await getProfessionalState();
     if (proInfo.state === "approved") {
-      redirect("/dashboard");
+      redirect("/pro");
     }
 
     redirect("/become-professional");

@@ -13,6 +13,9 @@ export function getSignInDestination(
   ) {
     return "/become-professional";
   }
+  if (next === "/pro" || next?.startsWith("/pro/")) {
+    return next;
+  }
   if (next === "/dashboard" || next?.startsWith("/dashboard/")) {
     return next;
   }

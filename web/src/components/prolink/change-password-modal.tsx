@@ -37,20 +37,18 @@ export function ChangePasswordModal({
   const [success, setSuccess] = useState<string | null>(null);
   const [forgotNotice, setForgotNotice] = useState<string | null>(null);
 
-  // Reset fields when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setError(null);
-      setSuccess(null);
-      setForgotNotice(null);
-      setShowCurrentPassword(false);
-      setShowNewPassword(false);
-      setShowConfirmPassword(false);
-    }
-  }, [isOpen]);
+  function handleClose() {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setError(null);
+    setSuccess(null);
+    setForgotNotice(null);
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    onClose();
+  }
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -198,7 +196,7 @@ export function ChangePasswordModal({
       aria-modal="true"
       aria-labelledby="change-password-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         className="relative w-full max-w-md rounded-2xl border border-[#DCE8E0] bg-white p-6 shadow-xl"
@@ -224,7 +222,7 @@ export function ChangePasswordModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close change password modal"
             className="rounded-lg p-1.5 text-[#6A7B70] transition hover:bg-[#F4FAF6] hover:text-[#0C2A1B]"
           >
@@ -376,7 +374,7 @@ export function ChangePasswordModal({
           <div className="flex items-center justify-end gap-2.5 border-t border-[#DCE8E0] pt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="rounded-xl border border-[#DCE8E0] bg-white px-4 py-2.5 text-xs font-semibold text-[#34453B] transition hover:bg-[#F4FAF6]"
             >
               {success ? "Close" : "Cancel"}

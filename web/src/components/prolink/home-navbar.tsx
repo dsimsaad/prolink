@@ -176,7 +176,7 @@ export function HomeNavbar() {
               href={
                 isLoggedIn
                   ? proState === "approved"
-                    ? "/dashboard"
+                    ? "/pro"
                     : "/become-professional"
                   : "/become-professional/sign-in?mode=signup"
               }
@@ -274,7 +274,7 @@ export function HomeNavbar() {
                     href={
                       isLoggedIn
                         ? proState === "approved"
-                          ? "/dashboard"
+                          ? "/pro"
                           : "/become-professional"
                         : "/become-professional/sign-in?mode=signup"
                     }

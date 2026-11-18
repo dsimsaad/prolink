@@ -111,7 +111,7 @@ function SidebarProCta({
           Your professional partner account is active in Lahore.
         </p>
         <Link
-          href="/dashboard"
+          href="/pro"
           onClick={onNavigate}
           className="mt-2.5 inline-flex w-full items-center justify-center rounded-lg border border-[#0F6B3E] bg-white px-3 py-2 text-xs font-semibold text-[#0F6B3E] transition hover:bg-[#E6F4EA]"
         >
@@ -387,6 +387,28 @@ export function CustomerShell({
           </div>
 
           <div className="flex items-center gap-2.5 sm:gap-3">
+            {professionalState === "approved" && (
+              <div
+                role="group"
+                aria-label="Workspace mode switch"
+                className="hidden sm:inline-flex items-center rounded-xl border border-[#DCE8E0] bg-[#F4FAF6] p-0.5 text-xs font-semibold"
+              >
+                <Link
+                  href="/dashboard"
+                  aria-current="page"
+                  className="rounded-lg bg-white px-2.5 py-1 text-[#0F6B3E] shadow-2xs"
+                >
+                  Hire
+                </Link>
+                <Link
+                  href="/pro"
+                  className="rounded-lg px-2.5 py-1 text-[#34453B] transition hover:text-[#0C2A1B]"
+                >
+                  Work
+                </Link>
+              </div>
+            )}
+
             <Link
               href="/dashboard/jobs/new"
               className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-3.5 py-2 text-xs font-semibold !text-white text-white shadow-2xs transition hover:bg-[#0A4D2B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
@@ -462,7 +484,7 @@ export function CustomerShell({
 
                     {professionalState === "approved" && (
                       <Link
-                        href="/dashboard"
+                        href="/pro"
                         role="menuitem"
                         onClick={() => setProfileMenuOpen(false)}
                         className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-[#34453B] transition hover:bg-[#F4FAF6] hover:text-[#0C2A1B]"
@@ -518,7 +540,28 @@ export function CustomerShell({
 
         <div className="flex flex-1">
           <aside className="hidden w-64 shrink-0 border-r border-[#DCE8E0] bg-white lg:flex lg:flex-col lg:justify-between lg:p-4">
-            <div className="space-y-6">
+            <div className="space-y-4">
+              {professionalState === "approved" && (
+                <div
+                  role="group"
+                  aria-label="Switch between Hire and Work mode"
+                  className="grid grid-cols-2 rounded-xl border border-[#DCE8E0] bg-[#F4FAF6] p-1 text-xs font-semibold"
+                >
+                  <Link
+                    href="/dashboard"
+                    aria-current="page"
+                    className="rounded-lg bg-white py-1.5 text-center text-[#0F6B3E] shadow-2xs"
+                  >
+                    Hire
+                  </Link>
+                  <Link
+                    href="/pro"
+                    className="rounded-lg py-1.5 text-center text-[#34453B] transition hover:text-[#0C2A1B]"
+                  >
+                    Work
+                  </Link>
+                </div>
+              )}
               {renderNavList()}
             </div>
             {professionalState !== "suspended" && (

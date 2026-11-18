@@ -10,10 +10,14 @@ import { useCustomerViewer } from "@/components/customer/customer-shell";
 
 const PAGE_SIZE = 20;
 
-function formatNotificationContent(item: CustomerNotificationItem): {
+function formatNotificationContent(
+  item: CustomerNotificationItem,
+  mode: "customer" | "professional"
+): {
   title: string;
   body: string;
-  jobId: string | null;
+  href: string | null;
+  ctaLabel: string;
 } {
   const payload = item.payload ?? {};
   const rawJobId =
@@ -36,13 +40,24 @@ function formatNotificationContent(item: CustomerNotificationItem): {
       : typeof payload.price === "string" && !Number.isNaN(Number(payload.price))
         ? Number(payload.price)
         : null;
+  const ratingVal =
+    typeof payload.rating === "number"
+      ? payload.rating
+      : typeof payload.rating === "string" && !Number.isNaN(Number(payload.rating))
+        ? Number(payload.rating)
+        : null;
+
+  const customerJobHref = rawJobId ? `/dashboard/jobs/${rawJobId}` : null;
+  const proJobHref = rawJobId ? `/pro/jobs/${rawJobId}` : null;
+  const proOpportunityHref = rawJobId ? `/pro/opportunities/${rawJobId}` : null;
 
   switch (item.type) {
     case "new_job_match":
       return {
         title: "New matching job posted",
         body: `A new job matching your trade and area was posted: "${jobTitle}".`,
-        jobId: rawJobId,
+        href: mode === "professional" ? proOpportunityHref : customerJobHref,
+        ctaLabel: mode === "professional" ? "View opportunity" : "Open job",
       };
     case "offer_received":
       return {
@@ -51,13 +66,42 @@ function formatNotificationContent(item: CustomerNotificationItem): {
           priceVal !== null
             ? `A professional sent a quote of ${formatPkr(priceVal)} for "${jobTitle}".`
             : `You received a new offer from a professional for "${jobTitle}".`,
-        jobId: rawJobId,
+        href: customerJobHref,
+        ctaLabel: "Open job",
       };
     case "offer_accepted":
       return {
         title: "Offer accepted",
-        body: `Offer accepted for "${jobTitle}". Contact details are now available on the job page.`,
-        jobId: rawJobId,
+        body:
+          mode === "professional"
+            ? `Your offer for "${jobTitle}" was accepted! Customer contact details are now available.`
+            : `Offer accepted for "${jobTitle}". Contact details are now available on the job page.`,
+        href: mode === "professional" ? proJobHref : customerJobHref,
+        ctaLabel: "Open job",
+      };
+    case "offer_rejected":
+      return {
+        title: "Offer declined",
+        body: `The customer selected another professional for "${jobTitle}".`,
+        href: mode === "professional" ? "/pro/offers?tab=rejected" : customerJobHref,
+        ctaLabel: mode === "professional" ? "View offers" : "Open job",
+      };
+    case "job_started":
+      return {
+        title: "Work started",
+        body: `Work has started on "${jobTitle}".`,
+        href: mode === "professional" ? proJobHref : customerJobHref,
+        ctaLabel: "Open job",
+      };
+    case "work_marked_done":
+      return {
+        title: "Work marked as done",
+        body:
+          mode === "professional"
+            ? `You marked "${jobTitle}" as done. Waiting for customer confirmation.`
+            : `Your professional marked "${jobTitle}" as done. Please confirm if you are satisfied.`,
+        href: mode === "professional" ? proJobHref : customerJobHref,
+        ctaLabel: "Open job",
       };
     case "job_status_changed":
       return {
@@ -65,8 +109,20 @@ function formatNotificationContent(item: CustomerNotificationItem): {
         body: statusText
           ? `"${jobTitle}" moved to status: ${statusText}.`
           : `The status of "${jobTitle}" was updated.`,
-        jobId: rawJobId,
+        href: mode === "professional" ? proJobHref : customerJobHref,
+        ctaLabel: "Open job",
       };
+    case "review_received":
+      return {
+        title: "New customer review received",
+        body:
+          ratingVal !== null
+            ? `You received a ${ratingVal}-star review for "${jobTitle}".`
+            : `A customer left a review for "${jobTitle}".`,
+        href: mode === "professional" ? "/pro/reviews" : customerJobHref,
+        ctaLabel: mode === "professional" ? "View reviews" : "Open job",
+      };
+    case "professional_application_reviewed":
     case "application_reviewed":
       return {
         title: "Professional application update",
@@ -74,7 +130,8 @@ function formatNotificationContent(item: CustomerNotificationItem): {
           typeof payload.note === "string" && payload.note.trim().length > 0
             ? `Your professional application status changed (${payload.decision ?? "updated"}): ${payload.note}`
             : `Your professional application status was updated.`,
-        jobId: null,
+        href: mode === "professional" ? "/pro/profile" : null,
+        ctaLabel: "View profile",
       };
     default:
       return {
@@ -83,17 +140,26 @@ function formatNotificationContent(item: CustomerNotificationItem): {
           jobTitle !== "your job"
             ? `Update regarding "${jobTitle}".`
             : "You have a new update on your ProLink account.",
-        jobId: rawJobId,
+        href: mode === "professional" ? proJobHref : customerJobHref,
+        ctaLabel: "Open job",
       };
   }
 }
 
 export function NotificationsClient({
   initialItems,
+  mode = "customer",
+  viewerId,
+  onUnreadChange,
 }: {
   initialItems: CustomerNotificationItem[];
+  mode?: "customer" | "professional";
+  viewerId?: string;
+  onUnreadChange?: () => void;
 }) {
-  const { customerId, refreshHeaderCounts } = useCustomerViewer();
+  const customerViewer = useCustomerViewer();
+  const activeUserId = viewerId || customerViewer.customerId;
+  const notifyHeader = onUnreadChange || customerViewer.refreshHeaderCounts;
   const [items, setItems] = useState<CustomerNotificationItem[]>(initialItems);
   const [page, setPage] = useState(1);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -115,13 +181,13 @@ export function NotificationsClient({
       .from("notifications")
       .update({ read_at: nowIso })
       .eq("id", notificationId)
-      .eq("user_id", customerId);
+      .eq("user_id", activeUserId);
 
     if (!error) {
       setItems((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, read_at: nowIso } : n))
       );
-      refreshHeaderCounts();
+      notifyHeader();
     }
     setBusyId(null);
   }
@@ -135,14 +201,14 @@ export function NotificationsClient({
     const { error } = await supabase
       .from("notifications")
       .update({ read_at: nowIso })
-      .eq("user_id", customerId)
+      .eq("user_id", activeUserId)
       .is("read_at", null);
 
     if (!error) {
       setItems((prev) =>
         prev.map((n) => (n.read_at ? n : { ...n, read_at: nowIso }))
       );
-      refreshHeaderCounts();
+      notifyHeader();
     }
     setBusyId(null);
   }
@@ -185,7 +251,7 @@ export function NotificationsClient({
         <div className="space-y-2.5">
           {pageItems.map((item) => {
             const isUnread = !item.read_at;
-            const formatted = formatNotificationContent(item);
+            const formatted = formatNotificationContent(item, mode);
 
             return (
               <article
@@ -216,12 +282,12 @@ export function NotificationsClient({
                   </div>
 
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    {formatted.jobId && (
+                    {formatted.href && (
                       <Link
-                        href={`/dashboard/jobs/${formatted.jobId}`}
+                        href={formatted.href}
                         className="inline-flex items-center gap-1 rounded-xl border border-[#DCE8E0] bg-white px-3 py-1.5 text-xs font-semibold text-[#0F6B3E] hover:bg-[#F4FAF6]"
                       >
-                        <span>Open job</span>
+                        <span>{formatted.ctaLabel}</span>
                         <ExternalLink className="h-3 w-3" aria-hidden="true" />
                       </Link>
                     )}

@@ -38,11 +38,8 @@ export function getCtaConfig(
       };
     case "approved":
       return {
-        href: "/dashboard",
-        label:
-          variant === "menu-item" || variant === "mobile"
-            ? "Professional active"
-            : "Verified professional",
+        href: "/pro",
+        label: "Switch to professional mode",
       };
     case "rejected":
       return {
