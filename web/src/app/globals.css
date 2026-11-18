@@ -2754,6 +2754,16 @@ h3:where(:not(.portal-root *)) {
   font-weight: 600;
 }
 
+.site-header nav a.mobile-become-pro-btn,
+.site-header nav a.mobile-become-pro-btn:visited,
+.site-header nav a.mobile-become-pro-btn:hover,
+.site-header nav a.mobile-become-pro-btn:focus-visible,
+.site-header nav a.mobile-become-pro-btn span,
+.site-header nav a.mobile-become-pro-btn svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
 .site-header nav a:hover,
 .site-header nav a:focus-visible {
   color: var(--forest-hover) !important;

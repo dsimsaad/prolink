@@ -189,7 +189,7 @@ export function HomeNavbar() {
                     : "/become-professional"
                   : "/become-professional/sign-in?mode=signup"
               }
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0F6B3E] px-4 py-2 text-sm font-semibold text-white shadow-xs transition-all duration-200 hover:bg-[#0B5632] active:scale-[0.98]"
+              className="inline-flex items-center gap-2 rounded-xl border border-white bg-[#0F6B3E] px-4 py-2 text-sm font-semibold !text-white text-white shadow-xs transition-all duration-200 hover:bg-[#0B5632] active:scale-[0.98]"
             >
               <span>
                 {isLoggedIn && proState === "approved"
@@ -287,15 +287,15 @@ export function HomeNavbar() {
                           : "/become-professional"
                         : "/become-professional/sign-in?mode=signup"
                     }
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#0F6B3E] px-4 py-3 text-center text-sm font-semibold text-white shadow-xs transition hover:bg-[#0B5632]"
+                    className="mobile-become-pro-btn inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-white bg-[#0F6B3E] px-4 py-3 text-center text-sm font-semibold !text-white text-white shadow-xs transition hover:bg-[#0B5632]"
                     onClick={() => setMenuOpen(false)}
                   >
-                    <span>
+                    <span className="!text-white text-white">
                       {isLoggedIn && proState === "approved"
                         ? "Pro Dashboard"
                         : "Become a Professional"}
                     </span>
-                    <ArrowUpRight className="h-4 w-4 text-white" />
+                    <ArrowUpRight className="h-4 w-4 !text-white text-white" aria-hidden="true" />
                   </Link>
                 </>
               )}

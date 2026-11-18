@@ -282,9 +282,6 @@ export function AdminShell({
                 )}
                 <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#2FAE60] ring-2 ring-white" />
               </span>
-              <span className="hidden max-w-[140px] truncate text-xs font-semibold text-[#0C2A1B] sm:inline">
-                {displayName.split(" ")[0]}
-              </span>
               <ChevronDown
                 className={`h-3.5 w-3.5 text-[#6A7B70] transition-transform ${
                   profileMenuOpen ? "rotate-180" : ""

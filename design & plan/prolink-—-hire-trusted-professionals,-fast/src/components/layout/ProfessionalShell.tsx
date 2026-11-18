@@ -202,7 +202,7 @@ export const ProfessionalShell: React.FC<ProfessionalShellProps> = ({ children }
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 p-1 hover:bg-[#F4FAF6] rounded-full cursor-pointer focus:outline-none"
+              className="flex items-center gap-2 p-1 pr-2.5 rounded-full border border-[#DCE8E0] bg-white hover:border-[#0F6B3E] hover:bg-[#F4FAF6] cursor-pointer focus:outline-none transition"
             >
               <Avatar
                 src={pro.avatar}
@@ -211,10 +211,7 @@ export const ProfessionalShell: React.FC<ProfessionalShellProps> = ({ children }
                 isOnline={isOnline}
                 isVerified={true}
               />
-              <span className="hidden xl:inline text-xs font-semibold text-[#0C2A1B]">
-                {pro.name.split(' ')[0]}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#6A7B70] hidden xl:inline" />
+              <ChevronDown className="w-3.5 h-3.5 text-[#6A7B70]" />
             </button>
 
             {userMenuOpen && (

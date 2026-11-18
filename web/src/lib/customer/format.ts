@@ -96,7 +96,7 @@ export function normalizePakistaniPhone(raw: string): string {
 }
 
 export function isValidPakistaniPhone(phone: string): boolean {
-  return /^03[0-9]{9}$/.test(phone);
+  return /^03[0-57][0-9]{8}$/.test(phone);
 }
 
 export function formatPakistaniPhoneDisplay(phone: string | null | undefined): string {

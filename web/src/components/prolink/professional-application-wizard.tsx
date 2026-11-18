@@ -47,7 +47,7 @@ interface ProfessionalApplicationWizardProps {
 type WizardStep = 1 | 2 | 3;
 
 const CNIC_REGEX = /^\d{5}-\d{7}-\d{1}$/;
-const PHONE_REGEX = /^\d{4}-\d{7}$/;
+const PHONE_REGEX = /^03[0-57]\d-\d{7}$/;
 
 const SUGGESTED_SKILLS_BY_CATEGORY: Record<string, string[]> = {
   plumbing: [

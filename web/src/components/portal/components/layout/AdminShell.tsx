@@ -189,17 +189,14 @@ export const AdminShell: React.FC<AdminShellProps> = ({ children }) => {
             <div className="relative">
               <button
                 onClick={() => setAdminMenuOpen(!adminMenuOpen)}
-                className="flex items-center gap-2 p-1 hover:bg-[#F4FAF6] rounded-full cursor-pointer focus:outline-none"
+                className="flex items-center gap-2 p-1 pr-2.5 rounded-full border border-[#DCE8E0] bg-white hover:border-[#0F6B3E] hover:bg-[#F4FAF6] cursor-pointer focus:outline-none transition"
               >
                 <Avatar
                   name={currentUser?.name || 'Admin'}
                   size="sm"
                   isOnline={true}
                 />
-                <span className="hidden md:inline text-xs font-semibold text-[#0C2A1B]">
-                  HQ Admin
-                </span>
-                <ChevronDown className="w-3.5 h-3.5 text-[#6A7B70] hidden md:inline" />
+                <ChevronDown className="w-3.5 h-3.5 text-[#6A7B70]" />
               </button>
 
               {adminMenuOpen && (

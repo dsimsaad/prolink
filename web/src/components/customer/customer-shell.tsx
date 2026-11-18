@@ -78,12 +78,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard, exact: true },
   { label: "Post a job", href: "/dashboard/jobs/new", icon: PlusCircle, exact: true },
   { label: "My jobs", href: "/dashboard/jobs", icon: Briefcase },
-  {
-    label: "Notifications",
-    href: "/dashboard/notifications",
-    icon: Bell,
-    showUnreadBadge: true,
-  },
   { label: "Messages", href: "/dashboard/messages", icon: MessageSquare },
 ];
 
@@ -103,8 +97,29 @@ function SidebarProCta({
   reviewNote: string | null;
   onNavigate?: () => void;
 }) {
-  if (state === "suspended" || state === "approved") {
+  if (state === "suspended") {
     return null;
+  }
+
+  if (state === "approved") {
+    return (
+      <div className="rounded-xl border border-[#CDE9D6] bg-[#F4FAF6] p-3.5 text-xs text-[#0C2A1B]">
+        <div className="flex items-center gap-1.5 font-bold text-[#0F6B3E]">
+          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>Approved Professional</span>
+        </div>
+        <p className="mt-1 text-[11px] leading-relaxed text-[#34453B]">
+          Your professional partner account is active in Lahore.
+        </p>
+        <Link
+          href="/dashboard"
+          onClick={onNavigate}
+          className="mt-2.5 inline-flex w-full items-center justify-center rounded-lg border border-[#0F6B3E] bg-white px-3 py-2 text-xs font-semibold text-[#0F6B3E] transition hover:bg-[#E6F4EA]"
+        >
+          <span>Switch to Professional</span>
+        </Link>
+      </div>
+    );
   }
 
   if (state === "pending") {
@@ -405,13 +420,10 @@ export function CustomerShell({
                 aria-expanded={profileMenuOpen}
                 aria-haspopup="menu"
                 aria-label="Open customer account menu"
-                className="flex items-center gap-2.5 rounded-full border border-[#DCE8E0] bg-white py-1 pl-1.5 pr-3 text-xs font-semibold text-[#0C2A1B] shadow-2xs transition hover:border-[#0F6B3E]/40 hover:bg-[#F4FAF6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
+                className="flex items-center gap-2 rounded-full border border-[#DCE8E0] bg-white p-1 pr-2.5 text-xs font-semibold text-[#0C2A1B] shadow-2xs transition hover:border-[#0F6B3E]/40 hover:bg-[#F4FAF6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0F6B3E] text-[11px] font-bold !text-white text-white">
                   {initials}
-                </span>
-                <span className="hidden max-w-[140px] truncate sm:inline-block">
-                  {displayName}
                 </span>
                 <ChevronDown
                   className={`h-3.5 w-3.5 text-[#6A7B70] transition-transform ${
@@ -449,6 +461,44 @@ export function CustomerShell({
                       <span>Profile & settings</span>
                     </Link>
 
+                    {professionalState === "approved" && (
+                      <Link
+                        href="/dashboard"
+                        role="menuitem"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-[#34453B] transition hover:bg-[#F4FAF6] hover:text-[#0C2A1B]"
+                      >
+                        <Sparkles className="h-4 w-4 text-[#0F6B3E]" aria-hidden="true" />
+                        <span>Switch to Professional</span>
+                      </Link>
+                    )}
+
+                    {professionalState === "pending" && (
+                      <Link
+                        href="/become-professional/submitted"
+                        role="menuitem"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-[#34453B] transition hover:bg-[#F4FAF6] hover:text-[#0C2A1B]"
+                      >
+                        <Briefcase className="h-4 w-4 text-[#0F6B3E]" aria-hidden="true" />
+                        <span>Application status</span>
+                      </Link>
+                    )}
+
+                    {professionalState !== "approved" &&
+                      professionalState !== "pending" &&
+                      professionalState !== "suspended" && (
+                        <Link
+                          href="/become-professional"
+                          role="menuitem"
+                          onClick={() => setProfileMenuOpen(false)}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-[#34453B] transition hover:bg-[#F4FAF6] hover:text-[#0C2A1B]"
+                        >
+                          <Briefcase className="h-4 w-4 text-[#0F6B3E]" aria-hidden="true" />
+                          <span>Become a Professional</span>
+                        </Link>
+                      )}
+
                     {role === "admin" && (
                       <Link
                         href="/admin"
@@ -484,7 +534,7 @@ export function CustomerShell({
             <div className="space-y-6">
               {renderNavList()}
             </div>
-            {professionalState !== "approved" && professionalState !== "suspended" && (
+            {professionalState !== "suspended" && (
               <div className="mt-6 pt-4 border-t border-[#DCE8E0]">
                 <SidebarProCta state={professionalState} reviewNote={reviewNote} />
               </div>
@@ -514,7 +564,7 @@ export function CustomerShell({
                   </div>
                   {renderNavList(() => setMobileMenuOpen(false))}
                 </div>
-                {professionalState !== "approved" && professionalState !== "suspended" && (
+                {professionalState !== "suspended" && (
                   <div className="mt-6 border-t border-[#DCE8E0] pt-4">
                     <SidebarProCta
                       state={professionalState}
@@ -537,7 +587,7 @@ export function CustomerShell({
           aria-label="Mobile quick navigation"
           className="fixed bottom-0 inset-x-0 z-30 flex items-center justify-around border-t border-[#DCE8E0] bg-white/95 backdrop-blur-md px-2 py-1.5 lg:hidden"
         >
-          {NAV_ITEMS.slice(0, 5).map((item) => {
+          {NAV_ITEMS.map((item) => {
             const IconComponent = item.icon;
             const active = isItemActive(item);
             return (

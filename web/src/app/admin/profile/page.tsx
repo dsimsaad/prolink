@@ -1,10 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Mail, Phone, Shield, UserPen } from "lucide-react";
+import { KeyRound, Mail, Phone, Shield, UserPen } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useAdminViewer } from "@/components/admin/admin-shell";
-import { normalizePakistaniMobilePhone } from "@/utils/phone";
+import {
+  normalizePakistaniMobilePhone,
+  formatPakistaniMobilePhone,
+  sanitizePakistaniPhoneInput,
+} from "@/utils/phone";
+import { ChangePasswordModal } from "@/components/prolink/change-password-modal";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -27,6 +32,7 @@ export default function AdminProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
   const loadProfile = useCallback(async () => {
     if (!adminId) return;
@@ -77,7 +83,7 @@ export default function AdminProfilePage() {
     e.preventDefault();
     const normalizedPhone = normalizePakistaniMobilePhone(formPhone);
     if (!normalizedPhone) {
-      setError("Enter a valid Pakistani mobile number, e.g. 0300-1234567 or +92 300 1234567.");
+      setError("Enter a valid Pakistani mobile number (e.g. 0300-1234567). Prefixes 036, 038, and 039 are not allowed.");
       return;
     }
 
@@ -110,6 +116,10 @@ export default function AdminProfilePage() {
     }
   }
 
+  function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFormPhone(sanitizePakistaniPhoneInput(e.target.value));
+  }
+
   const initials = getInitials(fullName);
 
   return (
@@ -125,20 +135,30 @@ export default function AdminProfilePage() {
         </div>
 
         {!isEditing && (
-          <button
-            type="button"
-            onClick={() => {
-              setFormName(fullName);
-              setFormPhone(phone);
-              setFeedback(null);
-              setError(null);
-              setIsEditing(true);
-            }}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white shadow-2xs transition hover:bg-[#0B5430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
-          >
-            <UserPen className="h-4 w-4 !text-white text-white" aria-hidden="true" />
-            <span className="!text-white text-white">Edit Profile</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setPasswordModalOpen(true)}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#DCE8E0] bg-[#F8FBF9] px-3.5 py-2 text-xs font-semibold text-[#0C2A1B] transition hover:bg-[#E6F4EA]"
+            >
+              <KeyRound className="h-4 w-4 text-[#0F6B3E]" aria-hidden="true" />
+              <span>Change Password</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFormName(fullName);
+                setFormPhone(phone);
+                setFeedback(null);
+                setError(null);
+                setIsEditing(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white shadow-2xs transition hover:bg-[#0B5430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
+            >
+              <UserPen className="h-4 w-4 !text-white text-white" aria-hidden="true" />
+              <span className="!text-white text-white">Edit Profile</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -195,17 +215,16 @@ export default function AdminProfilePage() {
                   htmlFor="profile-full-name"
                   className="block text-xs font-bold text-[#0C2A1B]"
                 >
-                  Full Name *
+                  Full Name
                 </label>
                 <input
                   id="profile-full-name"
                   type="text"
                   readOnly
+                  disabled
                   value={formName}
-                  aria-describedby="profile-name-help"
-                  className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] bg-gray-50 px-3 py-2 text-xs text-[#6A7B70]"
+                  className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] bg-gray-50 px-3 py-2 text-xs text-[#6A7B70] cursor-not-allowed"
                 />
-                <p id="profile-name-help" className="mt-1 text-[11px] text-[#6A7B70]">Names cannot be changed from profile settings.</p>
               </div>
 
               <div>
@@ -222,9 +241,9 @@ export default function AdminProfilePage() {
                   autoComplete="tel"
                   inputMode="numeric"
                   maxLength={11}
-                  pattern="03[0-9]{9}"
+                  pattern="03[0-57][0-9]{8}"
                   value={formPhone}
-                  onChange={(e) => setFormPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
+                  onChange={handlePhoneChange}
                   placeholder="03001234567"
                   className="mt-1.5 w-full rounded-lg border border-[#DCE8E0] px-3 py-2 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
                 />
@@ -279,7 +298,7 @@ export default function AdminProfilePage() {
                   <span>Phone Number</span>
                 </dt>
                 <dd className="mt-1 text-sm font-bold text-[#0C2A1B]">
-                  {phone || "Not added yet"}
+                  {formatPakistaniMobilePhone(phone) || "Not added yet"}
                 </dd>
               </div>
 
@@ -293,19 +312,16 @@ export default function AdminProfilePage() {
                     : "Date unavailable"}
                 </dd>
               </div>
-
-              <div className="rounded-xl border border-[#DCE8E0] bg-[#F8FBF9] p-4 sm:col-span-2">
-                <dt className="text-[11px] font-bold uppercase tracking-wider text-[#6A7B70]">
-                  Administrator Account ID
-                </dt>
-                <dd className="mt-1 font-mono text-xs text-[#34453B]">
-                  {adminId}
-                </dd>
-              </div>
             </dl>
           </div>
         )}
       </div>
+
+      <ChangePasswordModal
+        isOpen={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+        userEmail={adminEmail}
+      />
     </div>
   );
 }

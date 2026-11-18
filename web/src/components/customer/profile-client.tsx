@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -9,7 +8,6 @@ import {
   CheckCircle2,
   KeyRound,
   Lock,
-  LogOut,
   Mail,
   MapPin,
   Phone,
@@ -22,9 +20,14 @@ import {
   isValidPakistaniPhone,
   normalizePakistaniPhone,
 } from "@/lib/customer/format";
+import {
+  normalizePakistaniMobilePhone,
+  sanitizePakistaniPhoneInput,
+} from "@/utils/phone";
 import type { AreaOption } from "@/lib/customer/types";
 import type { ProfessionalState } from "@/utils/professional";
 import { useCustomerViewer } from "@/components/customer/customer-shell";
+import { ChangePasswordModal } from "@/components/prolink/change-password-modal";
 
 interface ProfileClientProps {
   customerId: string;
@@ -66,17 +69,13 @@ export function ProfileClient({
   const [areaId, setAreaId] = useState<number>(
     initialAreaId ?? (areas[0]?.id ?? 0)
   );
-  const [phone, setPhone] = useState(initialPhone);
+  const [phone, setPhone] = useState(initialPhone.replace(/\D/g, "").slice(0, 11));
 
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileNotice, setProfileNotice] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [passwordNotice, setPasswordNotice] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
   const currentAreaName =
     areas.find((a) => a.id === areaId)?.name ||
@@ -86,10 +85,14 @@ export function ProfileClient({
   function handleCancelEdit() {
     setFullName(initialFullName);
     setAreaId(initialAreaId ?? (areas[0]?.id ?? 0));
-    setPhone(initialPhone);
+    setPhone(initialPhone.replace(/\D/g, "").slice(0, 11));
     setEditing(false);
     setProfileError(null);
     setProfileNotice(null);
+  }
+
+  function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setPhone(sanitizePakistaniPhoneInput(e.target.value));
   }
 
   async function handleSaveProfile(e: React.FormEvent) {
@@ -97,16 +100,10 @@ export function ProfileClient({
     setProfileNotice(null);
     setProfileError(null);
 
-    const cleanName = fullName.trim();
-    if (cleanName.length < 2 || cleanName.length > 100) {
-      setProfileError("Full name must be between 2 and 100 characters.");
-      return;
-    }
-
-    const cleanPhone = phone.trim() ? normalizePakistaniPhone(phone.trim()) : "";
-    if (cleanPhone && !isValidPakistaniPhone(cleanPhone)) {
+    const cleanPhone = phone.trim() ? normalizePakistaniMobilePhone(phone.trim()) : "";
+    if (phone.trim() && !cleanPhone) {
       setProfileError(
-        "Phone number must be an 11-digit Pakistani mobile number starting with 03 (e.g. 03001234567)."
+        "Phone number must be a valid 11-digit Pakistani mobile number starting with 03 (prefixes 036, 038, and 039 are not allowed)."
       );
       return;
     }
@@ -118,7 +115,6 @@ export function ProfileClient({
       const { error: updateProfErr } = await supabase
         .from("profiles")
         .update({
-          full_name: cleanName,
           area_id: areaId || null,
         })
         .eq("id", customerId);
@@ -155,43 +151,6 @@ export function ProfileClient({
     } finally {
       setSavingProfile(false);
     }
-  }
-
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    setPasswordNotice(null);
-    setPasswordError(null);
-
-    if (newPassword.length < 8) {
-      setPasswordError("New password must be at least 8 characters long.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError("New password and confirmation do not match.");
-      return;
-    }
-
-    setSavingPassword(true);
-    const supabase = createClient();
-
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
-
-    if (error) {
-      setPasswordError(error.message);
-    } else {
-      setNewPassword("");
-      setConfirmPassword("");
-      setPasswordNotice("Your password has been updated successfully.");
-    }
-    setSavingPassword(false);
-  }
-
-  async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.replace("/");
   }
 
   const roleBadgeLabel =
@@ -329,18 +288,22 @@ export function ProfileClient({
                     htmlFor="edit-fullName"
                     className="block text-xs font-semibold text-[#0C2A1B] mb-1.5"
                   >
-                    Full Name <span className="text-red-600">*</span>
+                    Full Name
                   </label>
-                  <input
-                    id="edit-fullName"
-                    type="text"
-                    maxLength={100}
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    placeholder="Enter full name"
-                    className="w-full rounded-xl border border-[#DCE8E0] bg-white px-3.5 py-2.5 text-sm text-[#0C2A1B] focus:border-[#0F6B3E] focus:ring-1 focus:ring-[#0F6B3E] focus:outline-none"
-                  />
+                  <div className="flex items-center gap-2 rounded-xl border border-[#DCE8E0] bg-[#F8FBF9] px-3.5 py-2.5 text-sm text-[#6A7B70]">
+                    <Lock className="h-3.5 w-3.5 shrink-0 text-[#6A7B70]" aria-hidden="true" />
+                    <input
+                      id="edit-fullName"
+                      type="text"
+                      readOnly
+                      disabled
+                      value={fullName}
+                      className="w-full bg-transparent text-sm text-[#6A7B70] cursor-not-allowed focus:outline-none"
+                    />
+                  </div>
+                  <p className="mt-1 text-[11px] text-[#6A7B70]">
+                    Contact support if you need to update your registered name.
+                  </p>
                 </div>
 
                 <div>
@@ -353,9 +316,12 @@ export function ProfileClient({
                   <input
                     id="edit-phone"
                     type="tel"
+                    autoComplete="tel"
                     inputMode="numeric"
+                    maxLength={11}
+                    pattern="03[0-57][0-9]{8}"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={handlePhoneChange}
                     placeholder="03001234567"
                     className="w-full rounded-xl border border-[#DCE8E0] bg-white px-3.5 py-2.5 text-sm text-[#0C2A1B] placeholder:text-[#6A7B70] focus:border-[#0F6B3E] focus:ring-1 focus:ring-[#0F6B3E] focus:outline-none"
                   />
@@ -483,7 +449,15 @@ export function ProfileClient({
               </div>
 
               {/* Action buttons in View Mode */}
-              <div className="mt-6 flex justify-end">
+              <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPasswordModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#DCE8E0] bg-[#F8FBF9] px-4 py-2.5 text-xs font-semibold text-[#0C2A1B] transition hover:bg-[#E6F4EA]"
+                >
+                  <KeyRound className="h-4 w-4 text-[#0F6B3E]" aria-hidden="true" />
+                  <span>Change Password</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
@@ -497,191 +471,11 @@ export function ProfileClient({
         </section>
       </div>
 
-      {/* Security & Password Card */}
-      <section className="rounded-[18px] border border-[#DCE8E0] bg-white p-6 shadow-2xs">
-        <div className="mb-5 flex items-center gap-2.5 border-b border-[#DCE8E0] pb-3">
-          <KeyRound className="h-4 w-4 text-[#0F6B3E]" aria-hidden="true" />
-          <div>
-            <h2 className="text-base font-bold text-[#0C2A1B]">
-              Change Password
-            </h2>
-            <p className="text-xs text-[#6A7B70]">
-              Update the password used to sign in to your ProLink account
-            </p>
-          </div>
-        </div>
-
-        {passwordError && (
-          <div
-            role="alert"
-            className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-800"
-          >
-            <AlertCircle className="h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
-            <span>{passwordError}</span>
-          </div>
-        )}
-
-        {passwordNotice && (
-          <div
-            role="status"
-            className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-[#E6F4EA] px-4 py-3 text-xs font-medium text-[#0C2A1B]"
-          >
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0F6B3E]" aria-hidden="true" />
-            <span>{passwordNotice}</span>
-          </div>
-        )}
-
-        <form onSubmit={(e) => void handleChangePassword(e)} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label
-                htmlFor="new-password"
-                className="block text-xs font-semibold text-[#0C2A1B] mb-1.5"
-              >
-                New password
-              </label>
-              <input
-                id="new-password"
-                type="password"
-                autoComplete="new-password"
-                minLength={8}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 8 characters"
-                required
-                className="w-full rounded-xl border border-[#DCE8E0] bg-white px-3.5 py-2.5 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirm-password"
-                className="block text-xs font-semibold text-[#0C2A1B] mb-1.5"
-              >
-                Confirm new password
-              </label>
-              <input
-                id="confirm-password"
-                type="password"
-                autoComplete="new-password"
-                minLength={8}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter new password"
-                required
-                className="w-full rounded-xl border border-[#DCE8E0] bg-white px-3.5 py-2.5 text-xs text-[#0C2A1B] focus:border-[#0F6B3E] focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-1">
-            <button
-              type="submit"
-              disabled={savingPassword}
-              className="rounded-xl border border-[#DCE8E0] bg-[#F8FBF9] px-4 py-2.5 text-xs font-semibold text-[#0C2A1B] transition hover:bg-[#E6F4EA] disabled:opacity-60"
-            >
-              {savingPassword ? "Updating password..." : "Update Password"}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Professional Account Status Card (if applicable) */}
-      {professionalState !== "approved" && (
-        <section className="rounded-[18px] border border-[#DCE8E0] bg-white p-6 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0F6B3E]">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-            <span>Professional Partner Status</span>
-          </div>
-
-          {professionalState === "pending" && (
-            <div className="space-y-2">
-              <h2 className="text-base font-bold text-[#0C2A1B]">
-                Your professional application is under review
-              </h2>
-              <p className="text-xs text-[#34453B]">
-                An administrator is reviewing your skills and service areas in Lahore.
-              </p>
-              <Link
-                href="/become-professional/submitted"
-                className="inline-flex items-center rounded-xl border border-[#DCE8E0] bg-[#F8FBF9] px-4 py-2 text-xs font-semibold text-[#0F6B3E] hover:bg-[#E6F4EA]"
-              >
-                View application status →
-              </Link>
-            </div>
-          )}
-
-          {professionalState === "rejected" && (
-            <div className="space-y-2">
-              <h2 className="text-base font-bold text-amber-900">
-                Your previous professional application was not approved
-              </h2>
-              {reviewNote && (
-                <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                  Administrator note: &ldquo;{reviewNote}&rdquo;
-                </p>
-              )}
-              <Link
-                href="/become-professional"
-                className="inline-flex items-center rounded-xl bg-[#0F6B3E] px-4 py-2 text-xs font-semibold !text-white text-white hover:bg-[#0A4D2B]"
-              >
-                Update and reapply →
-              </Link>
-            </div>
-          )}
-
-          {(professionalState === "none" || professionalState === "logged_out") && (
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <div>
-                <h2 className="text-base font-bold text-[#0C2A1B]">
-                  Earn with your skills on ProLink
-                </h2>
-                <p className="mt-1 text-xs text-[#6A7B70]">
-                  Use the same account to apply as a professional and send quotes on local jobs in Lahore.
-                </p>
-              </div>
-              <Link
-                href="/become-professional"
-                className="inline-flex shrink-0 items-center rounded-xl bg-[#0F6B3E] px-4 py-2.5 text-xs font-semibold !text-white text-white hover:bg-[#0A4D2B]"
-              >
-                Apply as a professional
-              </Link>
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Session & Account Support Card */}
-      <section className="rounded-[18px] border border-[#DCE8E0] bg-white p-6 shadow-2xs space-y-4">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="text-sm font-bold text-[#0C2A1B]">
-              Session & Account Support
-            </h2>
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[#6A7B70]">
-              <Mail className="h-3.5 w-3.5 text-[#0F6B3E]" aria-hidden="true" />
-              <span>
-                Need help or wish to close your account? Email{" "}
-                <a
-                  href={`mailto:${siteConfig.supportEmail}`}
-                  className="font-semibold text-[#0F6B3E] hover:underline"
-                >
-                  {siteConfig.supportEmail}
-                </a>
-              </span>
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => void handleSignOut()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-50"
-          >
-            <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Sign out</span>
-          </button>
-        </div>
-      </section>
+      <ChangePasswordModal
+        isOpen={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+        userEmail={email}
+      />
     </div>
   );
 }
