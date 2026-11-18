@@ -307,6 +307,62 @@ Verify the CTA appearance across professional lifecycle states:
   - `/dashboard/messages` explains that real-time chat is coming soon and lists accepted jobs with links to view the assigned professional's contact details.
   - `/dashboard/profile` updates `full_name`, `area_id`, and 11-digit Pakistani mobile `phone` (`03XXXXXXXXX`) in `contact_details`, allows changing password via `supabase.auth.updateUser`, shows the professional application status card, and displays the support email for account deletion requests.
 
+---
+
+## 11. Professional Dashboard & C# Professional API Verification Checklist (`013_professional_dashboard.sql`)
+
+### A. Database Migration, RLS Suite & Demo Seed Verification
+- [ ] **Run Migration 013**:
+  - Execute [`db/migrations/013_professional_dashboard.sql`](file:///d:/UET%20STUDY/Third%20Semester/prolink/db/migrations/013_professional_dashboard.sql) in the Supabase SQL Editor.
+- [ ] **Run RLS Test Suite (`Tests 37–42`)**:
+  - Execute [`db/tests/rls_tests.sql`](file:///d:/UET%20STUDY/Third%20Semester/prolink/db/tests/rls_tests.sql) in the Supabase SQL Editor and verify `TEST 37` through `TEST 42` report `PASS`:
+    - `TEST 37`: Approved professional can read `Open` and `Offers received` jobs and jobs assigned to them, and cannot read `Draft` jobs or jobs assigned to another professional.
+    - `TEST 38`: `pending` or `suspended` professional cannot read `Open` jobs they do not own.
+    - `TEST 39`: Professional can read their own offers, cannot read another professional's offers, and `job_offer_counts` returns only active (`pending` + `accepted`) counts without exposing competitor details.
+    - `TEST 40`: Professional cannot read a customer's phone in `contact_details` before their offer is accepted, and can after acceptance (`status = 'Assigned'`).
+    - `TEST 41`: `update_my_professional_profile` updates bio, years, availability, skills, areas, and phone, cannot change `status` or `verified`, and rejects non-approved users.
+    - `TEST 42`: `my_professional_stats` returns accurate offer, job, review, agreed value, and 8-week bucket counts for the caller only.
+- [ ] **Seed Professional Demo Data (Development Only)**:
+  - Edit `v_pro_email` at the top of [`db/seed/004_professional_demo_data.sql`](file:///d:/UET%20STUDY/Third%20Semester/prolink/db/seed/004_professional_demo_data.sql) to match your test professional account and run it in the SQL Editor.
+  - Verify 6 open opportunities, 4 offers (`pending`, `accepted`, `rejected`, `withdrawn`), 3 assigned jobs (`Assigned`, `In progress`, `Completed`), `job_events`, 2 reviews, and 5 notifications are created.
+  - Run [`db/seed/997_remove_professional_demo_data.sql`](file:///d:/UET%20STUDY/Third%20Semester/prolink/db/seed/997_remove_professional_demo_data.sql) when finished to remove only those demo rows.
+
+### B. Access Guards, Mode Switch & Canonical Routes (`/pro/*`)
+- [ ] **Route Guards**:
+  - Visiting `/pro` while logged out redirects to `/sign-in?next=/pro`.
+  - Visiting `/pro` as an admin redirects to `/admin`.
+  - Visiting `/pro` as a suspended user or suspended professional signs out and redirects to `/sign-in?error=...`.
+  - Visiting `/pro` with professional state `none`, `pending`, or `rejected` redirects to `/become-professional`.
+- [ ] **`Hire | Work` Mode Switch & Links**:
+  - Approved professionals see the `Hire | Work` mode switch in both `/dashboard` and `/pro` (header and sidebar).
+  - `BecomeProfessionalCta` in the `approved` state displays `"Switch to professional mode"` and links to `/pro`.
+  - Legacy `/pro/overview`, `/pro/feed`, `/pro/feed/[id]`, and `/pro/active` redirect to `/pro`, `/pro/opportunities`, `/pro/opportunities/[id]`, and `/pro/jobs`.
+
+### C. Professional Dashboard Flows (`/pro/*`)
+- [ ] **Availability Toggle (`ProShell`)**:
+  - Switching between `Available`, `Busy`, and `Offline` updates `professional_profiles.availability` immediately and displays a warning banner when `Busy` or `Offline`.
+- [ ] **Overview (`/pro`)**:
+  - Shows greeting, 4 stat cards (*New opportunities*, *Pending offers*, *Active jobs*, *Completed jobs*), **Needs your attention**, recent notifications, profile completeness hint, and 3-step empty guide for first-time professionals.
+- [ ] **Opportunities Feed (`/pro/opportunities`) & Detail (`/pro/opportunities/[id]`)**:
+  - Defaults to the professional's categories and areas with a *"Show all categories & areas"* switch, category filter (own skills first), area filter, urgency filter, budget filter, keyword search, and *"Hide jobs I already quoted"* toggle.
+  - Sorts urgent opportunities first, then newest (`web/src/lib/pro/opportunity-sort.ts`).
+  - Opportunity detail shows only the customer's first name (never phone or email) and active offer count from `job_offer_counts`.
+  - Submitting an offer (`POST /pro/jobs/{id}/offers`) validates price (`1–10,000,000` PKR), inspection fee (`0–100,000` PKR), arrival time (`10–10,080` minutes with live friendly preview), and optional message (`0–500` chars).
+  - Pending offers on open jobs can be edited (`PATCH /pro/offers/{id}`) or withdrawn (`POST /pro/offers/{id}/withdraw`) with `<dialog>` confirmation.
+- [ ] **My Offers (`/pro/offers`)**:
+  - Displays `Pending`, `Accepted`, `Declined`, and `Withdrawn` tabs with inline edit and withdraw dialogs for pending offers on open jobs.
+- [ ] **My Jobs (`/pro/jobs`) & Job Detail (`/pro/jobs/[id]`)**:
+  - Lists assigned jobs under `Active`, `Completed`, and `Closed` tabs.
+  - Job detail reveals the customer's phone number from `contact_details` (`tel:` link) alongside a disabled **Chat (coming soon)** button.
+  - **Start work** (`POST /pro/jobs/{id}/start`) transitions `Assigned` $\rightarrow$ `In progress` and sets `work_started_at`.
+  - **Mark work as done** (`POST /pro/jobs/{id}/mark-done`) sets `professional_marked_done_at`, notifies the customer (`work_marked_done`), shows *"Waiting for the customer to confirm"* on `/pro/jobs/[id]`, and surfaces a confirmation banner at the top of `/dashboard/jobs/[id]` and first in `/dashboard` **Needs your attention**.
+  - **Report a problem** (`POST /pro/jobs/{id}/dispute`) validates reason (`>= 10` chars) and transitions to `Disputed`.
+- [ ] **Reviews (`/pro/reviews`), Performance (`/pro/performance`), Notifications (`/pro/notifications`), Messages (`/pro/messages`), & Profile (`/pro/profile`)**:
+  - `/pro/reviews` shows real customer reviews and displays `"New"` when `rating_count === 0`.
+  - `/pro/performance` displays stats from `my_professional_stats()`, notes *"Quoted value, not tracked payments"*, and renders the 8-week offers bar chart.
+  - `/pro/profile` saves bio (`30–1000`), years (`0–60`), availability, categories (`1–5`), areas (`1–12`), and phone (`03XXXXXXXXX`) via `update_my_professional_profile`, shows read-only *"Reviewed by our team"* status and *"How customers see you"* preview card, and provides password change, sign-out, and support contact details.
+
+
 
 
 
