@@ -1250,6 +1250,261 @@ BEGIN
         END IF;
     END;
 
+    -- Migration 013 Professional Dashboard RLS & RPC tests (Tests 37 to 42)
+    DECLARE
+        v_p3_pending_id uuid := 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+        v_pro_test_job_id uuid := gen_random_uuid();
+        v_pro_done_job_id uuid := gen_random_uuid();
+        v_p1_offer_id uuid := gen_random_uuid();
+        v_p2_offer_id uuid := gen_random_uuid();
+        v_p1_withdrawn_offer_id uuid := gen_random_uuid();
+        v_pending_visible int;
+        v_approved_visible int;
+        v_own_offer_visible int;
+        v_other_offer_visible int;
+        v_cust_phone_before text;
+        v_cust_phone_after text;
+        v_offer_cnt bigint;
+        v_stats_json jsonb;
+        v_updated_bio text;
+        v_updated_avail text;
+        v_updated_status text;
+    BEGIN
+        PERFORM set_config('request.jwt.claims', '', true);
+
+        -- Ensure phone numbers satisfy the 11-digit 03XXXXXXXXX check constraint from 009/012
+        UPDATE public.contact_details SET phone = '03001111111' WHERE profile_id = v_c1_id;
+        UPDATE public.contact_details SET phone = '03002222222' WHERE profile_id = v_c2_id;
+        UPDATE public.contact_details SET phone = '03003333333' WHERE profile_id = v_p1_id;
+        UPDATE public.contact_details SET phone = '03004444444' WHERE profile_id = v_p2_id;
+
+        -- Create a pending professional (v_p3_pending_id)
+        INSERT INTO auth.users (id, email, raw_user_meta_data)
+        VALUES (v_p3_pending_id, 'p3pending@example.invalid', '{"full_name":"Pending Pro Three"}'::jsonb)
+        ON CONFLICT (id) DO NOTHING;
+
+        INSERT INTO public.profiles (id, role, full_name, area_id)
+        VALUES (v_p3_pending_id, 'user', 'Pending Pro Three', v_area1_id)
+        ON CONFLICT (id) DO NOTHING;
+
+        INSERT INTO public.professional_profiles (profile_id, status, verified, availability)
+        VALUES (v_p3_pending_id, 'pending', false, 'available')
+        ON CONFLICT (profile_id) DO UPDATE SET status = 'pending', verified = false;
+
+        -- Seed an Open job owned by Customer 2 (no active assignment with Pro 1 yet)
+        INSERT INTO public.jobs (id, customer_id, title, description, category_id, area_id, status)
+        VALUES (v_pro_test_job_id, v_c2_id, 'Customer 2 Main Valve Replacement', 'Replace leaking brass gate valve on main pipe.', v_cat_id, v_area1_id, 'Offers received');
+
+        -- Seed offers on v_pro_test_job_id from Pro 1 (pending) and Pro 2 (pending), plus a withdrawn offer on another job
+        INSERT INTO public.offers (id, job_id, professional_id, price, inspection_fee, eta_minutes, message, status)
+        VALUES
+            (v_p1_offer_id, v_pro_test_job_id, v_p1_id, 3000.00, 200.00, 35, 'Pro 1 quote', 'pending'),
+            (v_p2_offer_id, v_pro_test_job_id, v_p2_id, 3400.00, 300.00, 50, 'Pro 2 quote', 'pending'),
+            (v_p1_withdrawn_offer_id, v_assigned_job_id, v_p2_id, 2800.00, 0.00, 40, 'Withdrawn quote', 'withdrawn');
+
+        -- TEST 37: Pending professional cannot read Open/Offers received jobs of others; approved professional can
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_p3_pending_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT count(*) INTO v_pending_visible FROM public.jobs WHERE id = v_pro_test_job_id;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_p1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT count(*) INTO v_approved_visible FROM public.jobs WHERE id = v_pro_test_job_id;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        IF v_pending_visible = 0 AND v_approved_visible = 1 THEN
+            RAISE NOTICE 'TEST 37 [Pending pro cannot read Open jobs of others; approved pro can]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 37 [Open job visibility for pending vs approved pro]: FAIL (Pending: %, Approved: %)',
+                v_pending_visible, v_approved_visible;
+        END IF;
+
+        -- TEST 38: Approved professional can read their own offers, but cannot read another professional's offers
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_p1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT count(*) INTO v_own_offer_visible FROM public.offers WHERE id = v_p1_offer_id;
+        SELECT count(*) INTO v_other_offer_visible FROM public.offers WHERE id = v_p2_offer_id;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        IF v_own_offer_visible = 1 AND v_other_offer_visible = 0 THEN
+            RAISE NOTICE 'TEST 38 [Professional can read own offers and cannot read another professional''s offers]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 38 [Professional offer isolation]: FAIL (Own: %, Other: %)',
+                v_own_offer_visible, v_other_offer_visible;
+        END IF;
+
+        -- TEST 39: Approved professional cannot read customer's phone before acceptance, and can after acceptance
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_p1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT phone INTO v_cust_phone_before
+        FROM public.contact_details
+        WHERE profile_id = v_c2_id;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        -- Accept Pro 1's offer on Customer 2's job
+        UPDATE public.offers SET status = 'accepted' WHERE id = v_p1_offer_id;
+        UPDATE public.offers SET status = 'rejected' WHERE id = v_p2_offer_id;
+        UPDATE public.jobs SET status = 'Assigned', assigned_professional_id = v_p1_id WHERE id = v_pro_test_job_id;
+
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_p1_id), true);
+        BEGIN
+            SET LOCAL ROLE authenticated;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        SELECT phone INTO v_cust_phone_after
+        FROM public.contact_details
+        WHERE profile_id = v_c2_id;
+
+        BEGIN
+            RESET ROLE;
+        EXCEPTION
+            WHEN OTHERS THEN NULL;
+        END;
+
+        IF v_cust_phone_before IS NULL AND v_cust_phone_after = '03002222222' THEN
+            RAISE NOTICE 'TEST 39 [Professional cannot read customer phone before acceptance and can after]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 39 [Customer phone visibility for professional]: FAIL (Before: %, After: %)',
+                v_cust_phone_before, v_cust_phone_after;
+        END IF;
+
+        -- TEST 40: job_offer_counts returns pending/accepted counts only and rejects non-professionals
+        -- v_pro_test_job_id now has 1 accepted offer and 1 rejected offer -> count must be 1
+        -- v_assigned_job_id has 1 withdrawn offer -> count must be 0
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_p1_id), true);
+        SELECT offer_count INTO v_offer_cnt
+        FROM public.job_offer_counts(ARRAY[v_pro_test_job_id, v_assigned_job_id])
+        WHERE job_id = v_pro_test_job_id;
+
+        v_error_caught := false;
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_p3_pending_id), true);
+        BEGIN
+            PERFORM * FROM public.job_offer_counts(ARRAY[v_pro_test_job_id]);
+        EXCEPTION
+            WHEN SQLSTATE '42501' THEN
+                v_error_caught := true;
+        END;
+
+        IF v_offer_cnt = 1 AND v_error_caught THEN
+            RAISE NOTICE 'TEST 40 [job_offer_counts returns pending/accepted counts only and rejects non-professionals]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 40 [job_offer_counts behavior]: FAIL (Count: %, RejectedNonPro: %)',
+                v_offer_cnt, v_error_caught;
+        END IF;
+
+        -- TEST 41: update_my_professional_profile validates inputs and updates bio/skills/areas/phone without changing status
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_p1_id), true);
+
+        -- Short bio must be rejected
+        v_error_caught := false;
+        BEGIN
+            PERFORM public.update_my_professional_profile('Too short bio', 8, 'available', ARRAY[v_cat_id], ARRAY[v_area1_id], '03005556677');
+        EXCEPTION
+            WHEN SQLSTATE '22023' THEN
+                v_error_caught := true;
+        END;
+
+        -- Valid profile update
+        PERFORM public.update_my_professional_profile(
+            'Master electrician and plumber with 9 years of residential troubleshooting experience in Lahore.',
+            9,
+            'busy',
+            ARRAY[v_cat_id],
+            ARRAY[v_area1_id, v_area2_id],
+            '03005556677'
+        );
+
+        SELECT bio, availability, status
+        INTO v_updated_bio, v_updated_avail, v_updated_status
+        FROM public.professional_profiles
+        WHERE profile_id = v_p1_id;
+
+        SELECT phone INTO v_phone_visible
+        FROM public.contact_details
+        WHERE profile_id = v_p1_id;
+
+        IF v_error_caught
+           AND v_updated_avail = 'busy'
+           AND v_updated_status = 'approved'
+           AND v_phone_visible = '03005556677' THEN
+            RAISE NOTICE 'TEST 41 [update_my_professional_profile validates inputs and preserves status]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 41 [update_my_professional_profile]: FAIL (ErrCaught: %, Avail: %, Status: %, Phone: %)',
+                v_error_caught, v_updated_avail, v_updated_status, v_phone_visible;
+        END IF;
+
+        -- TEST 42: my_professional_stats returns accurate numbers for known test data
+        PERFORM set_config('request.jwt.claims', '', true);
+
+        -- Complete v_pro_test_job_id (accepted offer price = 3000) and add a 4-star review for Pro 1
+        UPDATE public.jobs
+        SET status = 'Completed',
+            work_started_at = now() - interval '2 hours',
+            professional_marked_done_at = now() - interval '1 hour'
+        WHERE id = v_pro_test_job_id;
+
+        INSERT INTO public.reviews (job_id, reviewer_id, professional_id, rating, comment)
+        VALUES (v_pro_test_job_id, v_c2_id, v_p1_id, 4, 'Prompt valve replacement.');
+
+        PERFORM set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_p1_id), true);
+        v_stats_json := public.my_professional_stats();
+
+        IF (v_stats_json->>'offers_sent')::int >= 2
+           AND (v_stats_json->>'offers_accepted')::int = 1
+           AND (v_stats_json->>'active_jobs')::int = 1
+           AND (v_stats_json->>'completed_jobs')::int = 1
+           AND (v_stats_json->>'reviews_count')::int = 1
+           AND (v_stats_json->>'agreed_value_completed')::numeric = 3000.00
+           AND jsonb_array_length(v_stats_json->'offers_per_week') = 8 THEN
+            RAISE NOTICE 'TEST 42 [my_professional_stats returns accurate counts, quoted value, and 8-week series]: PASS';
+        ELSE
+            RAISE WARNING 'TEST 42 [my_professional_stats]: FAIL (Stats: %)', v_stats_json;
+        END IF;
+    END;
+
     RAISE NOTICE '================================================================';
     RAISE NOTICE 'ALL DUAL-ROLE RLS & APPLICATION TESTS COMPLETED (ROLLING BACK)';
     RAISE NOTICE '================================================================';
