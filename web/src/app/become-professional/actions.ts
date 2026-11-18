@@ -27,7 +27,7 @@ export type SubmitProfessionalApplicationResult =
     };
 
 const CNIC_REGEX = /^\d{5}-\d{7}-\d{1}$/;
-const PHONE_REGEX = /^03[0-57]\d-\d{7}$/;
+const PHONE_REGEX = /^0\d{10}$/;
 
 export async function submitProfessionalApplicationAction(
   input: SubmitProfessionalApplicationInput
@@ -128,7 +128,7 @@ export async function submitProfessionalApplicationAction(
   if (!PHONE_REGEX.test(cleanPhone)) {
     return {
       ok: false,
-      error: "Phone Number must follow the format XXXX-XXXXXXX (e.g. 0300-1234567).",
+      error: "Phone Number must start with 0 and contain exactly 11 digits (e.g. 03001234567).",
     };
   }
 
@@ -240,10 +240,9 @@ export async function submitProfessionalApplicationAction(
       };
     }
 
-    // Fallback when migration 007 has not been applied to the remote DB yet:
-    // Use the existing apply_as_professional RPC (which requires digits-only phone)
+    // Fallback when migration 007 has not been applied to the remote DB yet.
     // and update profile, skill_tags, and extended columns/user_metadata.
-    const digitsOnlyPhone = cleanPhone.replace(/-/g, "");
+    const digitsOnlyPhone = cleanPhone;
     const { error: legacyRpcError } = await supabase.rpc("apply_as_professional", {
       p_bio: cleanBio,
       p_years: years,
@@ -327,7 +326,7 @@ function normalizeDbError(msg: string): string {
     return "Please select between 1 and 12 service coverage areas.";
   }
   if (msg.includes("Invalid phone number")) {
-    return "Phone number must follow the format XXXX-XXXXXXX (e.g. 0300-1234567).";
+    return "Phone number must start with 0 and contain exactly 11 digits (e.g. 03001234567).";
   }
   if (msg.includes("Invalid CNIC")) {
     return "CNIC number must follow the format XXXXX-XXXXXXX-X (e.g. 35202-1234567-1).";

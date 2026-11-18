@@ -47,7 +47,7 @@ interface ProfessionalApplicationWizardProps {
 type WizardStep = 1 | 2 | 3;
 
 const CNIC_REGEX = /^\d{5}-\d{7}-\d{1}$/;
-const PHONE_REGEX = /^03[0-57]\d-\d{7}$/;
+const PHONE_REGEX = /^0\d{10}$/;
 
 const SUGGESTED_SKILLS_BY_CATEGORY: Record<string, string[]> = {
   plumbing: [
@@ -156,10 +156,7 @@ export function formatPhoneInput(raw: string): string {
     digits = "0" + digits.slice(2);
   }
   digits = digits.slice(0, 11);
-  if (digits.length <= 4) {
-    return digits;
-  }
-  return `${digits.slice(0, 4)}-${digits.slice(4, 11)}`;
+  return digits;
 }
 
 interface SavedApplicationDraft {
@@ -171,6 +168,7 @@ interface SavedApplicationDraft {
   residentialAddress?: string;
   selectedCategories?: number[];
   skillTags?: string[];
+  customProfession?: string;
   yearsExperience?: string;
   bio?: string;
   selectedAreas?: number[];
@@ -255,6 +253,9 @@ export function ProfessionalApplicationWizard({
       : initialData.skillTags
   );
   const [skillInput, setSkillInput] = useState("");
+  const [customProfession, setCustomProfession] = useState(() =>
+    typeof savedDraft?.customProfession === "string" ? savedDraft.customProfession : ""
+  );
   const [yearsExperience, setYearsExperience] = useState<string>(() =>
     typeof savedDraft?.yearsExperience === "string"
       ? savedDraft.yearsExperience
@@ -313,6 +314,7 @@ export function ProfessionalApplicationWizard({
           residentialAddress,
           selectedCategories,
           skillTags,
+          customProfession,
           yearsExperience,
           bio,
           selectedAreas,
@@ -332,6 +334,7 @@ export function ProfessionalApplicationWizard({
     residentialAddress,
     selectedCategories,
     skillTags,
+    customProfession,
     yearsExperience,
     bio,
     selectedAreas,
@@ -671,7 +674,7 @@ export function ProfessionalApplicationWizard({
       errors.phone = "Phone Number is required.";
     } else if (!PHONE_REGEX.test(cleanPhone)) {
       errors.phone =
-        "Enter a valid 11-digit phone number in XXXX-XXXXXXX format (e.g. 0300-1234567).";
+        "Enter an 11-digit phone number that starts with 0 (e.g. 03001234567).";
     }
 
     if (!cleanAddr) {
@@ -701,6 +704,10 @@ export function ProfessionalApplicationWizard({
     if (selectedCategories.length < 1 || selectedCategories.length > 5) {
       errors.categories =
         "Please select at least 1 service category (up to 5).";
+    }
+
+    if (isOtherCategorySelected && customProfession.trim().length < 2) {
+      errors.customProfession = "Please tell us your profession for the Other category.";
     }
 
     if (effectiveSkills.length < 1) {
@@ -878,7 +885,9 @@ export function ProfessionalApplicationWizard({
         phone: phone.trim(),
         residentialAddress: residentialAddress.trim(),
         selectedCategoryIds: selectedCategories,
-        skillTags,
+        skillTags: isOtherCategorySelected
+          ? [...skillTags, `Custom profession: ${customProfession.trim()}`]
+          : skillTags,
         yearsExperience: parseInt(yearsExperience, 10),
         bio: bio.trim(),
         selectedAreaIds: selectedAreas,
@@ -947,6 +956,9 @@ export function ProfessionalApplicationWizard({
   ];
 
   const primaryCategoryId = selectedCategories[0] ?? "";
+  const isOtherCategorySelected = selectedCategories.some(
+    (id) => categories.find((category) => category.id === id)?.name.toLowerCase() === "others"
+  );
   const selectedCategoryNames = categories
     .filter((c) => selectedCategories.includes(c.id))
     .map((c) => c.name);
@@ -1412,14 +1424,14 @@ export function ProfessionalApplicationWizard({
                       fontFamily: "var(--font-mono)",
                     }}
                   >
-                    XXXX-XXXXXXX
+                    11 digits
                   </span>
                 </label>
                 <input
                   id="pro-phone-number"
                   type="tel"
                   inputMode="numeric"
-                  maxLength={12}
+                  maxLength={11}
                   value={phone}
                   onChange={(e) => {
                     const formatted = formatPhoneInput(e.target.value);
@@ -1428,7 +1440,7 @@ export function ProfessionalApplicationWizard({
                       setStep1Errors((prev) => ({ ...prev, phone: "" }));
                     }
                   }}
-                  placeholder="0300-1234567"
+                  placeholder="03001234567"
                   aria-invalid={Boolean(step1Errors.phone)}
                   style={{
                     width: "100%",
@@ -1462,7 +1474,7 @@ export function ProfessionalApplicationWizard({
                       marginTop: "4px",
                     }}
                   >
-                    Format: 4 digits followed by 7 digits separated by a hyphen.
+                    Must start with 0 and contain exactly 11 digits.
                   </p>
                 )}
               </div>
@@ -1586,18 +1598,7 @@ export function ProfessionalApplicationWizard({
                 id="pro-primary-category"
                 value={primaryCategoryId}
                 onChange={(e) => handlePrimaryCategoryChange(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "11px 14px",
-                  borderRadius: "8px",
-                  border: step2Errors.categories
-                    ? "1px solid #dc2626"
-                    : "1px solid var(--border)",
-                  fontSize: "14px",
-                  color: "var(--ink)",
-                  background: "white",
-                  marginBottom: "12px",
-                }}
+                className={`pro-application-select ${step2Errors.categories ? "has-error" : ""}`}
               >
                 <option value="">Select your primary profession...</option>
                 {categories.map((cat) => (
@@ -1606,6 +1607,26 @@ export function ProfessionalApplicationWizard({
                   </option>
                 ))}
               </select>
+
+              {isOtherCategorySelected && (
+                <div className="pro-custom-profession-field">
+                  <label htmlFor="pro-custom-profession">Your profession <span>*</span></label>
+                  <input
+                    id="pro-custom-profession"
+                    type="text"
+                    value={customProfession}
+                    onChange={(e) => {
+                      setCustomProfession(e.target.value);
+                      if (step2Errors.customProfession) setStep2Errors((prev) => ({ ...prev, customProfession: "" }));
+                    }}
+                    placeholder="e.g. Mobile phone repair technician"
+                    aria-invalid={Boolean(step2Errors.customProfession)}
+                    className={step2Errors.customProfession ? "has-error" : ""}
+                  />
+                  <p>We will save this under the Others category.</p>
+                  {step2Errors.customProfession && <p className="pro-field-error" role="alert">{step2Errors.customProfession}</p>}
+                </div>
+              )}
 
               <div
                 style={{

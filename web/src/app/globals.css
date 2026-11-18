@@ -204,6 +204,28 @@ button {
   outline-offset: 3px;
 }
 
+/* Professional application controls */
+.pro-application-select,
+.pro-custom-profession-field input {
+  width: 100%; min-height: 46px; padding: 11px 42px 11px 14px;
+  border: 1px solid var(--border); border-radius: 10px; background: #fff;
+  color: var(--ink); font-size: 14px; box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.pro-application-select {
+  appearance: none; margin-bottom: 12px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--forest) 50%), linear-gradient(135deg, var(--forest) 50%, transparent 50%);
+  background-position: calc(100% - 19px) 20px, calc(100% - 14px) 20px;
+  background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+}
+.pro-application-select:hover, .pro-custom-profession-field input:hover { border-color: var(--forest); }
+.pro-application-select:focus, .pro-custom-profession-field input:focus { outline: none; border-color: var(--forest); box-shadow: 0 0 0 4px rgb(22 101 52 / 12%); }
+.pro-application-select.has-error, .pro-custom-profession-field input.has-error { border-color: #dc2626; }
+.pro-custom-profession-field { margin: -2px 0 16px; padding: 14px; border: 1px solid #d7e7dc; border-radius: 10px; background: #f7fbf8; }
+.pro-custom-profession-field label { display: block; margin-bottom: 6px; color: var(--ink); font-size: 13px; font-weight: 700; }
+.pro-custom-profession-field label span, .pro-field-error { color: #dc2626; }
+.pro-custom-profession-field p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+
 ::selection {
   background: var(--mint);
   color: var(--ink);

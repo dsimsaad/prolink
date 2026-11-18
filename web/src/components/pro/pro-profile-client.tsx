@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   CheckCircle2,
-  Eye,
   KeyRound,
   Lock,
   LogOut,
@@ -181,16 +180,18 @@ export function ProProfileClient({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left: Edit Form */}
-        <section className="rounded-2xl border border-[#DCE8E0] bg-white p-5 sm:p-6 shadow-2xs lg:col-span-7 space-y-5">
-          <div className="border-b border-[#DCE8E0] pb-3">
-            <h2 className="text-base font-bold text-[#0C2A1B]">
-              Edit professional profile
+      <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
+        {/* Right: Professional profile information */}
+        <section className="order-2 rounded-[18px] border border-[#DCE8E0] bg-white p-6 shadow-2xs space-y-5">
+          <div className="mb-6">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0F6B3E]">
+              Professional details
+            </p>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#0C2A1B]">
+              Profile Information
             </h2>
-            <p className="text-xs text-[#6A7B70]">
-              Changes are saved atomically via your approved professional
-              account.
+            <p className="mt-1 text-sm text-[#6A7B70]">
+              Keep your skills, availability, service areas, and contact details current.
             </p>
           </div>
 
@@ -401,26 +402,24 @@ export function ProProfileClient({
           </form>
         </section>
 
-        {/* Right: Preview Card + Read-Only Verification & Account Settings */}
-        <div className="lg:col-span-5 space-y-6">
+        {/* Left: identity summary and account controls */}
+        <aside className="order-1 space-y-6">
           {/* "How customers see you" Preview Card */}
-          <section className="rounded-2xl border border-[#CDE9D6] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between border-b border-[#DCE8E0] pb-3">
-              <div className="flex items-center gap-2">
-                <Eye
-                  className="h-4 w-4 text-[#0F6B3E]"
-                  aria-hidden="true"
-                />
-                <h2 className="text-sm font-bold text-[#0C2A1B]">
-                  How customers see you
-                </h2>
+          <section className="overflow-hidden rounded-[18px] border border-[#DCE8E0] bg-white shadow-2xs">
+            <div className="border-b border-[#DCE8E0] bg-[#F4FAF6] p-6">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#0F6B3E] text-2xl font-bold text-white shadow-sm">
+                {initialProfile.full_name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}
               </div>
-              <span className="text-[11px] font-semibold text-[#0F6B3E]">
-                Offer preview
-              </span>
+              <h2 className="mt-5 text-2xl font-bold leading-tight tracking-tight text-[#0C2A1B]">
+                {initialProfile.full_name}
+              </h2>
+              <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#0F6B3E]">
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Approved Professional</span>
+              </div>
             </div>
 
-            <div className="rounded-xl border border-[#DCE8E0] bg-[#F8FBF9] p-4 space-y-3">
+            <div className="space-y-4 p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h3 className="text-sm font-extrabold text-[#0C2A1B]">
@@ -474,7 +473,7 @@ export function ProProfileClient({
           </section>
 
           {/* Read-Only Application Review Status & Account Security */}
-          <section className="rounded-2xl border border-[#DCE8E0] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
+          <section className="rounded-[18px] border border-[#DCE8E0] bg-white p-5 shadow-2xs space-y-4">
             <h2 className="text-sm font-bold text-[#0C2A1B] border-b border-[#DCE8E0] pb-3">
               Application status &amp; account security
             </h2>
@@ -554,7 +553,7 @@ export function ProProfileClient({
               </div>
             </div>
           </section>
-        </div>
+        </aside>
       </div>
 
       <ChangePasswordModal

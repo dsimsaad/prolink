@@ -87,95 +87,6 @@ function getInitials(name: string): string {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function SidebarProCta({
-  state,
-  reviewNote,
-  onNavigate,
-}: {
-  state: ProfessionalState;
-  reviewNote: string | null;
-  onNavigate?: () => void;
-}) {
-  if (state === "suspended") {
-    return null;
-  }
-
-  if (state === "approved") {
-    return (
-      <div className="rounded-xl border border-[#CDE9D6] bg-[#F4FAF6] p-3.5 text-xs text-[#0C2A1B]">
-        <div className="flex items-center gap-1.5 font-bold text-[#0F6B3E]">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>Approved Professional</span>
-        </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-[#34453B]">
-          Your professional partner account is active in Lahore.
-        </p>
-        <Link
-          href="/pro"
-          onClick={onNavigate}
-          className="mt-2.5 inline-flex w-full items-center justify-center rounded-lg border border-[#0F6B3E] bg-white px-3 py-2 text-xs font-semibold text-[#0F6B3E] transition hover:bg-[#E6F4EA]"
-        >
-          <span>Switch to Professional</span>
-        </Link>
-      </div>
-    );
-  }
-
-  if (state === "pending") {
-    return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-950">
-        <p className="font-bold text-amber-900">Application under review</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-amber-800">
-          Your professional application is being reviewed by an administrator.
-        </p>
-        <Link
-          href="/become-professional/submitted"
-          onClick={onNavigate}
-          className="mt-2.5 inline-flex items-center font-semibold text-[#0F6B3E] underline-offset-2 hover:underline"
-        >
-          View application status →
-        </Link>
-      </div>
-    );
-  }
-
-  if (state === "rejected") {
-    return (
-      <div className="rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-xs text-amber-950">
-        <p className="font-bold text-amber-900">Application rejected</p>
-        <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-amber-800">
-          {reviewNote
-            ? `Note: "${reviewNote}"`
-            : "Review the feedback on your application and submit updated details."}
-        </p>
-        <Link
-          href="/become-professional"
-          onClick={onNavigate}
-          className="mt-2.5 inline-flex items-center font-semibold text-[#0F6B3E] underline-offset-2 hover:underline"
-        >
-          View note and reapply →
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-xl border border-[#DCE8E0] bg-[#F4FAF6] p-3.5 text-xs text-[#0C2A1B]">
-      <p className="font-bold text-[#0C2A1B]">Earn with your skills</p>
-      <p className="mt-1 text-[11px] leading-relaxed text-[#34453B]">
-        Apply as a local professional in Lahore and send quotes on customer jobs.
-      </p>
-      <Link
-        href="/become-professional"
-        onClick={onNavigate}
-        className="mt-2.5 inline-flex w-full items-center justify-center rounded-lg bg-[#0F6B3E] px-3 py-2 text-xs font-semibold !text-white text-white transition hover:bg-[#0A4D2B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
-      >
-        <span className="!text-white text-white">Apply as a professional</span>
-      </Link>
-    </div>
-  );
-}
-
 export function CustomerShell({
   customerId,
   customerName,
@@ -384,31 +295,15 @@ export function CustomerShell({
                 Customer
               </span>
             </Link>
+            {professionalState === "approved" && (
+              <div role="group" aria-label="Workspace mode switch" className="hidden sm:inline-flex items-center rounded-xl border border-[#CDE9D6] bg-[#F4FAF6] p-1 text-sm font-bold shadow-sm">
+                <Link href="/dashboard" aria-current="page" className="rounded-lg bg-white px-3.5 py-1.5 text-[#0F6B3E] shadow-2xs">Hire</Link>
+                <Link href="/pro" className="rounded-lg px-3.5 py-1.5 text-[#34453B] transition hover:text-[#0C2A1B]">Work</Link>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {professionalState === "approved" && (
-              <div
-                role="group"
-                aria-label="Workspace mode switch"
-                className="hidden sm:inline-flex items-center rounded-xl border border-[#DCE8E0] bg-[#F4FAF6] p-0.5 text-xs font-semibold"
-              >
-                <Link
-                  href="/dashboard"
-                  aria-current="page"
-                  className="rounded-lg bg-white px-2.5 py-1 text-[#0F6B3E] shadow-2xs"
-                >
-                  Hire
-                </Link>
-                <Link
-                  href="/pro"
-                  className="rounded-lg px-2.5 py-1 text-[#34453B] transition hover:text-[#0C2A1B]"
-                >
-                  Work
-                </Link>
-              </div>
-            )}
-
             <Link
               href="/dashboard/jobs/new"
               className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-3.5 py-2 text-xs font-semibold !text-white text-white shadow-2xs transition hover:bg-[#0A4D2B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
@@ -541,34 +436,8 @@ export function CustomerShell({
         <div className="flex flex-1">
           <aside className="hidden w-64 shrink-0 border-r border-[#DCE8E0] bg-white lg:flex lg:flex-col lg:justify-between lg:p-4">
             <div className="space-y-4">
-              {professionalState === "approved" && (
-                <div
-                  role="group"
-                  aria-label="Switch between Hire and Work mode"
-                  className="grid grid-cols-2 rounded-xl border border-[#DCE8E0] bg-[#F4FAF6] p-1 text-xs font-semibold"
-                >
-                  <Link
-                    href="/dashboard"
-                    aria-current="page"
-                    className="rounded-lg bg-white py-1.5 text-center text-[#0F6B3E] shadow-2xs"
-                  >
-                    Hire
-                  </Link>
-                  <Link
-                    href="/pro"
-                    className="rounded-lg py-1.5 text-center text-[#34453B] transition hover:text-[#0C2A1B]"
-                  >
-                    Work
-                  </Link>
-                </div>
-              )}
               {renderNavList()}
             </div>
-            {professionalState !== "suspended" && (
-              <div className="mt-6 pt-4 border-t border-[#DCE8E0]">
-                <SidebarProCta state={professionalState} reviewNote={reviewNote} />
-              </div>
-            )}
           </aside>
 
           {mobileMenuOpen && (
@@ -594,15 +463,6 @@ export function CustomerShell({
                   </div>
                   {renderNavList(() => setMobileMenuOpen(false))}
                 </div>
-                {professionalState !== "suspended" && (
-                  <div className="mt-6 border-t border-[#DCE8E0] pt-4">
-                    <SidebarProCta
-                      state={professionalState}
-                      reviewNote={reviewNote}
-                      onNavigate={() => setMobileMenuOpen(false)}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           )}

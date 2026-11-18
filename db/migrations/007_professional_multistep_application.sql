@@ -108,8 +108,8 @@ BEGIN
     END IF;
 
     v_clean_phone := TRIM(COALESCE(p_phone, ''));
-    IF v_clean_phone !~ '^[0-9]{4}-[0-9]{7}$' THEN
-        RAISE EXCEPTION 'Invalid phone number: Phone number must follow the format XXXX-XXXXXXX.'
+    IF v_clean_phone !~ '^0[0-9]{10}$' THEN
+        RAISE EXCEPTION 'Invalid phone number: Phone number must start with 0 and contain exactly 11 digits.'
             USING ERRCODE = '22023';
     END IF;
 

@@ -24,7 +24,6 @@ import {
   LogOut,
   Menu,
   MessageSquare,
-  Sparkles,
   Star,
   User,
   Wrench,
@@ -88,7 +87,6 @@ const NAV_ITEMS: NavItem[] = [
     showUnreadBadge: true,
   },
   { label: "Messages", href: "/pro/messages", icon: MessageSquare },
-  { label: "Profile", href: "/pro/profile", icon: User },
 ];
 
 const MOBILE_BOTTOM_ITEMS: NavItem[] = [
@@ -438,30 +436,13 @@ export function ProShell({
                 <span className="!text-white text-white">Professional · Work</span>
               </span>
             </Link>
+            <div role="group" aria-label="Workspace mode switch" className="hidden sm:inline-flex items-center rounded-xl border border-[#CDE9D6] bg-[#F4FAF6] p-1 text-sm font-bold shadow-sm">
+              <Link href="/dashboard" className="rounded-lg px-3.5 py-1.5 text-[#34453B] transition hover:text-[#0C2A1B]">Hire</Link>
+              <Link href="/pro" aria-current="page" className="rounded-lg bg-[#0F6B3E] px-3.5 py-1.5 !text-white text-white shadow-2xs">Work</Link>
+            </div>
           </div>
 
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Hire | Work Mode Switch */}
-            <div
-              role="group"
-              aria-label="Workspace mode switch"
-              className="hidden sm:inline-flex items-center rounded-xl border border-[#DCE8E0] bg-[#F4FAF6] p-0.5 text-xs font-semibold"
-            >
-              <Link
-                href="/dashboard"
-                className="rounded-lg px-2.5 py-1 text-[#34453B] transition hover:text-[#0C2A1B]"
-              >
-                Hire
-              </Link>
-              <Link
-                href="/pro"
-                aria-current="page"
-                className="rounded-lg bg-[#0F6B3E] px-2.5 py-1 !text-white text-white shadow-2xs"
-              >
-                Work
-              </Link>
-            </div>
-
             <Link
               href="/pro/opportunities"
               className="hidden md:inline-flex items-center gap-1.5 rounded-xl bg-[#0F6B3E] px-3.5 py-2 text-xs font-semibold !text-white text-white shadow-2xs transition hover:bg-[#0A4D2B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F6B3E]"
@@ -541,18 +522,6 @@ export function ProShell({
                       <span>Professional profile</span>
                     </Link>
 
-                    <Link
-                      href="/dashboard"
-                      role="menuitem"
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-[#34453B] transition hover:bg-[#F4FAF6] hover:text-[#0C2A1B]"
-                    >
-                      <Sparkles
-                        className="h-4 w-4 text-[#0F6B3E]"
-                        aria-hidden="true"
-                      />
-                      <span>Switch to Customer (Hire)</span>
-                    </Link>
                   </div>
 
                   <div className="border-t border-[#DCE8E0] pt-1">
@@ -579,48 +548,12 @@ export function ProShell({
           {/* Desktop Sidebar with subtle green accent */}
           <aside className="hidden w-68 shrink-0 border-r border-[#CDE9D6] bg-white lg:flex lg:flex-col lg:justify-between lg:p-4">
             <div className="space-y-4">
-              {/* Hire | Work Switch */}
-              <div
-                role="group"
-                aria-label="Switch between Hire and Work mode"
-                className="grid grid-cols-2 rounded-xl border border-[#DCE8E0] bg-[#F4FAF6] p-1 text-xs font-semibold"
-              >
-                <Link
-                  href="/dashboard"
-                  className="rounded-lg py-1.5 text-center text-[#34453B] transition hover:text-[#0C2A1B]"
-                >
-                  Hire
-                </Link>
-                <Link
-                  href="/pro"
-                  aria-current="page"
-                  className="rounded-lg bg-[#0F6B3E] py-1.5 text-center !text-white text-white shadow-2xs"
-                >
-                  Work
-                </Link>
-              </div>
-
               {/* Compact Availability Toggle */}
               {renderAvailabilityBox()}
 
               {renderNavList()}
             </div>
 
-            <div className="mt-6 border-t border-[#DCE8E0] pt-4">
-              <div className="rounded-xl border border-[#DCE8E0] bg-[#F8FBF9] p-3 text-xs text-[#34453B]">
-                <p className="font-bold text-[#0C2A1B]">Need to hire instead?</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-[#6A7B70]">
-                  Switch back to your customer workspace to post a job or review
-                  quotes.
-                </p>
-                <Link
-                  href="/dashboard"
-                  className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-[#DCE8E0] bg-white px-3 py-1.5 text-xs font-semibold text-[#0F6B3E] transition hover:bg-[#E6F4EA]"
-                >
-                  Switch to Customer mode
-                </Link>
-              </div>
-            </div>
           </aside>
 
           {/* Mobile Drawer */}
@@ -648,28 +581,6 @@ export function ProShell({
                     >
                       <X className="h-4 w-4" />
                     </button>
-                  </div>
-
-                  <div
-                    role="group"
-                    aria-label="Switch between Hire and Work mode"
-                    className="grid grid-cols-2 rounded-xl border border-[#DCE8E0] bg-[#F4FAF6] p-1 text-xs font-semibold"
-                  >
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="rounded-lg py-1.5 text-center text-[#34453B]"
-                    >
-                      Hire
-                    </Link>
-                    <Link
-                      href="/pro"
-                      aria-current="page"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="rounded-lg bg-[#0F6B3E] py-1.5 text-center !text-white text-white shadow-2xs"
-                    >
-                      Work
-                    </Link>
                   </div>
 
                   {renderAvailabilityBox()}
