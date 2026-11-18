@@ -97,6 +97,36 @@ Creates a new job owned by the authenticated customer as either `'Draft'` (`publ
 
 ---
 
+### `GET /jobs/{id}`
+Returns the caller-owned job detail including `workStartedAt` and `professionalMarkedDoneAt`.
+- **Caller**: Authenticated non-suspended owner of the job.
+- **Route Parameters**:
+  - `id` (`uuid`): Target job ID.
+- **Response `200 OK`**:
+  ```json
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "customerId": "11111111-1111-1111-1111-111111111111",
+    "title": "Split AC indoor unit water leakage",
+    "description": "Water is dripping from the indoor unit of our 1.5 ton split AC.",
+    "categoryId": 5,
+    "areaId": 1,
+    "budgetMin": 1500,
+    "budgetMax": 3500,
+    "urgency": "normal",
+    "status": "In progress",
+    "assignedProfessionalId": "33333333-3333-3333-3333-333333333333",
+    "workStartedAt": "2026-11-18T14:00:00Z",
+    "professionalMarkedDoneAt": "2026-11-18T15:30:00Z",
+    "expiresAt": "2026-11-22T11:45:00Z",
+    "createdAt": "2026-11-15T11:45:00Z",
+    "updatedAt": "2026-11-18T15:30:00Z"
+  }
+  ```
+- **Error Codes**: `400` (`invalid_id`), `401` (`unauthorized`), `403` (`account_suspended`), `404` (`job_not_found`), `429` (`rate_limit_exceeded`).
+
+---
+
 ### `PATCH /jobs/{id}`
 Edits a job owned by the caller. Only jobs currently in `'Draft'` status can be edited.
 - **Caller**: Authenticated non-suspended owner of the job.

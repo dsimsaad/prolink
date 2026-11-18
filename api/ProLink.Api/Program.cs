@@ -1,6 +1,8 @@
+using System.IO.Pipelines;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using ProLink.Api.Auth;
 using ProLink.Api.Data;
@@ -62,6 +64,8 @@ builder.Services.AddSingleton<IAdminRepository>(_ => new AdminRepository(npgsqlC
 builder.Services.AddSingleton<AdminRoleCache>();
 builder.Services.AddSingleton<IAuthorizationHandler, AdminAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, CustomerAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, ApprovedProfessionalAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ProLinkAuthorizationResultHandler>();
 builder.Services.AddSingleton<IJobMatcher, FallbackMatcher>();
 builder.Services.AddSingleton<AdminEngineService>();
 
@@ -87,6 +91,11 @@ builder.Services.AddAuthorizationBuilder()
     {
         policy.RequireAuthenticatedUser();
         policy.AddRequirements(new CustomerRequirement());
+    })
+    .AddPolicy("ApprovedProfessional", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new ApprovedProfessionalRequirement());
     });
 
 var app = builder.Build();
@@ -100,6 +109,28 @@ app.UseExceptionHandler(errApp =>
         var payload = new ApiErrorResponse("internal_error", "An unexpected server error occurred.");
         await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
     });
+});
+
+app.Use(async (context, next) =>
+{
+    var bodyFeature = context.Features.Get<IHttpResponseBodyFeature>();
+    if (bodyFeature is not null)
+    {
+        var wrapped = new CompatibleResponseBodyFeature(bodyFeature);
+        context.Features.Set<IHttpResponseBodyFeature>(wrapped);
+        try
+        {
+            await next();
+            await wrapped.FlushAsync();
+        }
+        finally
+        {
+            context.Features.Set<IHttpResponseBodyFeature>(bodyFeature);
+        }
+        return;
+    }
+
+    await next();
 });
 
 app.UseCors("web");
@@ -126,9 +157,48 @@ app.MapAdminSearchEndpoints();
 app.MapAdminAnalyticsEndpoints();
 app.MapAdminJobsAndDisputesEndpoints();
 app.MapCustomerJobsEndpoints();
+app.MapProfessionalEndpoints();
 
 app.Run();
 
 public partial class Program
 {
+    private sealed class CompatibleResponseBodyFeature : IHttpResponseBodyFeature
+    {
+        private readonly IHttpResponseBodyFeature _inner;
+        private PipeWriter? _writer;
+
+        public CompatibleResponseBodyFeature(IHttpResponseBodyFeature inner)
+        {
+            _inner = inner;
+        }
+
+        public Stream Stream => _inner.Stream;
+
+        public PipeWriter Writer => _writer ??= PipeWriter.Create(
+            _inner.Stream,
+            new StreamPipeWriterOptions(leaveOpen: true));
+
+        public void DisableBuffering() => _inner.DisableBuffering();
+
+        public Task StartAsync(CancellationToken cancellationToken = default) =>
+            _inner.StartAsync(cancellationToken);
+
+        public Task SendFileAsync(string path, long offset, long? count, CancellationToken cancellationToken = default) =>
+            _inner.SendFileAsync(path, offset, count, cancellationToken);
+
+        public async Task FlushAsync()
+        {
+            if (_writer is not null)
+            {
+                await _writer.FlushAsync();
+            }
+        }
+
+        public async Task CompleteAsync()
+        {
+            await FlushAsync();
+            await _inner.CompleteAsync();
+        }
+    }
 }

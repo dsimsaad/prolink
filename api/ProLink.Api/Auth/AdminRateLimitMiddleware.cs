@@ -20,7 +20,8 @@ public sealed class AdminRateLimitMiddleware
     {
         bool isProtectedPath =
             context.Request.Path.StartsWithSegments("/admin", StringComparison.OrdinalIgnoreCase)
-            || context.Request.Path.StartsWithSegments("/jobs", StringComparison.OrdinalIgnoreCase);
+            || context.Request.Path.StartsWithSegments("/jobs", StringComparison.OrdinalIgnoreCase)
+            || context.Request.Path.StartsWithSegments("/pro", StringComparison.OrdinalIgnoreCase);
 
         if (!isProtectedPath)
         {

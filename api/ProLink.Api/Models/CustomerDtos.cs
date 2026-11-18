@@ -41,7 +41,9 @@ public sealed record CustomerJobRecord(
     Guid? AssignedProfessionalId,
     DateTimeOffset? ExpiresAt,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? WorkStartedAt = null,
+    DateTimeOffset? ProfessionalMarkedDoneAt = null);
 
 public sealed record JobOfferRecord(
     Guid Id,

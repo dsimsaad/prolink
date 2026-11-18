@@ -71,6 +71,8 @@ public sealed class FakeAdminRepository : IAdminRepository
     public static readonly Guid SuspendedAdminId = Guid.Parse("66666666-6666-6666-6666-666666666666");
     public static readonly Guid Pro1Id = Guid.Parse("33333333-3333-3333-3333-333333333333");
     public static readonly Guid Pro2Id = Guid.Parse("44444444-4444-4444-4444-444444444444");
+    public static readonly Guid PendingProId = Guid.Parse("88888888-8888-8888-8888-888888888888");
+    public static readonly Guid SuspendedProId = Guid.Parse("99999999-9999-9999-9999-999999999999");
 
     public static readonly Guid OpenJobId = Guid.Parse("aaaaaaaa-0000-4000-8000-000000000001");
     public static readonly Guid CompletedJobId = Guid.Parse("aaaaaaaa-0000-4000-8000-000000000002");
@@ -108,6 +110,22 @@ public sealed class FakeAdminRepository : IAdminRepository
         if (userId == SuspendedAdminId)
         {
             return Task.FromResult<AdminAuthRecord?>(new AdminAuthRecord(SuspendedAdminId, "admin", true));
+        }
+        if (userId == Pro1Id)
+        {
+            return Task.FromResult<AdminAuthRecord?>(new AdminAuthRecord(Pro1Id, "user", false, "approved", "Demo Pro One"));
+        }
+        if (userId == Pro2Id)
+        {
+            return Task.FromResult<AdminAuthRecord?>(new AdminAuthRecord(Pro2Id, "user", false, "approved", "Demo Pro Two"));
+        }
+        if (userId == PendingProId)
+        {
+            return Task.FromResult<AdminAuthRecord?>(new AdminAuthRecord(PendingProId, "user", false, "pending", "Pending Applicant"));
+        }
+        if (userId == SuspendedProId)
+        {
+            return Task.FromResult<AdminAuthRecord?>(new AdminAuthRecord(SuspendedProId, "user", true, "approved", "Suspended Pro"));
         }
         return Task.FromResult<AdminAuthRecord?>(null);
     }
@@ -540,6 +558,240 @@ public sealed class FakeAdminRepository : IAdminRepository
             Notifications.Add((proId, "new_job_match", jobTitle));
         }
         return Task.CompletedTask;
+    }
+
+    public readonly Dictionary<Guid, HashSet<long>> ProfessionalSkills = new()
+    {
+        [Pro1Id] = new HashSet<long> { 1, 2 },
+        [Pro2Id] = new HashSet<long> { 1, 3 },
+    };
+
+    public readonly Dictionary<Guid, ProfessionalOfferRecord> ProOffers = new();
+
+    public Task<CustomerJobRecord?> GetJobByIdAsync(Guid jobId, CancellationToken ct = default)
+    {
+        CustomerJobs.TryGetValue(jobId, out var job);
+        return Task.FromResult(job);
+    }
+
+    public Task<CustomerJobRecord?> GetAssignedProfessionalJobAsync(Guid jobId, Guid professionalId, CancellationToken ct = default)
+    {
+        if (CustomerJobs.TryGetValue(jobId, out var job) && job.AssignedProfessionalId == professionalId)
+        {
+            return Task.FromResult<CustomerJobRecord?>(job);
+        }
+        return Task.FromResult<CustomerJobRecord?>(null);
+    }
+
+    public Task<bool> ProfessionalHasCategorySkillAsync(Guid professionalId, long categoryId, CancellationToken ct = default)
+    {
+        bool hasSkill = ProfessionalSkills.TryGetValue(professionalId, out var skills) && skills.Contains(categoryId);
+        return Task.FromResult(hasSkill);
+    }
+
+    public Task<ProfessionalOfferRecord?> GetProfessionalOfferForJobAsync(Guid jobId, Guid professionalId, CancellationToken ct = default)
+    {
+        var match = ProOffers.Values.FirstOrDefault(o => o.JobId == jobId && o.ProfessionalId == professionalId);
+        if (match is not null && CustomerJobs.TryGetValue(jobId, out var job))
+        {
+            match = match with { JobStatus = job.Status, JobExpiresAt = job.ExpiresAt };
+        }
+        return Task.FromResult(match);
+    }
+
+    public Task<ProfessionalOfferRecord?> GetProfessionalOfferByIdAsync(Guid offerId, Guid professionalId, CancellationToken ct = default)
+    {
+        if (ProOffers.TryGetValue(offerId, out var offer) && offer.ProfessionalId == professionalId)
+        {
+            if (CustomerJobs.TryGetValue(offer.JobId, out var job))
+            {
+                offer = offer with { JobStatus = job.Status, JobExpiresAt = job.ExpiresAt };
+            }
+            return Task.FromResult<ProfessionalOfferRecord?>(offer);
+        }
+        return Task.FromResult<ProfessionalOfferRecord?>(null);
+    }
+
+    public Task<ProfessionalOfferRecord> CreateProfessionalOfferAsync(
+        Guid jobId,
+        Guid professionalId,
+        string professionalName,
+        Guid customerId,
+        string jobTitle,
+        string currentJobStatus,
+        string targetJobStatus,
+        decimal price,
+        decimal inspectionFee,
+        int etaMinutes,
+        string? message,
+        CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var offer = new ProfessionalOfferRecord(
+            Guid.NewGuid(),
+            jobId,
+            professionalId,
+            price,
+            inspectionFee,
+            etaMinutes,
+            message,
+            "pending",
+            targetJobStatus,
+            CustomerJobs.TryGetValue(jobId, out var j) ? j.ExpiresAt : null,
+            customerId,
+            jobTitle,
+            now,
+            now);
+
+        ProOffers[offer.Id] = offer;
+
+        if (!JobOffers.TryGetValue(jobId, out var list))
+        {
+            list = new List<JobOfferRecord>();
+            JobOffers[jobId] = list;
+        }
+        list.Add(new JobOfferRecord(offer.Id, jobId, professionalId, "pending", price, inspectionFee, etaMinutes));
+
+        if (CustomerJobs.TryGetValue(jobId, out var existingJob))
+        {
+            CustomerJobs[jobId] = existingJob with { Status = targetJobStatus, UpdatedAt = now };
+            JobStatuses[jobId] = targetJobStatus;
+        }
+
+        Notifications.Add((customerId, "offer_received", jobTitle));
+        return Task.FromResult(offer);
+    }
+
+    public Task<ProfessionalOfferRecord> UpdateProfessionalOfferAsync(
+        Guid offerId,
+        Guid jobId,
+        Guid professionalId,
+        string currentJobStatus,
+        decimal price,
+        decimal inspectionFee,
+        int etaMinutes,
+        string? message,
+        CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var existing = ProOffers[offerId];
+        var updated = existing with
+        {
+            Price = price,
+            InspectionFee = inspectionFee,
+            EtaMinutes = etaMinutes,
+            Message = message,
+            JobStatus = currentJobStatus,
+            UpdatedAt = now,
+        };
+        ProOffers[offerId] = updated;
+
+        if (JobOffers.TryGetValue(jobId, out var list))
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].Id == offerId)
+                {
+                    list[i] = list[i] with { Price = price, InspectionFee = inspectionFee, EtaMinutes = etaMinutes };
+                }
+            }
+        }
+
+        return Task.FromResult(updated);
+    }
+
+    public Task<ProfessionalOfferRecord> WithdrawProfessionalOfferAsync(
+        Guid offerId,
+        Guid jobId,
+        Guid professionalId,
+        string currentJobStatus,
+        CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var existing = ProOffers[offerId];
+        var withdrawn = existing with
+        {
+            Status = "withdrawn",
+            JobStatus = currentJobStatus,
+            UpdatedAt = now,
+        };
+        ProOffers[offerId] = withdrawn;
+
+        if (JobOffers.TryGetValue(jobId, out var list))
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].Id == offerId)
+                {
+                    list[i] = list[i] with { Status = "withdrawn" };
+                }
+            }
+        }
+
+        return Task.FromResult(withdrawn);
+    }
+
+    public Task<CustomerJobRecord> StartProfessionalJobAsync(
+        Guid jobId,
+        Guid professionalId,
+        Guid customerId,
+        string jobTitle,
+        CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var existing = CustomerJobs[jobId];
+        var updated = existing with
+        {
+            Status = JobStateMachine.InProgress,
+            WorkStartedAt = existing.WorkStartedAt ?? now,
+            UpdatedAt = now,
+        };
+        CustomerJobs[jobId] = updated;
+        JobStatuses[jobId] = updated.Status;
+        Notifications.Add((customerId, "job_started", jobTitle));
+        return Task.FromResult(updated);
+    }
+
+    public Task<CustomerJobRecord> MarkProfessionalJobDoneAsync(
+        Guid jobId,
+        Guid professionalId,
+        Guid customerId,
+        string jobTitle,
+        string? note,
+        CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var existing = CustomerJobs[jobId];
+        var updated = existing with
+        {
+            ProfessionalMarkedDoneAt = now,
+            UpdatedAt = now,
+        };
+        CustomerJobs[jobId] = updated;
+        Notifications.Add((customerId, "work_marked_done", jobTitle));
+        return Task.FromResult(updated);
+    }
+
+    public Task<CustomerJobRecord> DisputeProfessionalJobAsync(
+        Guid jobId,
+        Guid professionalId,
+        Guid customerId,
+        string fromStatus,
+        string jobTitle,
+        string reason,
+        CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var existing = CustomerJobs[jobId];
+        var updated = existing with
+        {
+            Status = JobStateMachine.Disputed,
+            UpdatedAt = now,
+        };
+        CustomerJobs[jobId] = updated;
+        JobStatuses[jobId] = updated.Status;
+        Notifications.Add((customerId, "job_status_changed", jobTitle));
+        return Task.FromResult(updated);
     }
 }
 

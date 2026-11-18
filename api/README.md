@@ -53,6 +53,7 @@ Full request/response JSON schemas and rules are documented in [`docs/api/custom
 | Method | Path | Purpose |
 | :--- | :--- | :--- |
 | `POST` | `/jobs` | Create a job as `Draft` or `Open` (`publish: true` sets 7-day `expires_at` and runs `IJobMatcher`). |
+| `GET` | `/jobs/{id}` | Fetch caller-owned job detail including `workStartedAt` and `professionalMarkedDoneAt`. |
 | `PATCH` | `/jobs/{id}` | Edit a `Draft` job owned by the caller. |
 | `POST` | `/jobs/{id}/publish` | Transition a `Draft` job to `Open`, set `expires_at`, and notify matching professionals. |
 | `POST` | `/jobs/{id}/cancel` | Cancel a job from `Draft`, `Open`, `Offers received`, or `Assigned`; reject pending offers and notify any assigned professional. |
@@ -61,6 +62,21 @@ Full request/response JSON schemas and rules are documented in [`docs/api/custom
 | `POST` | `/jobs/{id}/dispute` | Open a dispute (`Assigned` or `In progress` $\rightarrow$ `Disputed`) with a reason stored in `job_events.note`. |
 | `POST` | `/jobs/{id}/review` | Submit a 1–5 star review once on a `Completed` job. |
 | `GET` | `/jobs/suggest-category?text=...` | Optional category suggestion via Python `/classify` (3s timeout, empty fallback on error). |
+
+---
+
+## Professional Endpoints (`/pro`)
+
+Full request/response JSON schemas and rules are documented in [`docs/api/professional.md`](file:///Users/mrcom/Documents/prolink/docs/api/professional.md). All `/pro` endpoints require the `"ApprovedProfessional"` authorization policy (`professional_profiles.status = 'approved'` and `profiles.is_suspended = false`, returning `403 not_approved` otherwise) and pass through `SlidingWindowLimiter`:
+
+| Method | Path | Purpose |
+| :--- | :--- | :--- |
+| `POST` | `/pro/jobs/{id}/offers` | Submit an offer on an `Open` or `Offers received` job matching the caller's skills; transitions the job from `Open` to `Offers received` on its first offer and notifies the customer (`offer_received`). |
+| `PATCH` | `/pro/offers/{id}` | Edit price, inspection fee, arrival time, and message of a `pending` offer owned by the caller while the job is open. |
+| `POST` | `/pro/offers/{id}/withdraw` | Withdraw a `pending` offer (`pending` $\rightarrow$ `withdrawn`) without changing the job status. A withdrawn offer cannot be resubmitted. |
+| `POST` | `/pro/jobs/{id}/start` | Start work on an assigned job (`Assigned` $\rightarrow$ `In progress`), set `work_started_at`, and notify the customer (`job_started`). |
+| `POST` | `/pro/jobs/{id}/mark-done` | Mark an `In progress` assigned job as done (`professional_marked_done_at`), record a `job_events` note, and notify the customer (`work_marked_done`) without changing `jobs.status`. |
+| `POST` | `/pro/jobs/{id}/dispute` | Open a dispute on an assigned job (`Assigned` or `In progress` $\rightarrow$ `Disputed`) with a reason stored in `job_events.note`. |
 
 ---
 

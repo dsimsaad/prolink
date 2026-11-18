@@ -2,7 +2,12 @@ namespace ProLink.Api.Models;
 
 public sealed record ApiErrorResponse(string Code, string Message);
 
-public sealed record AdminAuthRecord(Guid UserId, string Role, bool IsSuspended);
+public sealed record AdminAuthRecord(
+    Guid UserId,
+    string Role,
+    bool IsSuspended,
+    string? ProfessionalStatus = null,
+    string? FullName = null);
 
 public sealed record PendingApplicationRecord(
     Guid ProfileId,

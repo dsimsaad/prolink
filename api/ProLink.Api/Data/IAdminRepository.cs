@@ -122,4 +122,66 @@ public interface IAdminRepository
         string urgency,
         IReadOnlyList<Guid> professionalIds,
         CancellationToken ct = default);
+
+    Task<CustomerJobRecord?> GetJobByIdAsync(Guid jobId, CancellationToken ct = default);
+    Task<CustomerJobRecord?> GetAssignedProfessionalJobAsync(Guid jobId, Guid professionalId, CancellationToken ct = default);
+    Task<bool> ProfessionalHasCategorySkillAsync(Guid professionalId, long categoryId, CancellationToken ct = default);
+    Task<ProfessionalOfferRecord?> GetProfessionalOfferForJobAsync(Guid jobId, Guid professionalId, CancellationToken ct = default);
+    Task<ProfessionalOfferRecord?> GetProfessionalOfferByIdAsync(Guid offerId, Guid professionalId, CancellationToken ct = default);
+
+    Task<ProfessionalOfferRecord> CreateProfessionalOfferAsync(
+        Guid jobId,
+        Guid professionalId,
+        string professionalName,
+        Guid customerId,
+        string jobTitle,
+        string currentJobStatus,
+        string targetJobStatus,
+        decimal price,
+        decimal inspectionFee,
+        int etaMinutes,
+        string? message,
+        CancellationToken ct = default);
+
+    Task<ProfessionalOfferRecord> UpdateProfessionalOfferAsync(
+        Guid offerId,
+        Guid jobId,
+        Guid professionalId,
+        string currentJobStatus,
+        decimal price,
+        decimal inspectionFee,
+        int etaMinutes,
+        string? message,
+        CancellationToken ct = default);
+
+    Task<ProfessionalOfferRecord> WithdrawProfessionalOfferAsync(
+        Guid offerId,
+        Guid jobId,
+        Guid professionalId,
+        string currentJobStatus,
+        CancellationToken ct = default);
+
+    Task<CustomerJobRecord> StartProfessionalJobAsync(
+        Guid jobId,
+        Guid professionalId,
+        Guid customerId,
+        string jobTitle,
+        CancellationToken ct = default);
+
+    Task<CustomerJobRecord> MarkProfessionalJobDoneAsync(
+        Guid jobId,
+        Guid professionalId,
+        Guid customerId,
+        string jobTitle,
+        string? note,
+        CancellationToken ct = default);
+
+    Task<CustomerJobRecord> DisputeProfessionalJobAsync(
+        Guid jobId,
+        Guid professionalId,
+        Guid customerId,
+        string fromStatus,
+        string jobTitle,
+        string reason,
+        CancellationToken ct = default);
 }

@@ -16,6 +16,7 @@ public static class CustomerJobsEndpoints
         var group = app.MapGroup("/jobs").RequireAuthorization("Customer");
 
         group.MapPost("", CreateJobAsync);
+        group.MapGet("/{id}", GetJobDetailAsync);
         group.MapPatch("/{id}", UpdateDraftJobAsync);
         group.MapPost("/{id}/publish", PublishJobAsync);
         group.MapPost("/{id}/cancel", CancelJobAsync);
@@ -82,6 +83,26 @@ public static class CustomerJobsEndpoints
 
         engine.InvalidateAfterJobMutation(created.Id);
         return Results.Created($"/jobs/{created.Id}", FormatJobResponse(created, matchedProfessionals));
+    }
+
+    private static async Task<IResult> GetJobDetailAsync(
+        string id,
+        HttpContext ctx,
+        IAdminRepository repo,
+        CancellationToken ct)
+    {
+        if (!TryParseJobAndCustomer(id, ctx, out Guid jobId, out Guid customerId, out IResult? idError))
+        {
+            return idError!;
+        }
+
+        var job = await repo.GetCustomerJobAsync(jobId, customerId, ct);
+        if (job is null)
+        {
+            return NotFoundJob();
+        }
+
+        return Results.Ok(FormatJobResponse(job));
     }
 
     private static async Task<IResult> UpdateDraftJobAsync(
@@ -226,6 +247,8 @@ public static class CustomerJobsEndpoints
             id = updated.Id,
             previousStatus = job.Status,
             status = updated.Status,
+            workStartedAt = updated.WorkStartedAt,
+            professionalMarkedDoneAt = updated.ProfessionalMarkedDoneAt,
             updatedAt = updated.UpdatedAt,
         });
     }
@@ -337,6 +360,8 @@ public static class CustomerJobsEndpoints
             id = updated.Id,
             previousStatus = job.Status,
             status = updated.Status,
+            workStartedAt = updated.WorkStartedAt,
+            professionalMarkedDoneAt = updated.ProfessionalMarkedDoneAt,
             updatedAt = updated.UpdatedAt,
         });
     }
@@ -390,6 +415,8 @@ public static class CustomerJobsEndpoints
             id = updated.Id,
             previousStatus = job.Status,
             status = updated.Status,
+            workStartedAt = updated.WorkStartedAt,
+            professionalMarkedDoneAt = updated.ProfessionalMarkedDoneAt,
             updatedAt = updated.UpdatedAt,
         });
     }
@@ -639,6 +666,8 @@ public static class CustomerJobsEndpoints
             urgency = job.Urgency,
             status = job.Status,
             assignedProfessionalId = job.AssignedProfessionalId,
+            workStartedAt = job.WorkStartedAt,
+            professionalMarkedDoneAt = job.ProfessionalMarkedDoneAt,
             expiresAt = job.ExpiresAt,
             createdAt = job.CreatedAt,
             updatedAt = job.UpdatedAt,
