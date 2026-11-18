@@ -1404,7 +1404,7 @@ h3:where(:not(.portal-root *)) {
 }
 
 .prolink-auth-back-link:hover {
-  color: #0e3e3b;
+  color: var(--forest);
 }
 
 .prolink-auth-back-link .arrow {
@@ -1533,8 +1533,8 @@ h3:where(:not(.portal-root *)) {
 
 .prolink-form-field input:focus {
   outline: none;
-  border-color: #0e3e3b;
-  box-shadow: 0 0 0 3px rgba(14, 62, 59, 0.12);
+  border-color: var(--forest);
+  box-shadow: 0 0 0 3px rgba(15, 107, 62, 0.12);
 }
 
 .prolink-form-field input.has-error {
@@ -1567,14 +1567,14 @@ h3:where(:not(.portal-root *)) {
   border: none;
   font-size: 12.5px;
   font-weight: 600;
-  color: #0e3e3b;
+  color: var(--forest);
   cursor: pointer;
   padding: 6px 8px;
   border-radius: 6px;
 }
 
 .prolink-password-toggle:hover {
-  color: #062220;
+  color: var(--forest-hover);
 }
 
 .prolink-form-options {
@@ -1599,14 +1599,14 @@ h3:where(:not(.portal-root *)) {
   width: 16px;
   height: 16px;
   border-radius: 4px;
-  accent-color: #0e3e3b;
+  accent-color: var(--forest);
   cursor: pointer;
 }
 
 .prolink-forgot-link {
   font-size: 13px;
   font-weight: 500;
-  color: #0e3e3b;
+  color: var(--forest);
   text-decoration: none;
   background: none;
   border: none;
@@ -1618,7 +1618,7 @@ h3:where(:not(.portal-root *)) {
 
 .prolink-forgot-link:hover {
   text-decoration: underline;
-  color: #062220;
+  color: var(--forest-hover);
 }
 
 .prolink-submit-btn {
@@ -1630,25 +1630,25 @@ h3:where(:not(.portal-root *)) {
   min-height: 48px;
   border: none;
   border-radius: 9999px;
-  background: #0e3e3b;
+  background: var(--forest);
   color: #ffffff;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   margin-top: 8px;
   transition: all 0.18s ease;
-  box-shadow: 0 12px 24px -4px rgba(14, 62, 59, 0.42), 0 4px 8px -4px rgba(14, 62, 59, 0.2);
+  box-shadow: 0 12px 24px -4px rgba(15, 107, 62, 0.42), 0 4px 8px -4px rgba(15, 107, 62, 0.2);
 }
 
 .prolink-submit-btn:hover {
-  background: #092e2c;
+  background: var(--forest-hover);
   transform: translateY(-1px);
-  box-shadow: 0 16px 28px -4px rgba(14, 62, 59, 0.52), 0 6px 10px -4px rgba(14, 62, 59, 0.25);
+  box-shadow: 0 16px 28px -4px rgba(15, 107, 62, 0.52), 0 6px 10px -4px rgba(15, 107, 62, 0.25);
 }
 
 .prolink-submit-btn:active {
   transform: translateY(0);
-  box-shadow: 0 8px 16px -4px rgba(14, 62, 59, 0.4);
+  box-shadow: 0 8px 16px -4px rgba(15, 107, 62, 0.4);
 }
 
 .prolink-submit-btn:disabled {
@@ -1677,7 +1677,7 @@ h3:where(:not(.portal-root *)) {
 
 .prolink-switch-link {
   font-weight: 600;
-  color: #0e3e3b;
+  color: var(--forest);
   text-decoration: none;
   background: none;
   border: none;
@@ -1688,7 +1688,7 @@ h3:where(:not(.portal-root *)) {
 
 .prolink-switch-link:hover {
   text-decoration: underline;
-  color: #062220;
+  color: var(--forest-hover);
 }
 
 .prolink-auth-alert {
@@ -1715,7 +1715,7 @@ h3:where(:not(.portal-root *)) {
 .auth-visual-panel {
   position: relative;
   min-height: 100svh;
-  background: linear-gradient(155deg, #07151D 0%, #0A222B 50%, #05141A 100%);
+  background: linear-gradient(155deg, #06281a 0%, var(--forest-deep) 50%, #041d12 100%);
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -1732,7 +1732,7 @@ h3:where(:not(.portal-root *)) {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background: radial-gradient(circle at 50% 36%, rgba(20, 184, 166, 0.16) 0%, rgba(13, 148, 136, 0.05) 45%, transparent 70%);
+  background: radial-gradient(circle at 50% 36%, rgba(47, 174, 96, 0.2) 0%, rgba(15, 107, 62, 0.07) 45%, transparent 70%);
 }
 
 .auth-visual-grid-dots {
@@ -1744,7 +1744,7 @@ h3:where(:not(.portal-root *)) {
   opacity: 0.12;
   pointer-events: none;
   z-index: 0;
-  background-image: radial-gradient(#5eead4 1.2px, transparent 1.2px);
+  background-image: radial-gradient(#86efac 1.2px, transparent 1.2px);
   background-size: 18px 18px;
   mask-image: radial-gradient(circle at 60% 60%, black 40%, transparent 80%);
   -webkit-mask-image: radial-gradient(circle at 60% 60%, black 40%, transparent 80%);
@@ -1776,7 +1776,7 @@ h3:where(:not(.portal-root *)) {
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(45, 212, 191, 0.28) 0%, rgba(20, 184, 166, 0.1) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(134, 239, 172, 0.28) 0%, rgba(47, 174, 96, 0.1) 40%, transparent 70%);
   filter: blur(20px);
   pointer-events: none;
   transition: opacity 0.5s ease;
@@ -1962,10 +1962,10 @@ h3:where(:not(.portal-root *)) {
 .auth-particle.particle-1 {
   width: 5px;
   height: 5px;
-  background: #5eead4;
+  background: #86efac;
   top: 62px;
   left: 165px;
-  box-shadow: 0 0 10px #5eead4;
+  box-shadow: 0 0 10px #86efac;
 }
 
 .auth-particle.particle-2 {
@@ -2001,10 +2001,10 @@ h3:where(:not(.portal-root *)) {
 .auth-particle.particle-5 {
   width: 9px;
   height: 9px;
-  background: #2dd4bf;
+  background: #4ade80;
   bottom: 30px;
   left: 155px;
-  box-shadow: 0 0 14px #2dd4bf;
+  box-shadow: 0 0 14px #4ade80;
 }
 
 .auth-hero-copy {
@@ -2023,7 +2023,7 @@ h3:where(:not(.portal-root *)) {
 }
 
 .auth-hero-highlight {
-  color: #8ce8c3;
+  color: #86efac;
   display: inline;
 }
 

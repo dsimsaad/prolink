@@ -32,6 +32,11 @@ export default async function ApplicationSubmittedPage() {
     redirect("/become-professional/sign-in");
   }
 
+  // Admins cannot be professionals — redirect directly to the Admin Portal
+  if (proInfo.profile?.role === "admin") {
+    redirect("/admin");
+  }
+
   if (proInfo.state === "none") {
     redirect("/become-professional");
   }

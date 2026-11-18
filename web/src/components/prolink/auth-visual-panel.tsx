@@ -49,13 +49,13 @@ export function AuthVisualPanel({
             >
               <defs>
                 <linearGradient id="proLoopGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#5EEAD4" stopOpacity="0.95" />
-                  <stop offset="45%" stopColor="#2DD4BF" stopOpacity="0.75" />
-                  <stop offset="100%" stopColor="#0D9488" stopOpacity="0.25" />
+                  <stop offset="0%" stopColor="#86EFAC" stopOpacity="0.95" />
+                  <stop offset="45%" stopColor="#4ADE80" stopOpacity="0.75" />
+                  <stop offset="100%" stopColor="#0F6B3E" stopOpacity="0.25" />
                 </linearGradient>
                 <linearGradient id="proLoopGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#6EE7B7" stopOpacity="0.9" />
-                  <stop offset="55%" stopColor="#2DD4BF" stopOpacity="0.7" />
+                  <stop offset="55%" stopColor="#4ADE80" stopOpacity="0.7" />
                   <stop offset="100%" stopColor="#047857" stopOpacity="0.2" />
                 </linearGradient>
                 <filter id="proNeonGlow" x="-20%" y="-20%" width="140%" height="140%">
@@ -116,7 +116,7 @@ export function AuthVisualPanel({
                 cx="160"
                 cy="160"
                 r="22"
-                stroke="#5EEAD4"
+                stroke="#86EFAC"
                 strokeWidth="2.6"
                 fill="#062227"
                 filter="url(#proNeonGlow)"
@@ -125,7 +125,7 @@ export function AuthVisualPanel({
                 cx="160"
                 cy="160"
                 r="13"
-                stroke="#2DD4BF"
+                stroke="#4ADE80"
                 strokeWidth="1.4"
                 fill="#04181C"
                 opacity="0.8"

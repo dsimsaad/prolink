@@ -45,7 +45,6 @@ export function NavigationAccountProvider({ children }: { children: ReactNode })
         return;
       }
       const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-      setAccount({ isLoggedIn: true, isAdmin: false, proState: 'none', userName, reviewNote: null });
 
       // Leave the auth callback before making Supabase queries.
       timer = setTimeout(() => {
@@ -59,7 +58,8 @@ export function NavigationAccountProvider({ children }: { children: ReactNode })
           const isAdmin = profile.data?.role === 'admin';
           setAccount({ isLoggedIn: true, isAdmin, proState, userName: profile.data?.full_name || userName, reviewNote: professional.data?.review_note || null });
         }).catch(() => {
-          // Keep the session's display name if account details are unavailable.
+          if (!active || requestRevision !== revision) return;
+          setAccount({ isLoggedIn: true, isAdmin: false, proState: 'none', userName, reviewNote: null });
         });
       }, 0);
     });

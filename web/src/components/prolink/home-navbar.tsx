@@ -132,21 +132,12 @@ export function HomeNavbar() {
                         : "Customer Account"}
                     </small>
                   </div>
-                  {isAdmin && (
-                    <Link
-                      href="/admin"
-                      role="menuitem"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      Admin
-                    </Link>
-                  )}
                   <Link
-                    href="/dashboard"
+                    href={isAdmin ? "/admin" : "/dashboard"}
                     role="menuitem"
                     onClick={() => setUserMenuOpen(false)}
                   >
-                    My dashboard
+                    {isAdmin ? "Admin portal" : "My dashboard"}
                   </Link>
                   {!isAdmin && (
                     <BecomeProfessionalCta
@@ -252,11 +243,11 @@ export function HomeNavbar() {
               {isLoggedIn ? (
                 <>
                   <Link
-                    href="/dashboard"
+                    href={isAdmin ? "/admin" : "/dashboard"}
                     className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-mint)]"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Dashboard
+                    {isAdmin ? "Admin portal" : "Dashboard"}
                   </Link>
                   <button
                     type="button"

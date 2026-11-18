@@ -45,6 +45,11 @@ export default async function BecomeProfessionalPage() {
     redirect("/become-professional/sign-in");
   }
 
+  // Admins cannot apply to be professionals — redirect directly to the Admin Portal
+  if (proInfo.profile?.role === "admin") {
+    redirect("/admin");
+  }
+
   // 2. If user is already an approved professional, redirect to the dashboard
   if (proInfo.state === "approved") {
     redirect("/dashboard");

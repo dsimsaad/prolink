@@ -49,6 +49,11 @@ export default async function DashboardLayout({
     redirect(`/sign-in?error=${encodeURIComponent(message)}`);
   }
 
+  // Admins are not customers or professionals — redirect them directly to the Admin Portal.
+  if (profile?.role === "admin") {
+    redirect("/admin");
+  }
+
   const customerName =
     profile?.full_name ||
     (typeof user.user_metadata?.full_name === "string"
@@ -57,14 +62,12 @@ export default async function DashboardLayout({
     user.email ||
     "Customer";
 
-  const role = profile?.role === "admin" ? "admin" : "user";
-
   return (
     <CustomerShell
       customerId={user.id}
       customerName={customerName}
       customerEmail={user.email ?? ""}
-      role={role}
+      role="user"
       professionalState={proState.state}
       reviewNote={proState.reviewNote}
       initialUnreadNotifications={unreadRes.count ?? 0}

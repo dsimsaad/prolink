@@ -10,8 +10,17 @@ const supabaseKey =
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // If a logged-in user hits the landing page ("/"), redirect them to their customer portal immediately
-  if (pathname === "/") {
+  // Protect landing page, customer dashboard, and become-professional routes against role mismatches
+  const isCustomerOrProPath =
+    pathname === "/" ||
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/user" ||
+    pathname.startsWith("/user/") ||
+    pathname === "/become-professional" ||
+    pathname.startsWith("/become-professional/");
+
+  if (isCustomerOrProPath) {
     const hasAuthCookie = request.cookies
       .getAll()
       .some(
@@ -34,12 +43,33 @@ export async function proxy(request: NextRequest) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/dashboard";
-        return NextResponse.redirect(url);
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        const isAdmin = profile?.role === "admin";
+
+        // Admin must only ever see the admin portal
+        if (isAdmin) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/admin";
+          return NextResponse.redirect(url);
+        }
+
+        // Standard logged-in user hitting the root landing page
+        if (pathname === "/") {
+          const url = request.nextUrl.clone();
+          url.pathname = "/dashboard";
+          return NextResponse.redirect(url);
+        }
       }
     }
-    return NextResponse.next();
+
+    if (pathname === "/") {
+      return NextResponse.next();
+    }
   }
 
   // Public UI pages that can be viewed without forced authentication

@@ -21,7 +21,6 @@ import {
   Menu,
   MessageSquare,
   PlusCircle,
-  Shield,
   Sparkles,
   User,
   X,
@@ -33,7 +32,7 @@ export interface CustomerViewerContextValue {
   customerId: string;
   customerName: string;
   customerEmail: string;
-  role: "user" | "admin";
+  role: "user";
   professionalState: ProfessionalState;
   reviewNote: string | null;
   unreadNotifications: number;
@@ -59,7 +58,7 @@ interface CustomerShellProps {
   customerId: string;
   customerName: string;
   customerEmail: string;
-  role: "user" | "admin";
+  role: "user";
   professionalState: ProfessionalState;
   reviewNote: string | null;
   initialUnreadNotifications: number;
@@ -498,18 +497,6 @@ export function CustomerShell({
                           <span>Become a Professional</span>
                         </Link>
                       )}
-
-                    {role === "admin" && (
-                      <Link
-                        href="/admin"
-                        role="menuitem"
-                        onClick={() => setProfileMenuOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-[#34453B] transition hover:bg-[#F4FAF6] hover:text-[#0C2A1B]"
-                      >
-                        <Shield className="h-4 w-4 text-[#0F6B3E]" aria-hidden="true" />
-                        <span>Admin portal</span>
-                      </Link>
-                    )}
                   </div>
 
                   <div className="border-t border-[#DCE8E0] pt-1">

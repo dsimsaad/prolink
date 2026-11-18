@@ -143,7 +143,7 @@ export function ProfessionalSignInForm() {
       const supabase = createClient();
 
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
           email: trimmedEmail,
           password,
         });
@@ -152,6 +152,29 @@ export function ProfessionalSignInForm() {
           setMessage(error.message);
           setLoading(false);
           return;
+        }
+
+        if (authData?.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role, is_suspended, suspended_reason")
+            .eq("id", authData.user.id)
+            .maybeSingle();
+
+          if (profile?.is_suspended) {
+            await supabase.auth.signOut();
+            const msg = profile.suspended_reason
+              ? `Your account has been suspended: ${profile.suspended_reason}`
+              : "Your account has been suspended. Please contact support.";
+            setMessage(msg);
+            setLoading(false);
+            return;
+          }
+
+          if (profile?.role === "admin") {
+            window.location.replace("/admin");
+            return;
+          }
         }
 
         const check = await resolvePostLoginAction(targetDestination);
